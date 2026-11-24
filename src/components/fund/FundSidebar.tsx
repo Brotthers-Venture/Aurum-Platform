@@ -99,7 +99,7 @@ export function FundSidebar() {
                         href={it.href}
                         className={cx(
                           "flex items-center gap-2.5 rounded-[10px] px-2.5 py-[8px] text-[13px] transition-colors",
-                          active ? "bg-ink-900 font-semibold text-[#F3E9D2] shadow-[0_6px_14px_-8px_rgba(15,35,64,0.6)]" : "text-stone-600 hover:bg-stone-100 hover:text-ink-900",
+                          active ? "bg-champagne font-semibold text-ink-900 shadow-[inset_0_0_0_1px_rgba(184,151,90,0.45)]" : "text-stone-600 hover:bg-stone-100 hover:text-ink-900",
                         )}
                       >
                         <Icon size={15} strokeWidth={active ? 2 : 1.6} />

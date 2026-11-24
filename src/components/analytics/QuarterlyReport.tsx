@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Printer } from "lucide-react";
 import { GpLogo } from "@/components/brand/GpLogo";
 import { cx } from "@/components/ui";
-import { periodLabel, type FundAnalytics } from "@/lib/analytics";
+import { periodLabel, type FundAnalytics, type PeriodFx } from "@/lib/analytics";
 import type { GpClient } from "@/lib/gps";
 import { FlowsWidget, KpiStrip, NavWidget, SummaryWidget, fmtFull, useAnalyticsView } from "./AnalyticsPanels";
 import { MiniTable, Widget } from "./Widget";
@@ -66,7 +66,7 @@ function Page({ gp, fund, asOf, n, total, children }: { gp: GpClient; fund: Repo
   );
 }
 
-export function QuarterlyReport({ data, fund, gp }: { data: { periods: string[]; funds: FundAnalytics[] }; fund: ReportFund; gp: GpClient }) {
+export function QuarterlyReport({ data, fund, gp }: { data: { periods: string[]; fx: PeriodFx[]; funds: FundAnalytics[] }; fund: ReportFund; gp: GpClient }) {
   const params = useSearchParams();
   const initial = Math.max(0, data.periods.indexOf(params.get("asOf") ?? ""));
   const [asOfIdx, setAsOfIdx] = useState(initial || data.periods.length - 2);

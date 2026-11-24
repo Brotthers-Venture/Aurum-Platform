@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { reportingRate } from "@/lib/fx-server";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Check, ExternalLink, FileText, Lock } from "lucide-react";
 import { ButtonLink, Panel, Stat, StatRow, Status, cx } from "@/components/ui";
@@ -35,7 +36,8 @@ export default async function GpWorkspace({ params }: { params: Promise<{ gpId: 
   if (!gp) notFound();
   const current = section?.[0] ?? "";
   if (!sections.some(([s]) => s === current)) notFound();
-  const t = gpTotals(gp.id);
+  const fx = await reportingRate();
+  const t = gpTotals(gp.id, fx.rate);
   const team = users.filter((u) => u.scope.toLowerCase().includes(gp.shortName.split(" ")[0].toLowerCase()) && roleById(u.role).audience === "Client (GP)");
 
   const empty = (msg: string) => <div className="rounded-[4px] border border-dashed border-stone-300 bg-white px-6 py-12 text-center text-[13px] text-stone-500">{msg}</div>;
@@ -51,7 +53,7 @@ export default async function GpWorkspace({ params }: { params: Promise<{ gpId: 
           empty("No funds yet. Add a vehicle and upload its LPA to set the economics.")
         );
       case "investors": {
-        const rows = investorsForGp(gp.id);
+        const rows = investorsForGp(gp.id, fx.rate);
         return rows.length ? (
           <Panel flush>
             <table className="data-table">

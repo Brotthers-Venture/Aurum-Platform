@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { reportingRate } from "@/lib/fx-server";
 import type { Metadata } from "next";
 import { Plus } from "lucide-react";
 import { ButtonLink, PageHeader, Status } from "@/components/ui";
@@ -9,7 +10,8 @@ import { date, moneyShort } from "@/lib/format";
 
 export const metadata: Metadata = { title: "GPs" };
 
-export default function GpsPage() {
+export default async function GpsPage() {
+  const fx = await reportingRate();
   return (
     <div className="space-y-6">
       <PageHeader
@@ -24,7 +26,7 @@ export default function GpsPage() {
       />
       <div className="grid gap-px overflow-hidden rounded-[8px] border border-stone-200/70 bg-stone-200 shadow-card md:grid-cols-2 xl:grid-cols-3">
         {gps.map((g) => {
-          const t = gpTotals(g.id);
+          const t = gpTotals(g.id, fx.rate);
           return (
             <Link key={g.id} href={`/admin/fund/gps/${g.id}`} className="group flex flex-col bg-white p-6 hover:bg-stone-25">
               <div className="flex h-[60px] items-center justify-between gap-4">

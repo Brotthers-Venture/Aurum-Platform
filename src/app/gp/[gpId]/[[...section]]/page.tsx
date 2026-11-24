@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { reportingRate } from "@/lib/fx-server";
 import { notFound } from "next/navigation";
 import { Download, FileText } from "lucide-react";
 import { Panel, Progress, Status } from "@/components/ui";
@@ -35,7 +36,8 @@ async function GpPortal({ params }: { params: Promise<{ gpId: string; section?: 
   if (!gp) notFound();
   const current = section?.[0] ?? "";
   if (!sections.includes(current)) notFound();
-  const t = gpTotals(gp.id);
+  const fx = await reportingRate();
+  const t = gpTotals(gp.id, fx.rate);
   const fs = fundsForGp(gp.id);
   const calls = callsForGp(gp.id);
   const pendingCalls = calls.filter((c) => c.status === "Draft");
@@ -55,7 +57,7 @@ async function GpPortal({ params }: { params: Promise<{ gpId: string; section?: 
   const content = () => {
     if (!fs.length) return noFunds;
     if (current === "investors") {
-      const rows = investorsForGp(gp.id);
+      const rows = investorsForGp(gp.id, fx.rate);
       const ob = onboardingForGp(gp.id);
       return (
         <div className="space-y-6">

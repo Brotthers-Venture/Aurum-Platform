@@ -74,7 +74,7 @@ export function OnboardingPipeline() {
             <button
               key={s}
               onClick={() => setStage(on ? "All" : s)}
-              className={cx("px-4 py-3.5 text-left transition-colors", on ? "bg-ink-900 text-white" : "bg-white hover:bg-stone-50")}
+              className={cx("px-4 py-3.5 text-left transition-colors", on ? "bg-champagne text-ink-900" : "bg-white hover:bg-stone-50")}
             >
               <div className={cx("text-[11px] font-semibold uppercase tracking-[0.1em]", on ? "text-gold-400" : "text-stone-500")}>{s}</div>
               <div className="mt-1.5 flex items-baseline justify-between">

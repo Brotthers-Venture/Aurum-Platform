@@ -180,10 +180,10 @@ export function HexNav({
 export function DarkCenter({ lines, expanded = true }: { lines: [string, string]; expanded?: boolean }) {
   return (
     <g className="hex-cell" style={{ transform: `scale(${expanded ? 1 : 1.16})` }}>
-      <polygon points={hexPoints(R)} fill="#0F2340" />
+      <polygon points={hexPoints(R)} fill="#FBF3DC" />
       <Band w={FRAME.outer} color="#F8C618" />
       <Band r={R - FRAME.outer - FRAME.gap} w={FRAME.inner} color="#F8C618" />
-      <text textAnchor="middle" fill="#FFFFFF">
+      <text textAnchor="middle" fill="#0F2340">
         <tspan x={0} y={-6} fontSize={22} className="font-serif">
           {lines[0]}
         </tspan>

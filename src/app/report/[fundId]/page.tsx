@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { QuarterlyReport } from "@/components/analytics/QuarterlyReport";
 import { analyticsData } from "@/lib/analytics";
+import { ptaxTable, rateOn } from "@/lib/fx-server";
 import { fundById, funds } from "@/lib/data";
 import { gpById } from "@/lib/gps";
 
@@ -20,6 +21,7 @@ export default async function ReportPage({ params }: { params: Promise<{ fundId:
   const f = fundById(fundId);
   const gp = f && gpById(f.gpId);
   if (!f || !gp) notFound();
+  const table = await ptaxTable();
   const fund = {
     id: f.id,
     name: f.name,
@@ -37,7 +39,7 @@ export default async function ReportPage({ params }: { params: Promise<{ fundId:
   };
   return (
     <Suspense>
-      <QuarterlyReport data={analyticsData()} fund={fund} gp={gp} />
+      <QuarterlyReport data={analyticsData((d) => rateOn(table, d))} fund={fund} gp={gp} />
     </Suspense>
   );
 }

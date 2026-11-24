@@ -4,17 +4,18 @@ import { gpById } from "./gps";
 export const fundsForGp = (gpId: string) => funds.filter((f) => f.gpId === gpId);
 const fundIds = (gpId: string) => new Set(fundsForGp(gpId).map((f) => f.id));
 
-export function gpTotals(gpId: string) {
+/** Totals in USD; brlPerUsd from fx-server (PTAX). */
+export function gpTotals(gpId: string, brlPerUsd: number) {
   const fs = fundsForGp(gpId);
   const ids = fundIds(gpId);
   const investorIds = new Set(capitalAccounts.filter((c) => ids.has(c.fundId)).map((c) => c.investorId));
   const agg = fs.reduce(
     (a, f) => {
       const t = fundTotals(f.id);
-      a.commitment += toUSD(t.commitment, f.currency);
-      a.nav += toUSD(t.nav, f.currency);
-      a.contributed += toUSD(t.contributed, f.currency);
-      a.distributed += toUSD(t.distributed, f.currency);
+      a.commitment += toUSD(t.commitment, f.currency, brlPerUsd);
+      a.nav += toUSD(t.nav, f.currency, brlPerUsd);
+      a.contributed += toUSD(t.contributed, f.currency, brlPerUsd);
+      a.distributed += toUSD(t.distributed, f.currency, brlPerUsd);
       return a;
     },
     { commitment: 0, nav: 0, contributed: 0, distributed: 0 },
@@ -33,14 +34,14 @@ export const distributionsForGp = (gpId: string) => distributions.filter((d) => 
 export const documentsForGp = (gpId: string) => documents.filter((d) => fundIds(gpId).has(d.fundId));
 export const onboardingForGp = (gpId: string) => onboarding.filter((o) => fundIds(gpId).has(o.fundId));
 
-export function investorsForGp(gpId: string) {
+export function investorsForGp(gpId: string, brlPerUsd: number) {
   const ids = fundIds(gpId);
   const map = new Map<string, { commitment: number; nav: number; funds: string[] }>();
   for (const c of capitalAccounts.filter((x) => ids.has(x.fundId))) {
     const f = fundById(c.fundId)!;
     const r = map.get(c.investorId) ?? { commitment: 0, nav: 0, funds: [] };
-    r.commitment += toUSD(c.commitment, f.currency);
-    r.nav += toUSD(c.nav, f.currency);
+    r.commitment += toUSD(c.commitment, f.currency, brlPerUsd);
+    r.nav += toUSD(c.nav, f.currency, brlPerUsd);
     r.funds.push(f.shortName);
     map.set(c.investorId, r);
   }

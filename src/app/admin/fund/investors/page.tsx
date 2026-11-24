@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { reportingRate } from "@/lib/fx-server";
 import { Download, UserPlus } from "lucide-react";
 import { Avatar, Button, ButtonLink, PageHeader, Panel, Status } from "@/components/ui";
 import { capitalAccounts, fundById, investorById, investors, profileChangeRequests, toUSD } from "@/lib/data";
@@ -6,12 +7,13 @@ import { date, initials, moneyShort } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Investors" };
 
-export default function InvestorsPage() {
+export default async function InvestorsPage() {
+  const fx = await reportingRate();
   const rows = investors
     .map((inv) => {
       const accts = capitalAccounts.filter((c) => c.investorId === inv.id);
-      const commitment = accts.reduce((a, c) => a + toUSD(c.commitment, fundById(c.fundId)!.currency), 0);
-      const nav = accts.reduce((a, c) => a + toUSD(c.nav, fundById(c.fundId)!.currency), 0);
+      const commitment = accts.reduce((a, c) => a + toUSD(c.commitment, fundById(c.fundId)!.currency, fx.rate), 0);
+      const nav = accts.reduce((a, c) => a + toUSD(c.nav, fundById(c.fundId)!.currency, fx.rate), 0);
       return { inv, accts, commitment, nav };
     })
     .sort((a, b) => b.commitment - a.commitment);

@@ -1,13 +1,16 @@
 /**
  * Analytics built from the ledger: point-in-time snapshots per fund at each quarter end,
  * period roll-forwards, cash-flow IRR and a GP › fund › investor tree.
- * Everything is in USD (BRL vehicles at the reporting rate) so vehicles can be aggregated.
+ * Everything is in USD so vehicles can be aggregated: BRL vehicles are converted at the
+ * official PTAX of each snapshot's or cash flow's own date (rates supplied by fx-server).
  */
 import { buildBooks, netAlloc, partnerNav, TODAY } from "@/lib/accounting/engine";
-import { FX_BRL_USD, funds, investorById, type Fund } from "@/lib/data";
+import { funds, investorById, type Fund } from "@/lib/data";
 import { gpById } from "@/lib/gps";
 
-const usd = (v: number, f: Fund) => (f.currency === "BRL" ? v / FX_BRL_USD : v);
+/** BRL per USD on a date (PTAX). */
+export type RateOn = (date: string) => number;
+const usd = (v: number, f: Fund, brlPerUsd: number) => (f.currency === "BRL" ? v / brlPerUsd : v);
 
 export type Snapshot = {
   date: string;
@@ -24,19 +27,19 @@ export type Snapshot = {
 
 const ZERO = (date: string): Snapshot => ({ date, commitment: 0, paidIn: 0, distributed: 0, nav: 0, income: 0, realized: 0, unrealized: 0, fees: 0, expenses: 0 });
 
-export function snapshot(f: Fund, date: string): Snapshot {
+export function snapshot(f: Fund, date: string, fx: number): Snapshot {
   const b = buildBooks(f.id, date);
   const s = ZERO(date);
   for (const p of b.partners) {
-    s.commitment += usd(p.commitment, f);
-    s.paidIn += usd(p.called, f);
-    s.distributed += usd(p.distributed, f);
-    s.nav += usd(partnerNav(p), f);
-    s.income += usd(p.alloc.income, f);
-    s.realized += usd(p.alloc.realized, f);
-    s.unrealized += usd(p.alloc.unrealized, f);
-    s.fees += usd(p.alloc.fees, f);
-    s.expenses += usd(p.alloc.expenses + p.alloc.organizational, f);
+    s.commitment += usd(p.commitment, f, fx);
+    s.paidIn += usd(p.called, f, fx);
+    s.distributed += usd(p.distributed, f, fx);
+    s.nav += usd(partnerNav(p), f, fx);
+    s.income += usd(p.alloc.income, f, fx);
+    s.realized += usd(p.alloc.realized, f, fx);
+    s.unrealized += usd(p.alloc.unrealized, f, fx);
+    s.fees += usd(p.alloc.fees, f, fx);
+    s.expenses += usd(p.alloc.expenses + p.alloc.organizational, f, fx);
   }
   return s;
 }
@@ -55,11 +58,11 @@ export const periodLabel = (d: string) => {
 };
 
 /** Cash flows to and from LPs (USD), for IRR. */
-export function lpFlows(f: Fund, asOf: string) {
+export function lpFlows(f: Fund, asOf: string, rateOn: RateOn) {
   const b = buildBooks(f.id, asOf);
   const flows: { date: string; amount: number }[] = [];
-  for (const c of b.calls) for (const a of c.allocations) if (a.paid && a.paidDate && a.paidDate <= asOf) flows.push({ date: a.paidDate, amount: -usd(a.paid, f) });
-  for (const d of b.distributions) if (d.status === "Paid" && d.date <= asOf) flows.push({ date: d.date, amount: usd(d.amount, f) });
+  for (const c of b.calls) for (const a of c.allocations) if (a.paid && a.paidDate && a.paidDate <= asOf) flows.push({ date: a.paidDate, amount: -usd(a.paid, f, rateOn(a.paidDate)) });
+  for (const d of b.distributions) if (d.status === "Paid" && d.date <= asOf) flows.push({ date: d.date, amount: usd(d.amount, f, rateOn(d.date)) });
   return flows;
 }
 
@@ -97,9 +100,13 @@ export type FundAnalytics = {
 };
 
 /** Everything the analytics workspace needs, serialisable for the client. */
-export function analyticsData(): { periods: string[]; funds: FundAnalytics[] } {
+export type PeriodFx = { rate: number; date: string | null; source: "PTAX" | "indicative" };
+
+export function analyticsData(fxOn: (date: string) => PeriodFx): { periods: string[]; fx: PeriodFx[]; funds: FundAnalytics[] } {
+  const rateOn: RateOn = (d) => fxOn(d).rate;
   return {
     periods: PERIODS,
+    fx: PERIODS.map(fxOn),
     funds: funds.map((f) => {
       const now = buildBooks(f.id, TODAY);
       return {
@@ -111,15 +118,15 @@ export function analyticsData(): { periods: string[]; funds: FundAnalytics[] } {
         strategy: f.strategy.split(" — ")[0],
         currency: f.currency,
         vintage: f.vintage,
-        series: PERIODS.map((d) => snapshot(f, d)),
-        flows: lpFlows(f, TODAY),
+        series: PERIODS.map((d) => snapshot(f, d, rateOn(d))),
+        flows: lpFlows(f, TODAY, rateOn),
         investors: now.partners.map((p) => ({
           id: p.investorId,
           name: investorById(p.investorId)?.name ?? p.investorId,
-          commitment: usd(p.commitment, f),
-          paidIn: usd(p.called, f),
-          distributed: usd(p.distributed, f),
-          nav: usd(partnerNav(p), f),
+          commitment: usd(p.commitment, f, rateOn(TODAY)),
+          paidIn: usd(p.called, f, rateOn(TODAY)),
+          distributed: usd(p.distributed, f, rateOn(TODAY)),
+          nav: usd(partnerNav(p), f, rateOn(TODAY)),
         })),
       };
     }),

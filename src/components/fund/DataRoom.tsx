@@ -263,9 +263,9 @@ export function DataRoom({ files, onChange, gleif, uploader = "Luiza Andrade" }:
                 key={g}
                 type="button"
                 onClick={() => setGroup(g)}
-                className={cx("h-7 rounded-full px-3 text-[12px] transition-colors", group === g ? "bg-ink-900 font-semibold text-white" : "text-stone-600 hover:bg-stone-100")}
+                className={cx("h-7 rounded-full px-3 text-[12px] transition-colors", group === g ? "bg-champagne font-semibold text-ink-900" : "text-stone-600 hover:bg-stone-100")}
               >
-                {g} <span className={cx("num ml-0.5", group === g ? "text-white/60" : "text-stone-400")}>{c}</span>
+                {g} <span className={cx("num ml-0.5", group === g ? "text-ink-900/50" : "text-stone-400")}>{c}</span>
               </button>
             );
           })}

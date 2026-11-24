@@ -3,36 +3,55 @@
 import { Fragment, useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { cx } from "@/components/ui";
-import { multiples, periodLabel, rollForward, sumSnapshots, xirr, type FundAnalytics, type Snapshot } from "@/lib/analytics";
+import { multiples, periodLabel, rollForward, sumSnapshots, xirr, type FundAnalytics, type PeriodFx, type Snapshot } from "@/lib/analytics";
 import { Columns, HBars, Legend, Lines, MEANING, SERIES } from "./charts";
 import { MiniTable, Widget } from "./Widget";
 
 export type Ccy = "USD" | "BRL";
-export const FX = 5.4;
 
 export type View = ReturnType<typeof useAnalyticsView>;
 
 const ZERO = (date: string): Snapshot => ({ date, commitment: 0, paidIn: 0, distributed: 0, nav: 0, income: 0, realized: 0, unrealized: 0, fees: 0, expenses: 0 });
 
 /** Aggregate the selected funds up to the as-of period. */
-export function useAnalyticsView(data: { periods: string[]; funds: FundAnalytics[] }, scope: string, asOfIdx: number, ccy: Ccy) {
+export function useAnalyticsView(data: { periods: string[]; fx: PeriodFx[]; funds: FundAnalytics[] }, scope: string, asOfIdx: number, ccy: Ccy) {
   return useMemo(() => {
-    const k = ccy === "BRL" ? FX : 1;
+    // BRL view: each period converted at its own PTAX (USD figures were built at the same rates)
+    const kAt = (i: number) => (ccy === "BRL" ? data.fx[i].rate : 1);
+    const k = kAt(asOfIdx);
     const [kind, id] = scope.split(":");
     const sel = data.funds.filter((f) => kind === "all" || (kind === "gp" && f.gpId === id) || (kind === "fund" && f.id === id));
-    const scale = (s: Snapshot): Snapshot => ({ ...s, commitment: s.commitment * k, paidIn: s.paidIn * k, distributed: s.distributed * k, nav: s.nav * k, income: s.income * k, realized: s.realized * k, unrealized: s.unrealized * k, fees: s.fees * k, expenses: s.expenses * k });
+    const scale = (s: Snapshot, m = k): Snapshot => ({ ...s, commitment: s.commitment * m, paidIn: s.paidIn * m, distributed: s.distributed * m, nav: s.nav * m, income: s.income * m, realized: s.realized * m, unrealized: s.unrealized * m, fees: s.fees * m, expenses: s.expenses * m });
     // start one period before the first commitment, so young vehicles don't show years of empty quarters
     const first = data.periods.findIndex((_, i) => sel.some((f) => f.series[i].commitment > 0));
     const from = Math.min(Math.max(0, first - 1), Math.max(0, asOfIdx - 3));
     const periods = data.periods.slice(from, asOfIdx + 1);
-    const series = periods.map((d, i) => scale(sumSnapshots(sel.map((f) => f.series[from + i]), d)));
+    const series = periods.map((d, i) => scale(sumSnapshots(sel.map((f) => f.series[from + i]), d), kAt(from + i)));
     const asOf = periods[periods.length - 1];
     const end = series[series.length - 1];
-    const qStart = series[series.length - 2] ?? ZERO("");
-    const yIdx = periods.findLastIndex((d, i) => i < periods.length - 1 && d.endsWith("12-31"));
-    const yStart = yIdx >= 0 ? series[yIdx] : ZERO("");
+    const usdAt = (i: number) => sumSnapshots(sel.map((f) => f.series[i]), data.periods[i]);
+    const yAbs = data.periods.findLastIndex((d, i) => i < asOfIdx && d.endsWith("12-31"));
+    /**
+     * Roll-forward from period s (exclusive; -1 = inception) to asOf, translated properly:
+     * opening NAV at the opening rate, each quarter's movements at that quarter's average rate,
+     * closing NAV at the closing rate; the residual is FX translation. In USD it is zero.
+     */
+    const translatedRoll = (s: number) => {
+      const lines = { contributions: 0, distributions: 0, fees: 0, expenses: 0, income: 0, realized: 0, unrealized: 0 };
+      for (let i = Math.max(0, s + 1); i <= asOfIdx; i++) {
+        const prev = i > 0 ? usdAt(i - 1) : ZERO("");
+        const m = rollForward(prev, usdAt(i));
+        const r = ccy === "BRL" ? (kAt(Math.max(0, i - 1)) + kAt(i)) / 2 : 1;
+        for (const key of Object.keys(lines) as (keyof typeof lines)[]) lines[key] += m[key] * r;
+      }
+      const beginning = s >= 0 ? usdAt(s).nav * kAt(s) : 0;
+      const ending = usdAt(asOfIdx).nav * k;
+      const moved = beginning + Object.values(lines).reduce((a, b) => a + b, 0);
+      const fxTranslation = Math.abs(ending - moved) < 0.5 ? 0 : ending - moved;
+      return { beginning, ...lines, fxTranslation, ending };
+    };
     const flows = sel.flatMap((f) => f.flows).filter((x) => x.date <= asOf);
-    const irr = xirr(flows, { date: asOf, amount: end.nav / k });
+    const irr = xirr(flows, { date: asOf, amount: end.nav / k }); // IRR measured in USD
     const perFund = sel.map((f) => {
       const s = scale(f.series[asOfIdx]);
       return { f, s, m: multiples(s), irr: xirr(f.flows.filter((x) => x.date <= asOf), { date: asOf, amount: s.nav / k }) };
@@ -48,7 +67,8 @@ export function useAnalyticsView(data: { periods: string[]; funds: FundAnalytics
       end,
       m: multiples(end),
       irr,
-      roll: { QTD: rollForward(qStart, end), YTD: rollForward(yStart, end), ITD: rollForward(ZERO(""), end) },
+      roll: { QTD: translatedRoll(asOfIdx - 1), YTD: translatedRoll(yAbs), ITD: translatedRoll(-1) },
+      fx: data.fx[asOfIdx],
       perFund,
     };
   }, [data, scope, asOfIdx, ccy]);
@@ -101,6 +121,7 @@ export function SummaryWidget({ v, bare }: { v: View; bare?: boolean }) {
     ["Income", "income"],
     ["Realized gains", "realized"],
     ["Unrealized gains", "unrealized"],
+    ...(v.ccy === "BRL" ? ([["FX translation", "fxTranslation"]] as [string, keyof View["roll"]["QTD"]][]) : []),
     ["Ending NAV", "ending", true],
   ];
   const cols = ["QTD", "YTD", "ITD"] as const;
@@ -134,7 +155,7 @@ export function SummaryWidget({ v, bare }: { v: View; bare?: boolean }) {
             </tr>
           ))}
           <tr className="text-stone-700">
-            <td className="pt-3">Net IRR</td>
+            <td className="pt-3">Net IRR{v.ccy === "BRL" ? " (USD)" : ""}</td>
             <td className="num pt-3 text-right text-stone-400">—</td>
             <td className="num pt-3 text-right text-stone-400">—</td>
             <td className="num pt-3 text-right font-semibold text-ink-900">{pctFmt(v.irr)}</td>

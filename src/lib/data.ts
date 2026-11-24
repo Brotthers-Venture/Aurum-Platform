@@ -39,7 +39,8 @@ export type Fund = {
   carryRate: number;
 };
 
-export const FX_BRL_USD = 5.4; // reporting rate for consolidated USD figures
+/** Indicative only — used when the BCB PTAX service is unreachable, and always labelled. Real rates: src/lib/fx-server.ts */
+export const INDICATIVE_BRL_USD = 5.4;
 
 export const funds: Fund[] = [
   {
@@ -370,8 +371,9 @@ export function fundTotals(fundId: string) {
   };
 }
 
-export function toUSD(amount: number, currency: Currency) {
-  return currency === "BRL" ? amount / FX_BRL_USD : amount;
+/** Convert to USD at an explicit BRL-per-USD rate (PTAX from fx-server; never implicit). */
+export function toUSD(amount: number, currency: Currency, brlPerUsd: number) {
+  return currency === "BRL" ? amount / brlPerUsd : amount;
 }
 
 export type CapitalCall = CallRecord;
@@ -500,8 +502,8 @@ export const investorById = (id: string) => investors.find((i) => i.id === id);
 /** The investor signed in to the client portal in this preview. */
 export const PORTAL_INVESTOR_ID = "inv-calloway";
 
-/** Consolidated quarterly cash flows across all vehicles, USD millions (BRL at reporting rate), from the ledger. */
-export const quarterlyFlows: { q: string; contributions: number; distributions: number }[] = (() => {
+/** Consolidated quarterly cash flows across all vehicles, USD millions, from the ledger; BRL at the PTAX of each flow's date. */
+export function quarterlyFlowsUSD(rateOn: (date: string) => number): { q: string; contributions: number; distributions: number }[] {
   const quarters = ["2024-4", "2025-1", "2025-2", "2025-3", "2025-4", "2026-1", "2026-2", "2026-3", "2026-4"];
   const acc = new Map(quarters.map((q) => [q, { contributions: 0, distributions: 0 }]));
   for (const f of funds) {
@@ -510,8 +512,8 @@ export const quarterlyFlows: { q: string; contributions: number; distributions: 
       const q = acc.get(`${y}-${Math.ceil(m / 3)}`);
       if (!q) continue;
       for (const l of je.lines) {
-        if (je.source === "Receipt" && l.account === "1000") q.contributions += toUSD(l.debit / 100, f.currency);
-        if (je.source === "Distribution" && l.account === "3100") q.distributions += toUSD(l.debit / 100, f.currency);
+        if (je.source === "Receipt" && l.account === "1000") q.contributions += toUSD(l.debit / 100, f.currency, rateOn(je.date));
+        if (je.source === "Distribution" && l.account === "3100") q.distributions += toUSD(l.debit / 100, f.currency, rateOn(je.date));
       }
     }
   }
@@ -520,7 +522,7 @@ export const quarterlyFlows: { q: string; contributions: number; distributions: 
     const v = acc.get(k)!;
     return { q: `Q${q} ${y}`, contributions: +(v.contributions / 1e6).toFixed(1), distributions: +(v.distributions / 1e6).toFixed(1) };
   });
-})();
+}
 
 export type ProfileChangeRequest = {
   id: string;

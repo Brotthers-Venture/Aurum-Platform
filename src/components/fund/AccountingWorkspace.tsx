@@ -224,7 +224,7 @@ export function AccountingWorkspace() {
             onClick={() => setSource(s)}
             className={cx(
               "h-7 rounded-[3px] border px-2.5 text-[12px] font-medium",
-              source === s ? "border-ink-900 bg-ink-900 text-white" : "border-stone-200 bg-white text-stone-600 hover:border-stone-400",
+              source === s ? "border-gold-500 bg-champagne text-ink-900" : "border-stone-200 bg-white text-stone-600 hover:border-stone-400",
             )}
           >
             {s}

@@ -219,7 +219,7 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
                                         <button
                                           key={i}
                                           onClick={() => setDraft({ ...draft, reading: i })}
-                                          className={cx("h-8 rounded-[3px] border px-3 text-[12px] font-semibold", draft.reading === i ? "border-ink-900 bg-ink-900 text-white" : "border-stone-300 bg-white")}
+                                          className={cx("h-8 rounded-[3px] border px-3 text-[12px] font-semibold", draft.reading === i ? "border-gold-500 bg-champagne text-ink-900" : "border-stone-300 bg-white")}
                                         >
                                           Apply reading {i + 1}
                                         </button>

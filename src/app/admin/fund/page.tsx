@@ -3,23 +3,28 @@ import type { Metadata } from "next";
 import { ArrowRight, Download, Plus } from "lucide-react";
 import { Button, ButtonLink, PageHeader, Panel, Stat, StatRow } from "@/components/ui";
 import { FlowsChart } from "@/components/fund/FlowsChart";
+import { TODAY } from "@/lib/accounting/engine";
+import { fxLabel, ptaxTable, rateOn } from "@/lib/fx-server";
 import { FundsTable } from "@/components/fund/FundsTable";
-import { activity, capitalCalls, fundById, funds, fundTotals, investors, onboarding, toUSD, type OnboardingStatus } from "@/lib/data";
+import { activity, capitalCalls, fundById, funds, fundTotals, investors, onboarding, quarterlyFlowsUSD, toUSD, type OnboardingStatus } from "@/lib/data";
 import { date, dateTime, moneyShort, pct } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Fund Solution" };
 
 const stages: OnboardingStatus[] = ["Invited", "In progress", "Submitted", "Changes requested", "Approved", "Countersigned"];
 
-export default function FundOverview() {
+export default async function FundOverview() {
+  const table = await ptaxTable();
+  const fx = rateOn(table, TODAY);
+  const flows = quarterlyFlowsUSD((d) => rateOn(table, d).rate);
   const agg = funds.reduce(
     (a, f) => {
       const t = fundTotals(f.id);
-      a.nav += toUSD(t.nav, f.currency);
-      a.commitment += toUSD(t.commitment, f.currency);
-      a.contributed += toUSD(t.contributed, f.currency);
-      a.unfunded += toUSD(t.unfunded, f.currency);
-      a.distributed += toUSD(t.distributed, f.currency);
+      a.nav += toUSD(t.nav, f.currency, fx.rate);
+      a.commitment += toUSD(t.commitment, f.currency, fx.rate);
+      a.contributed += toUSD(t.contributed, f.currency, fx.rate);
+      a.unfunded += toUSD(t.unfunded, f.currency, fx.rate);
+      a.distributed += toUSD(t.distributed, f.currency, fx.rate);
       return a;
     },
     { nav: 0, commitment: 0, contributed: 0, unfunded: 0, distributed: 0 },
@@ -93,7 +98,7 @@ export default function FundOverview() {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Panel title="Capital flows by quarter">
-          <FlowsChart />
+          <FlowsChart flows={flows} note={`USD millions · ${table ? "BRL at PTAX on each flow date" : fxLabel(fx)}`} />
         </Panel>
         <Panel title="Requires attention" actions={<span className="num text-stone-500">{attention.length} items</span>} flush>
           <ul className="divide-y divide-stone-100">

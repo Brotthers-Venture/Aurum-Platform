@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { reportingRate } from "@/lib/fx-server";
 import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
 import { AurumLogo } from "@/components/brand/Logo";
@@ -10,7 +11,8 @@ import { moneyShort } from "@/lib/format";
 export const metadata: Metadata = { title: "Your investment portals" };
 
 /** Investors with several managers pick a portal; each opens in that manager’s brand. */
-export default function PortalChooser() {
+export default async function PortalChooser() {
+  const fx = await reportingRate();
   const inv = investorById(PORTAL_INVESTOR_ID)!;
   const list = gpsForInvestor(inv.id, inv.name);
   return (
@@ -32,7 +34,7 @@ export default function PortalChooser() {
         <ul className="mt-10 space-y-3">
           {list.map((gp) => {
             const accts = capitalAccounts.filter((c) => c.investorId === inv.id && fundById(c.fundId)!.gpId === gp.id);
-            const nav = accts.reduce((a, c) => a + toUSD(c.nav, fundById(c.fundId)!.currency), 0);
+            const nav = accts.reduce((a, c) => a + toUSD(c.nav, fundById(c.fundId)!.currency, fx.rate), 0);
             const tall = gp.logo && gp.logo.width / gp.logo.height < 3;
             return (
               <li key={gp.id}>

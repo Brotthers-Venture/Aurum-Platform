@@ -1,18 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { quarterlyFlows } from "@/lib/data";
 
 const C_CONTRIB = "#0F2340";
 const C_DIST = "#1F8A84";
 
-export function FlowsChart() {
+export function FlowsChart({ flows: quarterlyFlows, note }: { flows: { q: string; contributions: number; distributions: number }[]; note: string }) {
   const [hover, setHover] = useState<number | null>(null);
   const W = 720;
   const H = 240;
   const pad = { l: 44, r: 8, t: 12, b: 28 };
-  const max = 30;
-  const ticks = [0, 10, 20, 30];
+  const top = Math.max(1, ...quarterlyFlows.flatMap((d) => [d.contributions, d.distributions]));
+  const step = top > 40 ? 20 : top > 20 ? 10 : 5;
+  const max = Math.ceil(top / step) * step;
+  const ticks = Array.from({ length: max / step + 1 }, (_, i) => i * step);
   const iw = W - pad.l - pad.r;
   const ih = H - pad.t - pad.b;
   const band = iw / quarterlyFlows.length;
@@ -43,7 +44,7 @@ export function FlowsChart() {
         <span className="flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-[1px]" style={{ background: C_DIST }} /> Distributions
         </span>
-        <span className="ml-auto text-[11px] text-stone-400">USD millions · BRL at 5.40</span>
+        <span className="ml-auto text-[11px] text-stone-400">{note}</span>
       </div>
       <div className="relative">
         <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" onMouseLeave={() => setHover(null)}>

@@ -3,12 +3,22 @@
 import { useState } from "react";
 import { FileText } from "lucide-react";
 import { ButtonLink, cx } from "@/components/ui";
-import { periodLabel, type FundAnalytics } from "@/lib/analytics";
+import { periodLabel, type FundAnalytics, type PeriodFx } from "@/lib/analytics";
 import { ExposureWidget, FlowsWidget, KpiStrip, NavWidget, PerformanceWidget, SummaryWidget, TreeWidget, useAnalyticsView, type Ccy } from "./AnalyticsPanels";
 
 const select = "h-8 rounded-[3px] border border-stone-300 bg-white px-2.5 text-[12.5px] text-ink-900 focus:border-ink-900 focus:outline-none";
 
-export function AnalyticsWorkspace({ data }: { data: { periods: string[]; funds: FundAnalytics[] } }) {
+function FxNote({ fx }: { fx: PeriodFx }) {
+  return fx.source === "PTAX" ? (
+    <span className="text-[11px] text-stone-500" title="Banco Central do Brasil · PTAX closing selling rate">
+      PTAX <span className="num font-semibold text-ink-900">{fx.rate.toFixed(4)}</span> · BCB · {fx.date}
+    </span>
+  ) : (
+    <span className="rounded-[4px] bg-negative-bg px-2 py-0.5 text-[11px] font-semibold text-negative">Indicative {fx.rate.toFixed(2)} · PTAX unavailable</span>
+  );
+}
+
+export function AnalyticsWorkspace({ data }: { data: { periods: string[]; fx: PeriodFx[]; funds: FundAnalytics[] } }) {
   const [scope, setScope] = useState("all");
   const [asOfIdx, setAsOfIdx] = useState(data.periods.length - 2); // last quarter end
   const [ccy, setCcy] = useState<Ccy>("USD");
@@ -53,12 +63,12 @@ export function AnalyticsWorkspace({ data }: { data: { periods: string[]; funds:
         </label>
         <div className="flex rounded-[3px] border border-stone-300 bg-white p-0.5" role="group" aria-label="Currency">
           {(["USD", "BRL"] as const).map((c) => (
-            <button key={c} type="button" onClick={() => setCcy(c)} className={cx("h-7 rounded-[2px] px-2.5 text-[12px] font-semibold", ccy === c ? "bg-ink-900 text-white" : "text-stone-500 hover:text-ink-900")}>
+            <button key={c} type="button" onClick={() => setCcy(c)} className={cx("h-7 rounded-[2px] px-2.5 text-[12px] font-semibold", ccy === c ? "bg-champagne text-ink-900 shadow-[inset_0_0_0_1px_rgba(184,151,90,0.45)]" : "text-stone-500 hover:text-ink-900")}>
               {c}
             </button>
           ))}
         </div>
-        {ccy === "BRL" && <span className="text-[11px] text-stone-400">at 5.40</span>}
+        <FxNote fx={data.fx[asOfIdx]} />
         <div className="ml-auto">
           <ButtonLink variant="secondary" size="sm" href={`/report/${reportFund ?? data.funds[0].id}?asOf=${data.periods[asOfIdx]}`}>
             <FileText size={13} /> {reportFund ? "Quarterly report" : "Report for a vehicle"}

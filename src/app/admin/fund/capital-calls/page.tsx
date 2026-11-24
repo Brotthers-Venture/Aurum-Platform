@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { reportingRate } from "@/lib/fx-server";
 import type { Metadata } from "next";
 import { Plus } from "lucide-react";
 import { ButtonLink, PageHeader, Panel, Progress, Stat, StatRow, Status } from "@/components/ui";
@@ -7,14 +8,15 @@ import { date, money, moneyShort } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Capital calls" };
 
-export default function CapitalCallsPage() {
+export default async function CapitalCallsPage() {
+  const fx = await reportingRate();
   const open = capitalCalls.filter((c) => c.status !== "Funded");
   const outstanding = open
     .filter((c) => c.status !== "Draft")
-    .reduce((a, c) => a + toUSD(c.amount - c.received, fundById(c.fundId)!.currency), 0);
+    .reduce((a, c) => a + toUSD(c.amount - c.received, fundById(c.fundId)!.currency, fx.rate), 0);
   const ytd = capitalCalls
     .filter((c) => c.noticeDate.startsWith("2026") && c.status !== "Draft")
-    .reduce((a, c) => a + toUSD(c.amount, fundById(c.fundId)!.currency), 0);
+    .reduce((a, c) => a + toUSD(c.amount, fundById(c.fundId)!.currency, fx.rate), 0);
   const next = open.filter((c) => c.status !== "Draft").sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0];
 
   return (

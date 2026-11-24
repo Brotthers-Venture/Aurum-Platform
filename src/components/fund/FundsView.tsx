@@ -21,7 +21,7 @@ export function FundsView({ cards, table }: { cards: ReactNode; table: ReactNode
               key={v}
               type="button"
               onClick={() => setView(v)}
-              className={cx("inline-flex h-7 items-center gap-1.5 rounded-[4px] px-2.5 text-[12px] font-semibold", view === v ? "bg-ink-900 text-white" : "text-stone-500 hover:text-ink-900")}
+              className={cx("inline-flex h-7 items-center gap-1.5 rounded-[4px] px-2.5 text-[12px] font-semibold", view === v ? "bg-champagne text-ink-900 shadow-[inset_0_0_0_1px_rgba(184,151,90,0.45)]" : "text-stone-500 hover:text-ink-900")}
             >
               <Icon size={13} /> {label}
             </button>

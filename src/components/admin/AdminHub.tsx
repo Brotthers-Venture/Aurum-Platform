@@ -9,6 +9,7 @@ import { GoldField } from "@/components/admin/GoldField";
 import { solutions } from "@/lib/solutions";
 import { gps, gpById, type GpClient } from "@/lib/gps";
 import { gpTotals } from "@/lib/gpData";
+import { INDICATIVE_BRL_USD } from "@/lib/data";
 
 /**
  * Hub navigation as a single honeycomb that travels:
@@ -39,10 +40,11 @@ type Node = {
   href?: string;
 };
 
+const CREAM = "#FBF3DC";
 const DWELL_MS = 420;
 const MOVE_PX = 6;
 
-const orderedGps = [...gps].sort((a, b) => Number(!!a.sample) - Number(!!b.sample) || gpTotals(b.id).nav - gpTotals(a.id).nav);
+const orderedGps = [...gps].sort((a, b) => Number(!!a.sample) - Number(!!b.sample) || gpTotals(b.id, INDICATIVE_BRL_USD).nav - gpTotals(a.id, INDICATIVE_BRL_USD).nav);
 const tallLogo = (g: GpClient) => !!g.logo && g.logo.width / g.logo.height < 3;
 
 const gpModules: { id: string; label: [string, string?]; path: string }[] = [
@@ -101,7 +103,7 @@ export function AdminHub() {
   let nodes: Node[] = [];
   let center: ReactNode;
   let centerFrom: Slot | null = null;
-  let accent = "#0F2340";
+  let accent = "#FBF3DC"; // Aurum levels: cream; GP levels use the GP's own colour
   let outlineColor = "#F8C618";
   let bandOn = "#F8C618"; // frame colour on hover
   let ringShown = true;
@@ -121,7 +123,7 @@ export function AdminHub() {
   } else if (level.kind === "fund") {
     centerFrom = level.from;
     nodes = orderedGps.slice(0, 5).map((g, i) => {
-      const t = gpTotals(g.id);
+      const t = gpTotals(g.id, INDICATIVE_BRL_USD); // counts only; no amounts shown
       return {
         id: g.id,
         slot: ringOrder[i],
@@ -137,7 +139,7 @@ export function AdminHub() {
     center = <DarkCenter lines={["Fund", "Solution"]} />;
   } else {
     const gp = gpById(level.gpId)!;
-    const t = gpTotals(gp.id);
+    const t = gpTotals(gp.id, INDICATIVE_BRL_USD); // counts only; no amounts shown
     centerFrom = level.from;
     accent = gp.brand.primary;
     outlineColor = gp.brand.secondary;
@@ -270,7 +272,7 @@ export function AdminHub() {
                     <div className="flex h-full w-full items-center justify-center">{n.art(on)}</div>
                   </foreignObject>
                 )}
-                <text textAnchor="middle" fill={on ? "#FFFFFF" : "#0F2340"} style={{ transition: "fill 200ms" }}>
+                <text textAnchor="middle" fill={on && (n.accent ?? accent) !== CREAM ? "#FFFFFF" : "#0F2340"} style={{ transition: "fill 200ms" }}>
                   {!n.art && (
                     <tspan x={0} y={n.label[1] ? -4 : 6} fontSize={16} fontWeight={600} letterSpacing="-0.01em">
                       {n.label[0]}
@@ -287,7 +289,7 @@ export function AdminHub() {
                     fontSize={9.5}
                     fontWeight={600}
                     letterSpacing="0.16em"
-                    fill={n.subTone === "accent" ? (on ? outlineColor : "#8A6A00") : on ? "rgba(255,255,255,0.65)" : "#A39B8A"}
+                    fill={n.subTone === "accent" ? (on && (n.accent ?? accent) !== CREAM ? outlineColor : "#8A6A00") : on && (n.accent ?? accent) !== CREAM ? "rgba(255,255,255,0.65)" : "#A39B8A"}
                   >
                     {n.sub}
                   </tspan>
