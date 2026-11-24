@@ -9,7 +9,7 @@ const tabs: DataRoomTab[] = ["rooms", "qa", "activity", "access", "new"];
 
 export default function Page({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   return (
-    <ModulePage context="Data rooms">
+    <ModulePage context="Data rooms" wide>
       <Suspense fallback={<div className="min-h-[70vh]" />}>
         <Body searchParams={searchParams} />
       </Suspense>

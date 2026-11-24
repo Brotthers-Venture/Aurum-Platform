@@ -140,7 +140,7 @@ export function dataroomCounts() {
 
 /* ───────────────────────── sharing: links, layers, page analytics ───────────────────────── */
 
-export type FolderAccess = "download" | "view" | "none";
+export type FolderAccess = "none" | "view" | "download" | "upload";
 export type NdaMode = "off" | "acknowledge" | "esign";
 
 /**
@@ -357,3 +357,32 @@ export function pageText(docName: string, page: number): { heading: string; body
   const body = Array.from({ length: 4 }, () => lines[(h = (h * 13 + 5) % lines.length)]);
   return { heading: `${page - 1}. ${sections[(page - 2 + docName.length) % sections.length]}`, body };
 }
+
+
+/** Room-level defaults that shape how the room looks and behaves for every visitor. */
+export type RoomSettings = {
+  indexNumbers: boolean;
+  visitorQa: boolean;
+  showCover: boolean;
+  showLogo: boolean;
+  newFileDigest: boolean;
+  hideNewContent: boolean;
+  domain: string;
+  /** Q&A: basic = submitter → coordinator; advanced adds an expert draft and/or a final approver */
+  qaFlow: "basic" | "advanced";
+  qaExpert: boolean;
+  qaApprover: boolean;
+};
+export const defaultSettings: RoomSettings = {
+  indexNumbers: true,
+  visitorQa: true,
+  showCover: true,
+  showLogo: true,
+  newFileDigest: false,
+  hideNewContent: false,
+  domain: "aurum-platform-6sal.vercel.app",
+  qaFlow: "advanced",
+  qaExpert: false,
+  qaApprover: true,
+};
+export const roomSettings: Record<string, RoomSettings> = Object.fromEntries(rooms.map((r) => [r.id, { ...defaultSettings, visitorQa: r.purpose !== "Audit" }]));

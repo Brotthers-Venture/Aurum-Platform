@@ -25,7 +25,7 @@ import { AurumMark } from "@/components/brand/Logo";
 import { GpLogo } from "@/components/brand/GpLogo";
 import { FundCover } from "@/components/fund/FundCard";
 import { gpById } from "@/lib/gps";
-import { pageCount, pageText, type FolderAccess, type Question, type Room, type RoomBrand, type RoomDoc, type ShareLink } from "@/lib/dataroom";
+import { pageCount, pageText, type FolderAccess, type Question, type Room, type RoomBrand, type RoomDoc, type RoomSettings, type ShareLink } from "@/lib/dataroom";
 import { addLocalQuestion, trackPage } from "@/lib/dataroom-local";
 
 type Step = "email" | "verify" | "password" | "questions" | "nda" | "room";
@@ -72,7 +72,7 @@ function Watermark({ text, id }: { text: string; id: string }) {
   );
 }
 
-export function RoomViewer({ room, link, docs, brand, ip, preview }: { room: Room; link: ShareLink; docs: RoomDoc[]; brand: RoomBrand; ip: string; preview: boolean }) {
+export function RoomViewer({ room, link, docs, brand, ip, preview, settings }: { room: Room; link: ShareLink; docs: RoomDoc[]; brand: RoomBrand; ip: string; preview: boolean; settings: RoomSettings }) {
   const steps: Step[] = useMemo(
     () => ["email", ...(link.verifyEmail ? ["verify" as const] : []), ...(link.password ? ["password" as const] : []), ...(link.questions.length ? ["questions" as const] : []), ...(link.nda !== "off" ? ["nda" as const] : []), "room"],
     [link],
@@ -88,17 +88,17 @@ export function RoomViewer({ room, link, docs, brand, ip, preview }: { room: Roo
   const expired = link.revoked || (link.expires && link.expires < "2026-11-24");
   if (expired)
     return (
-      <Shell brand={brand} room={room}>
+      <Shell brand={brand} room={room} settings={settings}>
         <GateCard title={link.revoked ? "Access has been revoked" : "This link has expired"}>
           <p className="text-[13px] text-stone-600">Ask the person who shared it for a new link.</p>
         </GateCard>
       </Shell>
     );
 
-  if (step === "room") return <RoomInside room={room} link={link} docs={docs} brand={brand} email={email} ip={ip} />;
+  if (step === "room") return <RoomInside room={room} link={link} docs={docs} brand={brand} email={email} ip={ip} settings={settings} />;
 
   return (
-    <Shell brand={brand} room={room} demo={step === "verify" ? `Email isn’t connected yet — the code for ${email} is ${codeFor(email)}` : preview ? "Preview — this is exactly what your viewers see" : undefined}>
+    <Shell brand={brand} room={room} settings={settings} demo={step === "verify" ? `Email isn’t connected yet — the code for ${email} is ${codeFor(email)}` : preview ? "Preview — this is exactly what your viewers see" : undefined}>
       {step === "email" && (
         <EmailGate
           link={link}
@@ -127,15 +127,15 @@ export function RoomViewer({ room, link, docs, brand, ip, preview }: { room: Roo
 
 /* ───────────────────────── entry ───────────────────────── */
 
-function Shell({ brand, room, demo, children }: { brand: RoomBrand; room: Room; demo?: string; children: ReactNode }) {
+function Shell({ brand, room, settings, demo, children }: { brand: RoomBrand; room: Room; settings: RoomSettings; demo?: string; children: ReactNode }) {
   return (
     <div className="relative flex min-h-screen flex-col bg-stone-50">
       {demo && <div className="bg-ink-900 px-4 py-2 text-center text-[12px] font-medium text-white">{demo}</div>}
       <div className="relative h-[270px] overflow-hidden">
-        <FundCover id={room.id} primary={brand.primary} secondary={brand.secondary} className="absolute inset-0 h-full w-full" />
+        {settings.showCover ? <FundCover id={room.id} primary={brand.primary} secondary={brand.secondary} className="absolute inset-0 h-full w-full" /> : <div className="absolute inset-0" style={{ background: brand.primary }} />}
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/35" />
         <div className="relative mx-auto flex h-full max-w-[1100px] flex-col justify-between px-8 pb-16 pt-7">
-          <BrandMark brand={brand} light />
+          {settings.showLogo ? <BrandMark brand={brand} light /> : <span />}
           <div>
             <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/75">{room.purpose}</div>
             <h1 className="mt-1 text-[30px] font-semibold tracking-[-0.015em] text-white">{room.name}</h1>
@@ -330,8 +330,12 @@ function StepDots({ steps, current }: { steps: Step[]; current: Step }) {
 
 /* ───────────────────────── inside the room ───────────────────────── */
 
-function RoomInside({ room, link, docs, brand, email, ip }: { room: Room; link: ShareLink; docs: RoomDoc[]; brand: RoomBrand; email: string; ip: string }) {
-  const access = (d: RoomDoc): FolderAccess => (link.folders[d.folder] ?? "view") === "none" ? "none" : link.download && link.folders[d.folder] === "download" ? "download" : "view";
+function RoomInside({ room, link, docs, brand, email, ip, settings }: { room: Room; link: ShareLink; docs: RoomDoc[]; brand: RoomBrand; email: string; ip: string; settings: RoomSettings }) {
+  const access = (d: RoomDoc): FolderAccess => {
+    const a = link.folders[d.folder] ?? "view";
+    if (a === "none") return "none";
+    return link.download && (a === "download" || a === "upload") ? "download" : "view";
+  };
   const visible = docs.filter((d) => access(d) !== "none");
   const folders = [...new Set(visible.map((d) => d.folder))];
   const [open, setOpen] = useState<Record<string, boolean>>(() => Object.fromEntries(folders.map((f) => [f, true])));
@@ -417,13 +421,19 @@ function RoomInside({ room, link, docs, brand, email, ip }: { room: Room; link: 
       <div className="vdr-print-msg hidden p-10 text-center text-[16px]">Printing is turned off for this data room.</div>
       <header className="relative z-20 flex h-14 shrink-0 items-center gap-4 border-b border-stone-200 bg-white px-5">
         <span className="absolute inset-x-0 top-0 h-[3px]" style={{ background: brand.secondary }} />
-        <BrandMark brand={brand} />
-        <span className="h-6 w-px bg-stone-200" />
+        {settings.showLogo && (
+          <>
+            <BrandMark brand={brand} />
+            <span className="h-6 w-px bg-stone-200" />
+          </>
+        )}
         <span className="truncate text-[14px] font-semibold text-ink-900">{room.name}</span>
         <div className="ml-auto flex items-center gap-3">
-          <button onClick={() => setAsking(true)} className="flex h-9 items-center gap-1.5 rounded-[10px] px-3.5 text-[13px] font-semibold text-white" style={{ background: brand.primary }}>
-            <MessageSquareText size={15} /> Ask a question
-          </button>
+          {settings.visitorQa && (
+            <button onClick={() => setAsking(true)} className="flex h-9 items-center gap-1.5 rounded-[10px] px-3.5 text-[13px] font-semibold text-white" style={{ background: brand.primary }}>
+              <MessageSquareText size={15} /> Ask a question
+            </button>
+          )}
           <span className="hidden items-center gap-2 rounded-full bg-stone-100 py-1 pl-1 pr-3 text-[12px] text-stone-600 md:flex">
             <span className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white" style={{ background: brand.primary }}>
               {email[0]?.toUpperCase()}
@@ -454,7 +464,7 @@ function RoomInside({ room, link, docs, brand, email, ip }: { room: Room; link: 
                   <button onClick={() => setOpen((o) => ({ ...o, [f]: !o[f] }))} className="flex w-full items-center gap-1.5 rounded-[8px] px-2 py-1.5 text-left text-[12.5px] font-semibold text-ink-900 hover:bg-stone-50">
                     {open[f] ? <ChevronDown size={13} className="text-stone-400" /> : <ChevronRight size={13} className="text-stone-400" />}
                     <Folder size={14} className="text-stone-500" />
-                    <span className="truncate">{f.replace(/^(\d+) /, "$1  ")}</span>
+                    <span className="truncate">{settings.indexNumbers ? f.replace(/^(\d+) /, "$1  ") : f.replace(/^\d+ /, "")}</span>
                   </button>
                 )}
                 {(results || open[f]) &&
@@ -468,7 +478,7 @@ function RoomInside({ room, link, docs, brand, email, ip }: { room: Room; link: 
                       }}
                       className={cx("flex w-full items-center gap-2 rounded-[8px] py-1.5 pl-7 pr-2 text-left text-[12.5px]", docId === d.id ? "bg-stone-100 font-semibold text-ink-900" : "text-stone-600 hover:bg-stone-50")}
                     >
-                      <span className="num w-7 shrink-0 text-[11px] text-stone-400">{d.index}</span>
+                      {settings.indexNumbers && <span className="num w-7 shrink-0 text-[11px] text-stone-400">{d.index}</span>}
                       <span className="min-w-0 flex-1 truncate">{d.name.replace(/\.[a-z]+$/i, "")}</span>
                       {access(d) === "view" && <Lock size={11} className="shrink-0 text-stone-300" aria-label="View only" />}
                     </button>
@@ -515,7 +525,7 @@ function RoomInside({ room, link, docs, brand, email, ip }: { room: Room; link: 
                 <button onClick={() => setDocId(null)} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-stone-500 hover:bg-stone-100" aria-label="Back to welcome">
                   <ArrowLeft size={16} />
                 </button>
-                <span className="num text-[11px] text-stone-400">{doc.index}</span>
+                {settings.indexNumbers && <span className="num text-[11px] text-stone-400">{doc.index}</span>}
                 <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-ink-900">{doc.name}</span>
                 <span className="num text-[12px] text-stone-500">
                   Page {page} of {pages}

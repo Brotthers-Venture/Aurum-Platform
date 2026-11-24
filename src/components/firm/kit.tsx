@@ -57,7 +57,7 @@ export function ActionButton({ color, children, onClick, disabled, type }: { col
       type={type ?? "button"}
       onClick={onClick}
       disabled={disabled}
-      className="flex h-9 items-center gap-1.5 rounded-[10px] px-4 text-[13px] font-semibold text-white shadow-card hover:opacity-95 disabled:opacity-40"
+      className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[10px] px-4 text-[13px] font-semibold text-white shadow-card hover:opacity-95 disabled:opacity-40"
       style={{ background: color }}
     >
       {children}
@@ -67,7 +67,7 @@ export function ActionButton({ color, children, onClick, disabled, type }: { col
 
 export function GhostButton({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex h-9 items-center gap-1.5 rounded-[10px] border border-stone-300 bg-white px-3.5 text-[13px] font-semibold text-ink-900 hover:border-ink-900">
+    <button type="button" onClick={onClick} className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[10px] border border-stone-300 bg-white px-3.5 text-[13px] font-semibold text-ink-900 hover:border-ink-900">
       {children}
     </button>
   );

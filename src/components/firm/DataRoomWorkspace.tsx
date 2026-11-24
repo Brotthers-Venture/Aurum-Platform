@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, Download, Droplets, Eye, FileSignature, FileSpreadsheet, FileText, Folder, Lock, Plus, Printer, Upload, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Download, Droplets, Eye, FileSignature, Plus, Printer, X } from "lucide-react";
 import { cx } from "@/components/ui";
 import { FIRM } from "@/lib/firm-colors";
 import { solutions } from "@/lib/solutions";
@@ -11,6 +11,8 @@ import {
   roomUsers as seedUsers,
   rooms as seedRooms,
   shareLinks as seedLinks,
+  roomSettings,
+  type RoomSettings,
   views,
   type ShareLink,
   type Permission,
@@ -20,13 +22,12 @@ import {
   type RoomPurpose,
   type RoomUser,
 } from "@/lib/dataroom";
-import { AnalyticsPanel, LinksPanel } from "@/components/dataroom/RoomAdmin";
+import { QuestionCard, RoomConsole } from "@/components/dataroom/RoomConsole";
 import { localQuestions } from "@/lib/dataroom-local";
-import { ActionButton, Card, GhostButton, Kpi, ModuleHeader, ModuleTabs, Pill, Toast, field, fieldLabel, fmtDate, fmtShort, td, th, useTab, useToast } from "./kit";
+import { ActionButton, Card, GhostButton, Kpi, ModuleHeader, ModuleTabs, Pill, Toast, field, fieldLabel, fmtShort, td, th, useTab, useToast } from "./kit";
 
 const C = FIRM.dataroom;
 export type DataRoomTab = "rooms" | "qa" | "activity" | "access" | "new";
-const size = (b: number) => (b >= 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : `${Math.round(b / 1000)} KB`);
 const when = (iso: string) =>
   new Date(iso).toLocaleString("en-US", {
     month: "short",
@@ -36,8 +37,6 @@ const when = (iso: string) =>
     timeZone: "America/New_York",
   });
 const dur = (s: number) => (s >= 60 ? `${Math.round(s / 60)} min` : s ? `${s}s` : "—");
-const Glyph = ({ name }: { name: string }) =>
-  /\.(xlsx|csv)$/i.test(name) ? <FileSpreadsheet size={15} className="shrink-0 text-[#1F6F6A]" /> : <FileText size={15} className="shrink-0 text-[#B5542A]" />;
 
 export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
   const [tab, setTab] = useTab<Exclude<DataRoomTab, "new">>(initial === "new" ? "rooms" : initial);
@@ -46,6 +45,11 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
   const [users, setUsers] = useState<RoomUser[]>(seedUsers);
   const [qs, setQs] = useState<Question[]>(seedQuestions);
   const [links, setLinks] = useState<ShareLink[]>(seedLinks);
+  const [settings, setSettings] = useState<Record<string, RoomSettings>>(roomSettings);
+  const draftAnswer = (id: string, text: string) => setQs((all) => all.map((x) => (x.id === id ? { ...x, draft: text, status: "Draft" } : x)));
+  const releaseAnswer = (id: string) => {
+    setQs((all) => all.map((x) => (x.id === id ? { ...x, answer: x.draft, answeredBy: "Managing Partner", status: "Answered" } : x)));
+  };
   // Questions asked from a preview visit in this browser (until the database is connected).
   useEffect(() => {
     const local = localQuestions();
@@ -58,8 +62,39 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
   const room = rooms.find((r) => r.id === roomId);
   const roomName = (id: string) => rooms.find((r) => r.id === id)?.name ?? "";
 
+  if (tab === "rooms" && room)
+    return (
+      <>
+        <RoomConsole
+          room={room}
+          docs={docs.filter((x) => x.roomId === room.id)}
+          users={users.filter((u) => u.roomId === room.id)}
+          questions={qs.filter((q) => q.roomId === room.id)}
+          links={links.filter((l) => l.roomId === room.id)}
+          settings={settings[room.id] ?? roomSettings[room.id]}
+          onBack={() => setRoomId(null)}
+          onRename={(name) => setRooms((all) => all.map((r) => (r.id === room.id ? { ...r, name } : r)))}
+          onSaveLink={(l) => {
+            setLinks((all) => (all.some((x) => x.id === l.id) ? all.map((x) => (x.id === l.id ? l : x)) : [...all, l]));
+            flash(`Group “${l.name}” saved`);
+          }}
+          onSettings={(st) => setSettings((all) => ({ ...all, [room.id]: st }))}
+          onDraft={draftAnswer}
+          onRelease={releaseAnswer}
+          flash={flash}
+          onUpload={(folder, files) => {
+            const existing = docs.filter((x) => x.roomId === room.id && x.folder === folder);
+            const n = Number(folder.split(" ")[0]) || 1;
+            setDocs((all) => [...all, ...files.map((f, i) => ({ id: `doc${Date.now()}${i}`, roomId: room.id, folder, index: `${n}.${existing.length + i + 1}`, name: f.name, size: f.size, views: 0 }))]);
+            flash(`${files.length} file${files.length > 1 ? "s" : ""} added to ${folder.replace(/^\d+ /, "")}`);
+          }}
+        />
+        <Toast text={toast} />
+      </>
+    );
+
   return (
-    <>
+    <div className="mx-auto max-w-[1256px] pb-16">
       <ModuleHeader
         color={C}
         title="Data rooms"
@@ -151,41 +186,6 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
           </>
         )}
 
-        {tab === "rooms" && room && (
-          <RoomView
-            room={room}
-            docs={docs.filter((x) => x.roomId === room.id)}
-            users={users.filter((u) => u.roomId === room.id)}
-            questions={qs.filter((q) => q.roomId === room.id)}
-            links={links.filter((l) => l.roomId === room.id)}
-            onSaveLink={(l) => {
-              setLinks((all) => (all.some((x) => x.id === l.id) ? all.map((x) => (x.id === l.id ? l : x)) : [...all, l]));
-              flash(`Link “${l.name}” saved`);
-            }}
-            onRevokeLink={(id) => setLinks((all) => all.map((x) => (x.id === id ? { ...x, revoked: !x.revoked } : x)))}
-            flash={flash}
-            onBack={() => setRoomId(null)}
-            onUpload={(folder, files) => {
-              const existing = docs.filter((x) => x.roomId === room.id && x.folder === folder);
-              const n = Number(folder.split(" ")[0]) || 1;
-              setDocs((all) => [
-                ...all,
-                ...files.map((f, i) => ({
-                  id: `doc${Date.now()}${i}`,
-                  roomId: room.id,
-                  folder,
-                  index: `${n}.${existing.length + i + 1}`,
-                  name: f.name,
-                  size: f.size,
-                  views: 0,
-                })),
-              ]);
-              flash(`${files.length} file${files.length > 1 ? "s" : ""} added to ${folder.replace(/^\d+ /, "")}`);
-            }}
-            onToggle={(k) => setRooms((all) => all.map((r) => (r.id === room.id ? { ...r, [k]: !r[k] } : r)))}
-          />
-        )}
-
         {tab === "qa" && (
           <div className="space-y-3">
             {[...qs]
@@ -195,25 +195,9 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
                   key={q.id}
                   q={q}
                   room={roomName(q.roomId)}
-                  onDraft={(text) => {
-                    setQs((all) => all.map((x) => (x.id === q.id ? { ...x, draft: text, status: "Draft" } : x)));
-                    flash("Answer drafted — release it after review");
-                  }}
-                  onRelease={() => {
-                    setQs((all) =>
-                      all.map((x) =>
-                        x.id === q.id
-                          ? {
-                              ...x,
-                              answer: x.draft,
-                              answeredBy: "Managing Partner",
-                              status: "Answered",
-                            }
-                          : x,
-                      ),
-                    );
-                    flash(`Answer released to ${q.from}`);
-                  }}
+                  needsApproval={(settings[q.roomId] ?? roomSettings[q.roomId])?.qaApprover ?? true}
+                  onDraft={(text) => draftAnswer(q.id, text)}
+                  onRelease={() => releaseAnswer(q.id)}
                 />
               ))}
           </div>
@@ -345,219 +329,7 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
         />
       )}
       <Toast text={toast} />
-    </>
-  );
-}
-
-function RoomView({
-  room,
-  docs,
-  users,
-  questions,
-  links,
-  onSaveLink,
-  onRevokeLink,
-  flash,
-  onBack,
-  onUpload,
-  onToggle,
-}: {
-  room: Room;
-  docs: RoomDoc[];
-  users: RoomUser[];
-  questions: Question[];
-  links: ShareLink[];
-  onSaveLink: (l: ShareLink) => void;
-  onRevokeLink: (id: string) => void;
-  flash: (t: string) => void;
-  onBack: () => void;
-  onUpload: (folder: string, files: File[]) => void;
-  onToggle: (k: "nda" | "watermark") => void;
-}) {
-  const folders = [...new Set(docs.map((x) => x.folder))];
-  const [folder, setFolder] = useState<string | "all">("all");
-  const input = useRef<HTMLInputElement>(null);
-  const shown = folder === "all" ? docs : docs.filter((x) => x.folder === folder);
-  const target = folder === "all" ? (folders[0] ?? "1 Documents") : folder;
-  const [view, setView] = useState<"documents" | "links" | "analytics">("documents");
-  return (
-    <div className="space-y-4">
-      <button onClick={onBack} className="flex items-center gap-1.5 text-[12px] font-semibold text-stone-500 hover:text-ink-900">
-        <ArrowLeft size={14} /> All rooms
-      </button>
-      <div className="flex items-end justify-between">
-        <div>
-          <div className="text-[10.5px] font-bold uppercase tracking-[0.14em]" style={{ color: C }}>
-            {room.purpose} · {room.client}
-          </div>
-          <h2 className="text-[22px] font-semibold tracking-[-0.01em] text-ink-900">{room.name}</h2>
-        </div>
-        <div className="flex gap-2">
-          <input ref={input} type="file" multiple hidden onChange={(e) => (e.target.files?.length && onUpload(target, Array.from(e.target.files)), (e.target.value = ""))} />
-          <ActionButton color={C} onClick={() => input.current?.click()}>
-            <Upload size={14} /> Upload to {target.replace(/^\d+ /, "")}
-          </ActionButton>
-        </div>
-      </div>
-      <div className="flex gap-1.5">
-        {(
-          [
-            ["documents", `Documents · ${docs.length}`],
-            ["links", `Links & protection · ${links.length}`],
-            ["analytics", "Analytics"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setView(id)}
-            className={cx("h-8 rounded-full px-3.5 text-[12.5px] font-semibold", view === id ? "text-white" : "bg-white text-stone-600 shadow-card hover:text-ink-900")}
-            style={view === id ? { background: C } : undefined}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      {view === "links" && <LinksPanel room={room} links={links} folders={folders} onSave={onSaveLink} onRevoke={onRevokeLink} flash={flash} />}
-      {view === "analytics" && <AnalyticsPanel docs={docs} />}
-      {view === "documents" && (
-        <div className="grid grid-cols-[220px_1fr_280px] gap-4">
-          <Card className="p-2">
-            {[["all", "All documents", docs.length] as const, ...folders.map((f) => [f, f.replace(/^(\d+) /, "$1  "), docs.filter((x) => x.folder === f).length] as const)].map(
-              ([id, label, n]) => (
-                <button
-                  key={id}
-                  onClick={() => setFolder(id)}
-                  className={cx(
-                    "flex w-full items-center gap-2 rounded-[9px] px-2.5 py-2 text-left text-[12.5px]",
-                    folder === id ? "bg-champagne font-semibold text-ink-900" : "text-stone-600 hover:bg-stone-50",
-                  )}
-                >
-                  <Folder size={14} className="shrink-0 text-gold-700" />
-                  <span className="flex-1 truncate whitespace-pre">{label}</span>
-                  <span className="text-[11px] text-stone-400">{n}</span>
-                </button>
-              ),
-            )}
-          </Card>
-          <Card>
-            <table className="w-full text-[12.5px]">
-              <thead>
-                <tr className="border-b border-stone-100">
-                  {["#", "Document", "Size", "Views", "Last viewed"].map((h) => (
-                    <th key={h} className={th}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {shown.map((x) => (
-                  <tr key={x.id} className="border-b border-stone-100 hover:bg-stone-50">
-                    <td className={cx(td, "num w-12 text-stone-400")}>{x.index}</td>
-                    <td className={td}>
-                      <span className="flex items-center gap-2 font-medium text-ink-900">
-                        <Glyph name={x.name} /> {x.name}
-                      </span>
-                    </td>
-                    <td className={cx(td, "num text-stone-500")}>{size(x.size)}</td>
-                    <td className={cx(td, "num font-semibold text-ink-900")}>{x.views}</td>
-                    <td className={cx(td, "text-[11.5px] text-stone-500")}>{x.lastViewed ? `${x.lastViewer} · ${fmtShort(x.lastViewed)}` : "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </Card>
-          <div className="space-y-4">
-            <Card className="p-4">
-              <div className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">Protection</div>
-              {(
-                [
-                  ["nda", "NDA before entry", FileSignature],
-                  ["watermark", "Watermark with viewer’s name", Droplets],
-                ] as const
-              ).map(([k, label, Icon]) => (
-                <label key={k} className="flex cursor-pointer items-center gap-2.5 py-1.5 text-[12.5px] text-ink-900">
-                  <Icon size={14} className="text-stone-500" />
-                  <span className="flex-1">{label}</span>
-                  <input type="checkbox" checked={room[k]} onChange={() => onToggle(k)} className="h-4 w-4" style={{ accentColor: C }} />
-                </label>
-              ))}
-              <div className="mt-2 flex items-center gap-2.5 border-t border-stone-100 pt-2.5 text-[12px] text-stone-500">
-                <Lock size={14} /> Access ends {fmtDate(room.expires)}
-              </div>
-            </Card>
-            <Card className="p-4">
-              <div className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">People · {users.length}</div>
-              <ul className="space-y-2">
-                {users.map((u) => (
-                  <li key={u.id} className="flex items-center justify-between gap-2 text-[12px]">
-                    <span className="min-w-0">
-                      <span className="block truncate font-medium text-ink-900">{u.name}</span>
-                      <span className="block truncate text-[11px] text-stone-500">
-                        {u.group} · {u.permission}
-                      </span>
-                    </span>
-                    {u.nda === "Pending" && <Pill tone="warn">NDA</Pill>}
-                  </li>
-                ))}
-                {!users.length && <li className="text-[12px] text-stone-400">No one invited yet.</li>}
-              </ul>
-            </Card>
-            {questions.some((q) => q.status === "Open") && (
-              <Card className="p-4">
-                <div className="mb-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">Open questions</div>
-                {questions
-                  .filter((q) => q.status === "Open")
-                  .map((q) => (
-                    <p key={q.id} className="mb-2 text-[12px] text-stone-700">
-                      <span className="font-semibold text-ink-900">{q.from}:</span> {q.text}
-                    </p>
-                  ))}
-              </Card>
-            )}
-          </div>
-        </div>
-      )}
     </div>
-  );
-}
-
-function QuestionCard({ q, room, onDraft, onRelease }: { q: Question; room: string; onDraft: (t: string) => void; onRelease: () => void }) {
-  const [text, setText] = useState(q.draft ?? "");
-  return (
-    <Card className="p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div className="text-[12px] text-stone-500">
-          <span className="font-semibold text-ink-900">{q.from}</span> · {q.firm} · {room}
-          {q.docIndex && (
-            <>
-              {" "}
-              · re {q.docIndex}
-              {q.page ? `, page ${q.page}` : ""}
-            </>
-          )}{" "}
-          · {when(q.at)}
-        </div>
-        <Pill tone={q.status === "Open" ? "warn" : q.status === "Draft" ? "gold" : "good"}>{q.status === "Draft" ? "Awaiting release" : q.status}</Pill>
-      </div>
-      <p className="mt-2 text-[14px] text-ink-900">{q.text}</p>
-      {q.status === "Answered" ? (
-        <div className="mt-3 rounded-[10px] bg-stone-50 px-4 py-3 text-[13px] text-stone-700">
-          <span className="font-semibold text-ink-900">{q.answeredBy}:</span> {q.answer}
-        </div>
-      ) : (
-        <div className="mt-3 flex gap-2">
-          <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Draft an answer — it’s released only after review" className={field} />
-          {q.status === "Draft" && text === q.draft ? (
-            <ActionButton color={C} onClick={onRelease}>
-              Release
-            </ActionButton>
-          ) : (
-            <GhostButton onClick={() => text.trim() && onDraft(text.trim())}>Save draft</GhostButton>
-          )}
-        </div>
-      )}
-    </Card>
   );
 }
 

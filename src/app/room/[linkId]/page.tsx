@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { RoomViewer } from "@/components/dataroom/RoomViewer";
-import { docs, roomBrand, rooms, shareLinks, type ShareLink } from "@/lib/dataroom";
+import { defaultSettings, docs, roomBrand, roomSettings, rooms, shareLinks, type RoomSettings, type ShareLink } from "@/lib/dataroom";
 
 export const metadata: Metadata = { title: { absolute: "Secure data room" }, robots: { index: false, follow: false } };
 
@@ -19,9 +19,10 @@ export default function RoomPage({ params, searchParams }: { params: Params; sea
 }
 
 /** Admin previews pass the link's current (possibly unsaved) settings; real visitors get the stored link. */
-function decode(cfg: string): ShareLink | null {
+function decode(cfg: string): { link: ShareLink; settings?: RoomSettings } | null {
   try {
-    return JSON.parse(Buffer.from(cfg, "base64url").toString("utf8")) as ShareLink;
+    const v = JSON.parse(Buffer.from(cfg, "base64url").toString("utf8"));
+    return v && v.link ? v : { link: v as ShareLink };
   } catch {
     return null;
   }
@@ -30,7 +31,7 @@ function decode(cfg: string): ShareLink | null {
 async function Viewer({ params, searchParams }: { params: Params; searchParams: Search }) {
   const [{ linkId }, { preview, cfg }, h] = await Promise.all([params, searchParams, headers()]);
   const fromAdmin = preview === "1" && cfg ? decode(cfg) : null;
-  const link = fromAdmin ?? shareLinks.find((l) => l.id === linkId);
+  const link = fromAdmin?.link ?? shareLinks.find((l) => l.id === linkId);
   const room = link && rooms.find((r) => r.id === link.roomId);
   if (!link || !room) notFound();
   const ip = (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || h.get("x-real-ip") || "IP hidden";
@@ -42,6 +43,7 @@ async function Viewer({ params, searchParams }: { params: Params; searchParams: 
       brand={roomBrand[room.id] ?? { primary: "#0F2340", secondary: "#B8975A", wordmark: room.client, tagline: "" }}
       ip={ip}
       preview={preview === "1"}
+      settings={fromAdmin?.settings ?? roomSettings[room.id] ?? defaultSettings}
     />
   );
 }
