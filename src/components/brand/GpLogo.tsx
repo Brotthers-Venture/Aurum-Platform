@@ -3,14 +3,26 @@ import type { GpClient } from "@/lib/gps";
 import { cx } from "@/components/ui";
 
 /** The GP's own logo, or a typographic wordmark for sample clients. */
-export function GpLogo({ gp, height = 32, className }: { gp: GpClient; height?: number; className?: string }) {
-  if (gp.logo) {
+export function GpLogo({
+  gp,
+  height = 32,
+  className,
+  tone = "light",
+}: {
+  gp: GpClient;
+  height?: number;
+  className?: string;
+  /** "dark" when placed on a dark or brand-coloured surface */
+  tone?: "light" | "dark";
+}) {
+  const art = tone === "dark" ? gp.logoDark ?? gp.logo : gp.logo;
+  if (art) {
     return (
       <Image
-        src={gp.logo.src}
+        src={art.src}
         alt={gp.name}
         height={height}
-        width={Math.round((height * gp.logo.width) / gp.logo.height)}
+        width={Math.round((height * art.width) / art.height)}
         className={className}
         priority
       />
@@ -18,14 +30,14 @@ export function GpLogo({ gp, height = 32, className }: { gp: GpClient; height?: 
   }
   const w = gp.wordmark!;
   return (
-    <span className={cx("inline-flex flex-col leading-none", className)} style={{ color: gp.brand.primary }} aria-label={gp.name}>
+    <span className={cx("inline-flex flex-col leading-none", className)} style={{ color: tone === "dark" ? "#FFFFFF" : gp.brand.primary }} aria-label={gp.name}>
       <span
         className={w.serif ? "font-serif font-semibold" : "font-sans font-semibold tracking-[0.18em]"}
         style={{ fontSize: height * (w.serif ? 0.72 : 0.56) }}
       >
         {w.text}
       </span>
-      <span className="mt-[3px] font-sans font-medium uppercase tracking-[0.24em] opacity-80" style={{ fontSize: Math.max(8, height * 0.24) }}>
+      <span className="mt-[3px] whitespace-nowrap font-sans font-medium uppercase tracking-[0.24em] opacity-80" style={{ fontSize: Math.max(8, height * 0.24) }}>
         {w.sub}
       </span>
     </span>
@@ -33,11 +45,10 @@ export function GpLogo({ gp, height = 32, className }: { gp: GpClient; height?: 
 }
 
 /** Square-ish mark for tight spaces (honeycomb centre, avatars). */
-export function GpMark({ gp, size = 28 }: { gp: GpClient; size?: number }) {
-  if (gp.mark) {
-    return (
-      <Image src={gp.mark.src} alt="" height={size} width={Math.round((size * gp.mark.width) / gp.mark.height)} />
-    );
+export function GpMark({ gp, size = 28, tone = "light" }: { gp: GpClient; size?: number; tone?: "light" | "dark" }) {
+  const art = tone === "dark" ? gp.markDark ?? gp.mark : gp.mark;
+  if (art) {
+    return <Image src={art.src} alt="" height={size} width={Math.round((size * art.width) / art.height)} />;
   }
   return (
     <span
@@ -50,11 +61,11 @@ export function GpMark({ gp, size = 28 }: { gp: GpClient; size?: number }) {
   );
 }
 
-export function AdministeredByAurum({ className }: { className?: string }) {
+export function AdministeredByAurum({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
   return (
-    <span className={cx("inline-flex items-center gap-1.5 text-[11px] text-stone-500", className)}>
+    <span className={cx("inline-flex items-center gap-1.5 text-[11px]", tone === "dark" ? "text-white/60" : "text-stone-500", className)}>
       Administered by
-      <span className="font-serif text-[11px] font-semibold tracking-[0.12em] text-ink-900">AURUM</span>
+      <span className={cx("font-serif text-[11px] font-semibold tracking-[0.12em]", tone === "dark" ? "text-white" : "text-ink-900")}>AURUM</span>
       Asset Management
     </span>
   );

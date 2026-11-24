@@ -22,16 +22,19 @@ export function moneyShort(amount: number, currency: Currency = "USD") {
 }
 
 export function pct(v: number, digits = 1) {
+  if (!Number.isFinite(v)) return "—";
   return `${(v * 100).toFixed(digits)}%`;
 }
 
 export function multiple(v: number) {
+  if (!Number.isFinite(v) || v === 0) return "—";
   return `${v.toFixed(2)}x`;
 }
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function date(iso: string) {
+  if (!/^\d{4}-\d{2}-\d{2}/.test(iso)) return iso;
   const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
   return `${months[m - 1]} ${d}, ${y}`;
 }

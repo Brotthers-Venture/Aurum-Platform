@@ -184,7 +184,7 @@ export function Status({ value, className }: { value: string; className?: string
 export function Progress({ value, className }: { value: number; className?: string }) {
   return (
     <div className={cx("h-1 w-full overflow-hidden rounded-full bg-stone-100", className)}>
-      <div className="h-full bg-brand" style={{ width: `${Math.round(value * 100)}%` }} />
+      <div className="h-full bg-brand" style={{ width: `${Number.isFinite(value) ? Math.round(Math.min(1, Math.max(0, value)) * 100) : 0}%` }} />
     </div>
   );
 }

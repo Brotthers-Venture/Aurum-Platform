@@ -2,50 +2,86 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronRight, ExternalLink } from "lucide-react";
+import { ArrowRight, ChevronRight, ExternalLink, Plus } from "lucide-react";
 import { BrandCenter, DarkCenter, HexNav, ringOrder, type Cell } from "./HexNav";
 import { GpLogo, GpMark } from "@/components/brand/GpLogo";
 import { solutions } from "@/lib/solutions";
-import { gps, gpById } from "@/lib/gps";
+import { gps, gpById, type GpClient } from "@/lib/gps";
 import { gpTotals } from "@/lib/gpData";
-import { capitalCalls, funds, fundTotals, investors, onboarding, toUSD } from "@/lib/data";
+import { funds, fundTotals, toUSD } from "@/lib/data";
 import { moneyShort } from "@/lib/format";
 import { cx } from "@/components/ui";
 
 type Level = { kind: "root" } | { kind: "fund" } | { kind: "gp"; gpId: string };
 
-const fundModules = [
-  {
-    id: "gps",
-    lines: ["GPs"] as [string],
-    href: "/admin/fund/gps",
-    summary: "Fund managers Aurum administers for. Each has its own white-labeled GP and investor portals.",
-  },
-  { id: "funds", lines: ["Funds"] as [string], href: "/admin/fund/funds", summary: "Every vehicle under administration, with terms, capital accounts and performance." },
-  { id: "investors", lines: ["Investors"] as [string], href: "/admin/fund/investors", summary: "Investor master records, KYC status and profile change requests across all GPs." },
-  { id: "onboarding", lines: ["Onboarding"] as [string], href: "/admin/fund/onboarding", summary: "Subscription pipeline: invitations, documents, KYC/AML review and countersignature." },
+const gpModules = [
+  { id: "funds", lines: ["Funds"] as [string], path: "funds", summary: "The GP’s vehicles, terms, capital accounts and performance." },
+  { id: "investors", lines: ["Investors"] as [string], path: "investors", summary: "Limited partners in this GP’s funds, with KYC status and holdings." },
+  { id: "onboarding", lines: ["Onboarding"] as [string], path: "onboarding", summary: "Subscriptions in progress for this GP’s funds." },
   {
     id: "capital",
     lines: ["Capital calls &", "Distributions"] as [string, string],
-    href: "/admin/fund/capital-calls",
-    summary: "Prepare, approve and issue calls and distributions; track receipts against the bank.",
+    path: "capital",
+    summary: "Calls and distributions for this GP, with collection status and GP approvals.",
   },
-  { id: "reports", lines: ["Reports"] as [string], href: "/admin/fund/reports", summary: "Capital account statements, investor reports, ILPA templates, K-1 and CVM packages." },
+  { id: "reports", lines: ["Reports"] as [string], path: "reports", summary: "Statements, notices and reports issued under the GP’s brand." },
+  { id: "portal", lines: ["Portal &", "Brand"] as [string, string], path: "portal", summary: "Logos, colours, portal address and email sender for the white-labeled portals." },
 ];
+
+const crossClient = [
+  ["Funds", "/admin/fund/funds"],
+  ["Investors", "/admin/fund/investors"],
+  ["Onboarding", "/admin/fund/onboarding"],
+  ["Capital calls", "/admin/fund/capital-calls"],
+  ["Distributions", "/admin/fund/distributions"],
+  ["General ledger", "/admin/fund/accounting"],
+  ["Reports", "/admin/fund/reports"],
+] as const;
+
+/** Real clients first, then by assets under administration. */
+const orderedGps = [...gps].sort((a, b) => Number(!!a.sample) - Number(!!b.sample) || gpTotals(b.id).nav - gpTotals(a.id).nav);
+const tallLogo = (g: GpClient) => !!g.logo && g.logo.width / g.logo.height < 3;
+
+function GpPreview({ gp, hint }: { gp: GpClient; hint?: boolean }) {
+  const t = gpTotals(gp.id);
+  return (
+    <div className="rounded-[4px] border border-stone-200 bg-white p-6">
+      <div className="flex items-center justify-between">
+        <span className="eyebrow">GP client</span>
+        <span className={cx("text-[10px] font-semibold uppercase tracking-[0.16em]", gp.status === "Live" ? "text-gold-700" : "text-stone-400")}>{gp.status}</span>
+      </div>
+      <div className="mt-4">
+        <GpLogo gp={gp} height={tallLogo(gp) ? 48 : 28} />
+      </div>
+      <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-stone-100 pt-4">
+        {[
+          ["Funds", String(t.funds)],
+          ["Investors", String(t.investors)],
+          ["NAV", t.nav ? moneyShort(t.nav) : "—"],
+        ].map(([k, v]) => (
+          <div key={k}>
+            <dt className="text-[10px] font-semibold uppercase tracking-[0.1em] text-stone-500">{k}</dt>
+            <dd className="num mt-0.5 text-[16px] font-medium">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="eyebrow mt-5">Inside</div>
+      <ul className="mt-2 grid grid-cols-2 gap-x-4 text-[13px] text-ink-800">
+        {gpModules.map((m) => (
+          <li key={m.id} className="border-b border-stone-100 py-1.5">
+            {m.lines.join(" ")}
+          </li>
+        ))}
+      </ul>
+      {hint && <p className="mt-4 text-[12px] font-semibold text-ink-900">Select to open →</p>}
+    </div>
+  );
+}
 
 export function AdminHub() {
   const [level, setLevel] = useState<Level>({ kind: "root" });
   const [hovered, setHovered] = useState<string | null>(null);
-
   const totalNav = funds.reduce((a, f) => a + toUSD(fundTotals(f.id).nav, f.currency), 0);
-  const counts: Record<string, string> = {
-    gps: `${gps.length} CLIENTS`,
-    funds: `${funds.length} VEHICLES`,
-    investors: `${investors.length} INVESTORS`,
-    onboarding: `${onboarding.filter((o) => o.status === "Submitted" || o.status === "Changes requested").length} TO REVIEW`,
-    capital: `${capitalCalls.filter((c) => c.status !== "Funded").length} OPEN`,
-    reports: "STATEMENTS",
-  };
 
   const setLvl = (l: Level) => {
     setHovered(null);
@@ -62,7 +98,7 @@ export function AdminHub() {
       id: s.id,
       slot: s.slot,
       lines: s.lines,
-      sub: s.live ? "LIVE" : "COMING SOON",
+      sub: s.live ? `${gps.length} GPS` : "COMING SOON",
       subTone: s.live ? "accent" : "muted",
       outline: s.live,
       ...(s.id === "fund" ? { onSelect: () => setLvl({ kind: "fund" }) } : { href: s.href }),
@@ -70,33 +106,37 @@ export function AdminHub() {
     center = (open: boolean) => <DarkCenter lines={["Client", "Portal"]} expanded={open} />;
     centerLabel = "Client Portal — show solutions";
   } else if (level.kind === "fund") {
-    cells = fundModules.map((m, i) => ({
-      id: m.id,
-      slot: ringOrder[i],
-      lines: m.lines,
-      sub: counts[m.id],
-      subTone: m.id === "gps" ? "accent" : "muted",
-      outline: m.id === "gps",
-      href: m.href,
-    }));
+    const ring = orderedGps.slice(0, 5);
+    cells = ring.map((g, i) => {
+      const t = gpTotals(g.id);
+      return {
+        id: g.id,
+        slot: ringOrder[i],
+        lines: [g.shortName] as [string],
+        sub: t.funds ? `${t.funds} FUND${t.funds > 1 ? "S" : ""}` : "ONBOARDING",
+        accent: g.brand.primary,
+        art: (active: boolean) => <GpLogo gp={g} height={tallLogo(g) ? 50 : 20} tone={active ? "dark" : "light"} />,
+        onSelect: () => setLvl({ kind: "gp", gpId: g.id }),
+      };
+    });
+    cells.push({ id: "all", slot: ringOrder[5], lines: ["All GPs"], sub: `${gps.length} CLIENTS`, subTone: "accent", outline: true, href: "/admin/fund/gps" });
     center = <DarkCenter lines={["Fund", "Solution"]} />;
     centerLabel = "Fund Solution — back to Client Portal";
   } else {
     const gp = gpById(level.gpId)!;
     const t = gpTotals(gp.id);
-    const base = `/admin/fund/gps/${gp.id}`;
-    const gpCells: [string, [string, string?], string, string][] = [
-      ["funds", ["Funds"], `${t.funds} VEHICLES`, `${base}/funds`],
-      ["investors", ["Investors"], `${t.investors} INVESTORS`, `${base}/investors`],
-      ["onboarding", ["Onboarding"], `${t.onboarding} OPEN`, `${base}/onboarding`],
-      ["capital", ["Capital calls &", "Distributions"], `${t.openCalls} OPEN`, `${base}/capital`],
-      ["reports", ["Reports"], "DOCUMENTS", `${base}/reports`],
-      ["portal", ["Portal &", "Brand"], gp.status === "Live" ? "LIVE" : "SETTING UP", `${base}/portal`],
-    ];
-    cells = gpCells.map(([id, lines, sub, href], i) => ({ id, slot: ringOrder[i], lines, sub, href }));
+    const subs: Record<string, string> = {
+      funds: `${t.funds} VEHICLE${t.funds === 1 ? "" : "S"}`,
+      investors: `${t.investors} INVESTORS`,
+      onboarding: `${t.onboarding} OPEN`,
+      capital: `${t.openCalls} OPEN`,
+      reports: "DOCUMENTS",
+      portal: gp.status === "Live" ? "LIVE" : "SETTING UP",
+    };
+    cells = gpModules.map((m, i) => ({ id: m.id, slot: ringOrder[i], lines: m.lines, sub: subs[m.id], href: `/admin/fund/gps/${gp.id}/${m.path}` }));
     center = (
-      <BrandCenter color={gp.brand.primary}>
-        <GpLogo gp={gp} height={gp.logo && gp.logo.width / gp.logo.height < 3 ? 52 : 26} />
+      <BrandCenter color={gp.brand.primary} secondary={gp.brand.secondary}>
+        <GpLogo gp={gp} height={tallLogo(gp) ? 52 : 26} />
       </BrandCenter>
     );
     centerLabel = `${gp.name} — back to Fund Solution`;
@@ -110,8 +150,9 @@ export function AdminHub() {
         ? [{ label: "Client Portal", to: { kind: "root" } }, { label: "Fund Solution" }]
         : [{ label: "Client Portal", to: { kind: "root" } }, { label: "Fund Solution", to: { kind: "fund" } }, { label: gpById(level.gpId)!.shortName }];
 
-  const activeSolution = level.kind === "root" && hovered ? solutions.find((s) => s.id === hovered) : null;
-  const activeModule = level.kind === "fund" && hovered ? fundModules.find((m) => m.id === hovered) : null;
+  const hoveredSolution = level.kind === "root" && hovered ? solutions.find((s) => s.id === hovered) : null;
+  const hoveredGp = level.kind === "fund" && hovered && hovered !== "all" ? gpById(hovered) : null;
+  const hoveredModule = level.kind === "gp" && hovered ? gpModules.find((m) => m.id === hovered) : null;
 
   return (
     <main className="flex flex-1 flex-col">
@@ -137,10 +178,10 @@ export function AdminHub() {
             </h1>
             <p className="mt-1 text-[14px] text-stone-600">
               {level.kind === "root"
-                ? "Hover over the Client Portal to open the solutions. Select a solution to enter it."
+                ? "Hover to preview, select to enter. Fund Solution opens your GP clients."
                 : level.kind === "fund"
-                  ? "Work across every client, or select a GP to work inside its book. Select the centre to go back."
-                  : "Everything below is limited to this GP’s funds and investors. Select the centre to go back."}
+                  ? "Hover a GP to preview it; select it to work inside its book. Select the centre to go back."
+                  : "Everything here is limited to this GP’s funds and investors. Select the centre to go back."}
             </p>
           </div>
           <div className="flex flex-1 items-center justify-center py-6">
@@ -151,6 +192,7 @@ export function AdminHub() {
               centerLabel={centerLabel}
               revealOnHover={level.kind === "root"}
               accent={accent}
+              outlineColor={level.kind === "gp" ? gpById(level.gpId)!.brand.secondary : "#F8C618"}
               onHover={setHovered}
               onCenterClick={() => setLvl(level.kind === "gp" ? { kind: "fund" } : { kind: "root" })}
             />
@@ -158,103 +200,101 @@ export function AdminHub() {
         </section>
 
         <aside className="space-y-4 lg:pt-[96px]">
-          {level.kind === "root" && (
-            <div className="rounded-[4px] border border-stone-200 bg-white p-6">
-              {activeSolution ? (
-                <>
+          {level.kind === "root" &&
+            (hoveredSolution?.id === "fund" ? (
+              <div className="rounded-[4px] border border-stone-200 bg-white">
+                <div className="p-6 pb-4">
                   <div className="flex items-center justify-between">
                     <span className="eyebrow">Solution</span>
-                    <span className={cx("text-[10px] font-semibold uppercase tracking-[0.16em]", activeSolution.live ? "text-gold-700" : "text-stone-400")}>
-                      {activeSolution.live ? "Live" : "Coming soon"}
-                    </span>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-700">Live</span>
                   </div>
-                  <h2 className="mt-3 text-[22px] font-semibold tracking-[-0.015em]">{activeSolution.name}</h2>
-                  <p className="mt-2 text-[14px] leading-relaxed text-stone-600">{activeSolution.summary}</p>
-                  <p className="mt-5 text-[12px] font-semibold text-ink-900">{activeSolution.live ? "Select to open its modules →" : "Select to view the roadmap →"}</p>
-                </>
-              ) : (
-                <>
-                  <span className="eyebrow">Client Portal</span>
-                  <h2 className="mt-3 text-[22px] font-semibold tracking-[-0.015em]">Six solutions, one client record</h2>
-                  <p className="mt-2 text-[14px] leading-relaxed text-stone-600">
-                    Every solution shares the same clients, entities, documents and permissions. Fund Solution is live; the remaining
-                    solutions are in build.
+                  <h2 className="mt-3 text-[22px] font-semibold tracking-[-0.015em]">Fund Solution</h2>
+                  <p className="mt-1 text-[13px] text-stone-600">
+                    {gps.length} GP clients · {moneyShort(totalNav)} NAV under administration
                   </p>
-                </>
-              )}
-            </div>
-          )}
-
-          {level.kind === "fund" && (
-            <>
+                </div>
+                <ul className="divide-y divide-stone-100 border-t border-stone-100">
+                  {orderedGps.map((g) => (
+                    <li key={g.id} className="flex items-center gap-3 px-6 py-2">
+                      <span className="flex w-6 justify-center">
+                        <GpMark gp={g} size={18} />
+                      </span>
+                      <span className="flex-1 truncate text-[13px] font-medium">{g.name}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="border-t border-stone-100 px-6 py-3 text-[12px] font-semibold">Select to open →</p>
+              </div>
+            ) : (
               <div className="rounded-[4px] border border-stone-200 bg-white p-6">
-                {activeModule ? (
+                {hoveredSolution ? (
                   <>
-                    <span className="eyebrow">Module</span>
-                    <h2 className="mt-3 text-[20px] font-semibold tracking-[-0.015em]">{activeModule.lines.join(" ")}</h2>
-                    <p className="mt-2 text-[14px] leading-relaxed text-stone-600">{activeModule.summary}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="eyebrow">Solution</span>
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-stone-400">Coming soon</span>
+                    </div>
+                    <h2 className="mt-3 text-[22px] font-semibold tracking-[-0.015em]">{hoveredSolution.name}</h2>
+                    <p className="mt-2 text-[14px] leading-relaxed text-stone-600">{hoveredSolution.summary}</p>
                   </>
                 ) : (
                   <>
-                    <span className="eyebrow">Fund Solution · all clients</span>
-                    <div className="num mt-3 text-[26px] font-medium tracking-[-0.02em]">{moneyShort(totalNav)}</div>
-                    <div className="text-[12px] text-stone-500">Net asset value under administration</div>
+                    <span className="eyebrow">Client Portal</span>
+                    <h2 className="mt-3 text-[22px] font-semibold tracking-[-0.015em]">Six solutions, one client record</h2>
+                    <p className="mt-2 text-[14px] leading-relaxed text-stone-600">
+                      Every solution shares the same clients, entities, documents and permissions. Fund Solution is live; the remaining
+                      solutions are in build.
+                    </p>
                   </>
                 )}
               </div>
-              <div className="rounded-[4px] border border-stone-200 bg-white">
-                <div className="border-b border-stone-200 px-5 py-3 text-[13px] font-semibold">Work inside a GP</div>
-                <ul className="divide-y divide-stone-100">
-                  {gps.map((g) => {
-                    const t = gpTotals(g.id);
-                    return (
-                      <li key={g.id}>
-                        <button onClick={() => setLvl({ kind: "gp", gpId: g.id })} className="group flex w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-stone-50">
-                          <span className="flex w-7 justify-center">
-                            <GpMark gp={g} size={22} />
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-[13px] font-semibold">{g.name}</span>
-                            <span className="num block text-[11px] text-stone-500">
-                              {t.funds ? `${t.funds} fund${t.funds > 1 ? "s" : ""} · ${moneyShort(t.nav)} NAV` : "No funds yet"}
-                              {g.status === "Onboarding" ? " · onboarding" : ""}
-                            </span>
-                          </span>
-                          <ArrowRight size={14} className="text-stone-300 group-hover:text-ink-900" />
-                        </button>
+            ))}
+
+          {level.kind === "fund" &&
+            (hoveredGp ? (
+              <GpPreview gp={hoveredGp} hint />
+            ) : (
+              <>
+                <div className="rounded-[4px] border border-stone-200 bg-white p-6">
+                  <span className="eyebrow">Fund Solution · all clients</span>
+                  <div className="num mt-3 text-[26px] font-medium tracking-[-0.02em]">{moneyShort(totalNav)}</div>
+                  <div className="text-[12px] text-stone-500">Net asset value under administration</div>
+                  <div className="eyebrow mt-6">Across all clients</div>
+                  <ul className="mt-2 grid grid-cols-2 gap-x-4">
+                    {crossClient.map(([l, h]) => (
+                      <li key={h}>
+                        <Link href={h} className="flex items-center justify-between border-b border-stone-100 py-2 text-[13px] text-ink-800 hover:text-ink-900">
+                          {l} <ArrowRight size={12} className="text-stone-300" />
+                        </Link>
                       </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </>
-          )}
+                    ))}
+                  </ul>
+                </div>
+                <Link
+                  href="/admin/fund/gps/new"
+                  className="flex items-center justify-between rounded-[4px] border border-dashed border-stone-300 bg-white px-5 py-4 text-[13px] font-semibold hover:border-ink-900"
+                >
+                  <span className="flex items-center gap-2">
+                    <Plus size={15} strokeWidth={2} /> New GP client
+                  </span>
+                  <ArrowRight size={14} className="text-stone-400" />
+                </Link>
+              </>
+            ))}
 
           {level.kind === "gp" &&
             (() => {
               const gp = gpById(level.gpId)!;
-              const t = gpTotals(gp.id);
+              if (hoveredModule)
+                return (
+                  <div className="rounded-[4px] border border-stone-200 bg-white p-6">
+                    <span className="eyebrow">{gp.shortName}</span>
+                    <h2 className="mt-3 text-[20px] font-semibold tracking-[-0.015em]">{hoveredModule.lines.join(" ")}</h2>
+                    <p className="mt-2 text-[14px] leading-relaxed text-stone-600">{hoveredModule.summary}</p>
+                  </div>
+                );
               return (
                 <>
-                  <div className="rounded-[4px] border border-stone-200 bg-white p-6">
-                    <span className="eyebrow">GP client · since {gp.clientSince.slice(0, 4)}</span>
-                    <div className="mt-4">
-                      <GpLogo gp={gp} height={gp.logo && gp.logo.width / gp.logo.height < 3 ? 48 : 30} />
-                    </div>
-                    <dl className="mt-5 grid grid-cols-2 gap-y-3 border-t border-stone-100 pt-4 text-[13px]">
-                      {[
-                        ["Funds", String(t.funds)],
-                        ["Investors", String(t.investors)],
-                        ["Commitments", moneyShort(t.commitment)],
-                        ["NAV", moneyShort(t.nav)],
-                      ].map(([k, v]) => (
-                        <div key={k}>
-                          <dt className="text-[11px] uppercase tracking-[0.08em] text-stone-500">{k}</dt>
-                          <dd className="num mt-0.5 text-[17px] font-medium">{v}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </div>
+                  <GpPreview gp={gp} />
                   <div className="rounded-[4px] border border-stone-200 bg-white p-5">
                     <div className="text-[13px] font-semibold">White-labeled portals</div>
                     <div className="mt-1 font-mono text-[11px] text-stone-500">{gp.customDomain ?? gp.portalDomain}</div>

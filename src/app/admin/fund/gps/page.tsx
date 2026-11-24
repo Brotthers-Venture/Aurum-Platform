@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Plus } from "lucide-react";
-import { Button, PageHeader, Status } from "@/components/ui";
+import { ButtonLink, PageHeader, Status } from "@/components/ui";
 import { GpLogo } from "@/components/brand/GpLogo";
 import { gps } from "@/lib/gps";
 import { gpTotals } from "@/lib/gpData";
@@ -17,9 +17,9 @@ export default function GpsPage() {
         title="GPs"
         description="Fund managers Aurum administers for. Each GP has its own white-labeled portal, and its investors see the GP’s brand on every screen, notice and report."
         actions={
-          <Button>
+          <ButtonLink href="/admin/fund/gps/new">
             <Plus size={14} strokeWidth={2} /> New GP client
-          </Button>
+          </ButtonLink>
         }
       />
       <div className="grid gap-px overflow-hidden rounded-[4px] border border-stone-200 bg-stone-200 md:grid-cols-2 xl:grid-cols-3">

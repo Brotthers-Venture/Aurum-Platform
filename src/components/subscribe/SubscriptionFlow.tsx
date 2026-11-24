@@ -531,7 +531,7 @@ function Shell({ fundName, client, children }: { fundName: string; client: GpCli
   return (
     <div className="min-h-screen" style={brandStyle(client.brand)}>
       <header className="border-b border-stone-200 bg-white">
-        <div className="h-[3px] bg-brand" />
+        <div className="h-[3px] bg-brand-2" />
         <div className="mx-auto flex h-16 max-w-[1120px] items-center justify-between px-8">
           <div className="flex items-center gap-5">
             <GpLogo gp={client} height={tall ? 40 : 24} />

@@ -21,21 +21,19 @@ export function BrandedLogin({ gp }: { gp: GpClient }) {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" style={brandStyle(gp.brand)}>
-      <aside className="relative hidden flex-col bg-brand-soft lg:flex">
-        <div className="h-[3px] bg-brand" />
+      <aside className="relative hidden flex-col bg-brand text-brand-ink lg:flex">
+        <div className="h-[3px] bg-brand-2" />
         <div className="flex flex-1 flex-col justify-center px-16">
-          <GpLogo gp={gp} height={tall ? 120 : 52} />
-          <div className="mt-14 max-w-[420px] border-t border-stone-300/70 pt-8">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: gp.brand.primary }}>
-              Investor Portal
-            </div>
-            <p className="mt-3 text-[15px] leading-relaxed text-stone-600">
+          <GpLogo gp={gp} height={tall ? 120 : 52} tone="dark" />
+          <div className="mt-14 max-w-[420px] border-t border-white/20 pt-8">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-2">Investor Portal</div>
+            <p className="mt-3 text-[15px] leading-relaxed opacity-70">
               Capital account statements, notices, reports and tax documents for your investments with {gp.shortName}.
             </p>
           </div>
         </div>
         <div className="px-16 pb-8">
-          <AdministeredByAurum />
+          <AdministeredByAurum tone="dark" />
         </div>
       </aside>
 

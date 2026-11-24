@@ -62,11 +62,12 @@ Access = role × scope. Ten roles across Aurum staff, client GPs, investors and 
 
 Aurum's clients are GPs (`src/lib/gps.ts`). Each GP has a brand (logo, colours), a portal address, an email sender and sign-in domains.
 
-- **Admin honeycomb:** Client Portal → Fund Solution (GPs, Funds, Investors, Onboarding, Capital calls & distributions, Reports) → one GP (its logo at the centre; six shortcuts scoped to that GP). Hover previews, click commits, the centre steps back.
+- **Admin honeycomb:** Client Portal → Fund Solution (ring of GP logos: five GPs plus "All GPs") → one GP (its logo at the centre; Funds, Investors, Onboarding, Capital calls & distributions, Reports, Portal & brand). Hover previews in the side panel; select to enter; the centre steps back. Cross-client modules are listed beside the Fund Solution ring.
+- **New GP client** (`/admin/fund/gps/new`): legal name, display name, entity type, jurisdiction, regulatory status, primary contact; logos for light and dark backgrounds; primary and secondary colours with WCAG contrast checks; portal address and optional custom domain; live preview; go-live checklist (KYB, engagement letter, first fund and LPA, GP users, brand approval).
 - **GP portal** `/gp/[gpId]`: the GP's brand; overview, investors, capital activity with GP approvals, reports.
 - **Investor portal** `/investor/[gpId]` with branded sign-in at `/investor/[gpId]/login`: only that GP's funds. Investors with several managers pick a portal at `/portal`.
 - Every white-labeled page carries "Administered by Aurum Asset Management".
-- Real GP clients: Strlex Capital Group Inc. (three funds; economics pending LPA review; capital figures are preview data) and Arbor Partners Inc. (onboarding, no funds yet). Other GPs are sample clients.
+- Real GP clients: Strlex Capital Group Inc. (STX-Anchor Capital Formation Fund, STX-Brazil Affordable Housing Fund I, Strlex Global Engine Fund; economics pending LPA review; capital figures are preview data) and Arbor Partners Inc. (Sagewood Seed Fund I LP; no commitments yet). Other GPs are sample clients.
 
 ## Brand
 

@@ -32,6 +32,10 @@ export type Cell = {
   href?: string;
   onSelect?: () => void;
   outline?: boolean;
+  /** hover fill for this cell (e.g. a GP's brand colour) */
+  accent?: string;
+  /** custom artwork (e.g. a GP logo) shown instead of the text label */
+  art?: (active: boolean) => ReactNode;
 };
 
 export function HexNav({
@@ -104,17 +108,24 @@ export function HexNav({
           >
             <polygon
               points={hexPoints(R)}
-              fill={isActive ? accent : "#FFFFFF"}
-              stroke={isActive ? accent : "#CFCFC7"}
+              fill={isActive ? c.accent ?? accent : "#FFFFFF"}
+              stroke={isActive ? c.accent ?? accent : "#CFCFC7"}
               strokeWidth={1}
               style={{ transition: "fill 200ms, stroke 200ms" }}
             />
             {c.outline && <polygon points={hexPoints(R - 7)} fill="none" stroke={outlineColor} strokeWidth={1.5} />}
+            {c.art && (
+              <foreignObject x={-66} y={-46} width={132} height={70} style={{ pointerEvents: "none" }}>
+                <div className="flex h-full w-full items-center justify-center">{c.art(isActive)}</div>
+              </foreignObject>
+            )}
             <text textAnchor="middle" fill={isActive ? "#FFFFFF" : "#0B1519"} style={{ transition: "fill 200ms" }}>
-              <tspan x={0} y={c.lines[1] ? -4 : 6} fontSize={16} fontWeight={600} letterSpacing="-0.01em">
-                {c.lines[0]}
-              </tspan>
-              {c.lines[1] && (
+              {!c.art && (
+                <tspan x={0} y={c.lines[1] ? -4 : 6} fontSize={16} fontWeight={600} letterSpacing="-0.01em">
+                  {c.lines[0]}
+                </tspan>
+              )}
+              {!c.art && c.lines[1] && (
                 <tspan x={0} y={16} fontSize={16} fontWeight={600} letterSpacing="-0.01em">
                   {c.lines[1]}
                 </tspan>
@@ -125,7 +136,7 @@ export function HexNav({
                 fontSize={9.5}
                 fontWeight={600}
                 letterSpacing="0.16em"
-                fill={c.subTone === "accent" ? (isActive ? outlineColor : "#8A6A00") : "#A3A39B"}
+                fill={c.subTone === "accent" ? (isActive ? outlineColor : "#8A6A00") : isActive ? "rgba(255,255,255,0.65)" : "#A3A39B"}
               >
                 {c.sub}
               </tspan>
@@ -177,11 +188,11 @@ export function DarkCenter({ lines, expanded = true }: { lines: [string, string]
 }
 
 /** White centre cell carrying a GP's own logo, bordered in its brand colour. */
-export function BrandCenter({ color, children }: { color: string; children: ReactNode }) {
+export function BrandCenter({ color, secondary, children }: { color: string; secondary: string; children: ReactNode }) {
   return (
     <>
       <polygon points={hexPoints(R)} fill="#FFFFFF" stroke={color} strokeWidth={2} />
-      <polygon points={hexPoints(R - 9)} fill="none" stroke={color} strokeOpacity={0.25} strokeWidth={1} />
+      <polygon points={hexPoints(R - 9)} fill="none" stroke={secondary} strokeWidth={1.5} />
       <foreignObject x={-74} y={-44} width={148} height={88}>
         <div className="flex h-full w-full items-center justify-center">{children}</div>
       </foreignObject>

@@ -47,12 +47,14 @@
 
 :root {
   --brand: #0b1519;
+  --brand-2: #f8c618;
   --brand-ink: #ffffff;
   --brand-soft: #f7f7f4;
 }
 
 @theme inline {
   --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
   --color-brand-ink: var(--brand-ink);
   --color-brand-soft: var(--brand-soft);
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Download, FileText } from "lucide-react";
 import { ButtonLink, Panel, Progress, Status } from "@/components/ui";
 import { PORTAL_INVESTOR_ID, capitalAccounts, capitalCalls, documents, fundById, investorById, onboarding } from "@/lib/data";
-import { date, money, multiple } from "@/lib/format";
+import { date, money, multiple, pct } from "@/lib/format";
 import type { GpClient } from "@/lib/gps";
 
 const inv = () => investorById(PORTAL_INVESTOR_ID)!;
@@ -126,7 +126,7 @@ export function InvestorOverview({ gp }: { gp: GpClient }) {
                     <td>
                       <div className="flex items-center gap-2">
                         <Progress value={a.called / a.commitment} />
-                        <span className="num text-[12px] text-stone-500">{Math.round((a.called / a.commitment) * 100)}%</span>
+                        <span className="num text-[12px] text-stone-500">{pct(a.called / a.commitment, 0)}</span>
                       </div>
                     </td>
                     <td className="num r">{money(a.unfunded, f.currency)}</td>

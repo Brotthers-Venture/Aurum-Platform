@@ -63,9 +63,9 @@ export default async function FundDetail({ params }: { params: Promise<{ id: str
       <div className="space-y-6">
         <Panel title="Fundraising">
           <div className="num text-[22px] font-medium tracking-[-0.01em]">{moneyShort(t.commitment, f.currency)}</div>
-          <div className="mt-1 text-[12px] text-stone-500">of {moneyShort(f.targetSize, f.currency)} target</div>
+          <div className="mt-1 text-[12px] text-stone-500">{f.targetSize ? `of ${moneyShort(f.targetSize, f.currency)} target` : "Target pending LPA review"}</div>
           <div className="mt-4 h-1.5 bg-stone-100">
-            <div className="h-full bg-gold-400" style={{ width: `${Math.min(100, (t.commitment / f.targetSize) * 100)}%` }} />
+            <div className="h-full bg-gold-400" style={{ width: `${f.targetSize ? Math.min(100, (t.commitment / f.targetSize) * 100) : 0}%` }} />
           </div>
           <div className="num mt-2 text-right text-[12px] text-stone-500">{pct(t.commitment / f.targetSize, 0)}</div>
         </Panel>

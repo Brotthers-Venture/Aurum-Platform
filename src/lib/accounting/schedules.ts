@@ -123,7 +123,7 @@ export const schedules: Record<string, FundEvent[]> = {
     { t: "call", number: 4, notice: "2026-11-03", due: "2026-11-17", investments: [{ name: "Tessera Robotics — Series B", amount: 4_250_000 }], expenses: 100_000 },
   ],
   // Strlex Capital Group — sample activity (preview data; fees await LPA review)
-  "stx-achor": [
+  "stx-anchor": [
     { t: "call", number: 1, notice: "2025-07-15", due: "2025-07-29", investments: [{ name: "Initial portfolio", amount: 5_115_000 }], organizational: 360_000 },
     { t: "call", number: 2, notice: "2026-03-02", due: "2026-03-16", investments: [{ name: "Follow-on investments", amount: 4_380_000 }] },
     { t: "val", date: "2026-06-30", amount: 520_000, memo: "Q2 2026 valuation" },

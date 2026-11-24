@@ -26,7 +26,7 @@ export function BrandedHeader({
   const tall = gp.logo && gp.logo.width / gp.logo.height < 3;
   return (
     <header className="border-b border-stone-200 bg-white">
-      <div className="h-[3px] bg-brand" />
+      <div className="h-[3px] bg-brand-2" />
       <div className="mx-auto flex h-16 max-w-[1200px] items-center gap-10 px-8">
         <Link href={nav[0].href} className="flex items-center">
           <GpLogo gp={gp} height={tall ? 40 : 24} />
