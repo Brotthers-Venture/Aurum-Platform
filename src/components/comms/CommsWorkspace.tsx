@@ -65,7 +65,7 @@ import {
 export const COMM = "#1F8A84";
 const TZ = "America/New_York";
 
-type Props = ({ mode: "aurum" } | { mode: "client"; clientId: string; personId: string; accent: string; accentInk: string }) & { className?: string };
+type Props = ({ mode: "aurum"; space?: string } | { mode: "client"; clientId: string; personId: string; accent: string; accentInk: string }) & { className?: string };
 
 type View = { kind: "conv"; where: string } | { kind: "requests" };
 
@@ -650,10 +650,16 @@ export function CommsWorkspace(props: Props) {
   const [reqs, setReqs] = useState<AccessRequest[]>(seedRequests);
   const [chans, setChans] = useState<Channel[]>(allChannels);
   const [read, setRead] = useState<Record<string, string>>(isAurum ? seedRead : {});
-  const [spaceId, setSpaceId] = useState<string>(isAurum ? "fund" : "");
+  const startSpace = props.mode === "aurum" && props.space && spaceById(props.space) ? props.space : "fund";
+  const [spaceId, setSpaceId] = useState<string>(isAurum ? startSpace : "");
   const visible = useMemo(() => chans.filter((c) => canSeeChannel(c, viewerId)), [chans, viewerId]);
-  const firstIn = (sid: string) => visible.find((c) => c.spaceId === sid && c.clientId === null) ?? visible.find((c) => c.spaceId === sid);
-  const [view, setView] = useState<View>(() => ({ kind: "conv", where: isAurum ? "f-strlex-stx" : (visible.find((c) => c.name !== "general") ?? visible[0])?.id ?? "" }));
+  /** Where to land in a space: the conversation with unread messages, else the most recent one. */
+  const firstIn = (sid: string) => {
+    const last = (id: string) => seedMessages.filter((m) => m.where === id).reduce((t, m) => (m.at > t ? m.at : t), "");
+    const unreadIn = (id: string) => (isAurum ? unreadCount(id, seedMessages, viewerId, seedRead) : 0);
+    return [...visible.filter((c) => c.spaceId === sid)].sort((a, b) => unreadIn(b.id) - unreadIn(a.id) || last(b.id).localeCompare(last(a.id)))[0];
+  };
+  const [view, setView] = useState<View>(() => ({ kind: "conv", where: isAurum ? (startSpace === "fund" ? "f-strlex-stx" : firstIn(startSpace)?.id ?? "") : (visible.find((c) => c.name !== "general") ?? visible[0])?.id ?? "" }));
   const [tab, setTab] = useState<"messages" | "files" | "pinned">("messages");
   const [side, setSide] = useState<null | { kind: "thread"; id: string } | { kind: "details" }>(null);
   const [query, setQuery] = useState("");

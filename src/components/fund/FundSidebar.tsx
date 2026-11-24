@@ -21,9 +21,13 @@ import {
   Users,
 } from "lucide-react";
 import { cx } from "@/components/ui";
-import { AurumLogo } from "@/components/brand/Logo";
+import { AurumLogo, AurumMark } from "@/components/brand/Logo";
+import { totalUnread } from "@/lib/comms";
+import { BILLING, billingCounts } from "@/lib/billing";
 import { onboarding } from "@/lib/data";
 
+const unread = totalUnread();
+const overdue = billingCounts().overdue;
 const openFiles = onboarding.filter((o) => o.status === "Submitted" || o.status === "Changes requested").length;
 
 const groups = [
@@ -116,6 +120,32 @@ export function FundSidebar() {
           ))}
         </div>
         <div className="border-t border-stone-200 p-3">
+          <div className="mb-1 grid grid-cols-2 gap-1.5">
+            {[
+              { href: "/admin/communication", label: "Messages", color: "#1F8A84", badge: unread },
+              { href: "/admin/billing", label: "Billing", color: BILLING, badge: overdue },
+            ].map((x) => {
+              const on = path.startsWith(x.href);
+              return (
+                <Link
+                  key={x.href}
+                  href={x.href}
+                  className={cx(
+                    "relative flex items-center gap-2 rounded-[10px] border px-2.5 py-2 text-[12px] font-semibold transition-colors",
+                    on ? "border-transparent bg-white text-ink-900 shadow-card" : "border-stone-200 bg-white/60 text-stone-600 hover:bg-white hover:text-ink-900",
+                  )}
+                >
+                  <AurumMark size={15} color={x.color} className="shrink-0" />
+                  {x.label}
+                  {x.badge > 0 && (
+                    <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold text-white" style={{ background: x.color }}>
+                      {x.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
           <Link href="/admin" className="flex items-center gap-2 rounded-[10px] px-2.5 py-2 text-[12px] font-medium text-stone-500 hover:bg-stone-100 hover:text-ink-900">
             <ArrowLeft size={14} strokeWidth={1.8} /> Aurum Platform
           </Link>

@@ -546,3 +546,8 @@ export function totalUnread() {
   for (const w of seen) t += unreadCount(w, messages, ME, lastRead);
   return t;
 }
+
+/** Unread for Aurum's admin within one space (hub ring). */
+export function spaceUnreadCount(spaceId: string) {
+  return channels.filter((c) => c.spaceId === spaceId).reduce((t, c) => t + unreadCount(c.id, messages, ME, lastRead), 0);
+}
