@@ -9,8 +9,7 @@ import { Band, BrandCenter, FRAME, DarkCenter, MarkCenter, R, hexPoints, offset,
 import { GpLogo } from "@/components/brand/GpLogo";
 import { GoldField } from "@/components/admin/GoldField";
 import { AurumMark } from "@/components/brand/Logo";
-import { spaceUnreadCount, totalUnread } from "@/lib/comms";
-import { BILLING, billingCounts } from "@/lib/billing";
+import { firmById, firmModules } from "@/lib/firm";
 import { solutions } from "@/lib/solutions";
 import { gps, gpById, type GpClient } from "@/lib/gps";
 import { gpTotals } from "@/lib/gpData";
@@ -31,8 +30,7 @@ type Level =
   | { kind: "root" }
   | { kind: "fund"; from: Slot }
   | { kind: "gp"; gpId: string; from: Slot }
-  | { kind: "comm"; from: Pt }
-  | { kind: "billing"; from: Pt };
+  | { kind: "module"; id: string; from: Pt };
 
 type Node = {
   id: string;
@@ -54,18 +52,6 @@ type Node = {
 };
 
 const CREAM = "#FBF3DC";
-const TEAL = "#1F8A84";
-const unreadAll = totalUnread();
-const bc = billingCounts();
-
-const billingModules: { id: string; label: [string, string?]; sub: string; tone: "accent" | "muted"; href: string }[] = [
-  { id: "invoices", label: ["Invoices"], sub: `${bc.open} OPEN`, tone: "accent", href: "/admin/billing?tab=invoices" },
-  { id: "new", label: ["New", "invoice"], sub: `${bc.drafts} IN DRAFT`, tone: "muted", href: "/admin/billing?tab=new" },
-  { id: "payments", label: ["Payments"], sub: `${bc.payments} THIS MONTH`, tone: "muted", href: "/admin/billing?tab=payments" },
-  { id: "subscriptions", label: ["Subscriptions"], sub: `${bc.subscriptions} ACTIVE`, tone: "muted", href: "/admin/billing?tab=subscriptions" },
-  { id: "fees", label: ["Administration", "fees"], sub: `${bc.schedules} SCHEDULES`, tone: "muted", href: "/admin/billing?tab=fees" },
-  { id: "overdue", label: ["Overdue"], sub: bc.overdue ? `${bc.overdue} TO CHASE` : "NONE", tone: bc.overdue ? "accent" : "muted", href: "/admin/billing?tab=invoices&filter=overdue" },
-];
 const DWELL_MS = 420;
 const MOVE_PX = 6;
 
@@ -92,9 +78,6 @@ export function AdminHub() {
   const leave = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hoverNode = useRef<Node | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const goldRef = useRef<HTMLAnchorElement>(null);
-  const commRef = useRef<HTMLAnchorElement>(null);
-  const billRef = useRef<HTMLAnchorElement>(null);
 
   const clearDwell = () => {
     if (dwell.current) clearTimeout(dwell.current);
@@ -166,31 +149,22 @@ export function AdminHub() {
     });
     nodes.push({ id: "all", slot: ringOrder[5], label: ["All GPs"], sub: `${gps.length} CLIENTS`, subTone: "accent", outline: true, href: "/admin/fund/gps" });
     center = <DarkCenter lines={["Fund", "Solution"]} />;
-  } else if (level.kind === "comm") {
+  } else if (level.kind === "module") {
+    const m = firmById(level.id)!;
     centerFrom = level.from;
-    accent = TEAL;
+    accent = m.color;
     outlineColor = CREAM;
     bandOn = CREAM;
-    nodes = solutions.map((s) => {
-      const u = spaceUnreadCount(s.id);
-      return {
-        id: s.id,
-        slot: s.slot,
-        label: s.lines,
-        sub: u ? `${u} UNREAD` : "ALL READ",
-        subTone: u ? "accent" : "muted",
-        subColor: TEAL,
-        href: `/admin/communication?space=${s.id}`,
-      };
-    });
-    center = <MarkCenter color={TEAL} />;
-  } else if (level.kind === "billing") {
-    centerFrom = level.from;
-    accent = BILLING;
-    outlineColor = CREAM;
-    bandOn = CREAM;
-    nodes = billingModules.map((m, i) => ({ id: m.id, slot: ringOrder[i], label: m.label, sub: m.sub, subTone: m.tone, subColor: BILLING, href: m.href }));
-    center = <MarkCenter color={BILLING} />;
+    nodes = m.ring.map((r, i) => ({
+      id: r.id,
+      slot: m.id === "communication" ? solutions[i].slot : ringOrder[i],
+      label: r.label,
+      sub: r.sub,
+      subTone: r.alert ? "accent" : "muted",
+      subColor: m.color,
+      href: r.href,
+    }));
+    center = <MarkCenter color={m.color} />;
   } else {
     const gp = gpById(level.gpId)!;
     const t = gpTotals(gp.id, INDICATIVE_BRL_USD); // counts only; no amounts shown
@@ -223,11 +197,9 @@ export function AdminHub() {
   const crumbs: { label: string; target?: "root" | "fund" }[] =
     level.kind === "root"
       ? []
-      : level.kind === "comm"
-        ? [{ label: "Aurum", target: "root" }, { label: "Communication" }]
-        : level.kind === "billing"
-          ? [{ label: "Aurum", target: "root" }, { label: "Billing" }]
-          : level.kind === "fund"
+      : level.kind === "module"
+        ? [{ label: "Aurum", target: "root" }, { label: firmById(level.id)!.name }]
+        : level.kind === "fund"
         ? [{ label: "Aurum", target: "root" }, { label: "Fund Solution" }]
         : [{ label: "Aurum", target: "root" }, { label: "Fund Solution", target: "fund" }, { label: gpById(level.gpId)!.shortName }];
   const crumbTo = (t: "root" | "fund") => (t === "root" ? toRoot() : go({ kind: "fund", from: "ne" }));
@@ -253,28 +225,17 @@ export function AdminHub() {
     return { x: (b.x + b.width / 2 - (a.x + a.width / 2)) * k, y: (b.y + b.height / 2 - (a.y + a.height / 2)) * k };
   };
   const dockNode = (id: string, open: () => void): Node => ({ id, slot: "ne", label: [""], sub: "", open });
-  const dock: { id: string; color: string; label: string; href: string; badge?: number; ref: React.RefObject<HTMLAnchorElement | null>; on: boolean; open: () => void }[] = [
-    { id: "aurum", color: "#F8C618", label: "Aurum solutions", href: "/admin", ref: goldRef, on: false, open: toRoot },
-    {
-      id: "comm",
-      color: TEAL,
-      label: `Communication — ${unreadAll} unread`,
-      href: "/admin/communication",
-      badge: unreadAll,
-      ref: commRef,
-      on: level.kind === "comm",
-      open: () => go({ kind: "comm", from: fromDock(commRef.current) }),
-    },
-    {
-      id: "billing",
-      color: BILLING,
-      label: `Billing — ${bc.overdue} overdue`,
-      href: "/admin/billing",
-      badge: bc.overdue,
-      ref: billRef,
-      on: level.kind === "billing",
-      open: () => go({ kind: "billing", from: fromDock(billRef.current) }),
-    },
+  const openDock = (id: string, el: HTMLElement) => (id === "aurum" ? toRoot() : go({ kind: "module", id, from: fromDock(el) }));
+  const dock: { id: string; color: string; label: string; href: string; badge?: number; on: boolean }[] = [
+    { id: "aurum", color: "#F8C618", label: "Aurum solutions", href: "/admin", on: false },
+    ...firmModules.map((m) => ({
+      id: m.id,
+      color: m.color,
+      label: `${m.name}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`,
+      href: m.href,
+      badge: m.badge,
+      on: level.kind === "module" && level.id === m.id,
+    })),
   ];
 
   const levelKey = level.kind === "gp" ? `gp-${level.gpId}` : level.kind;
@@ -413,23 +374,23 @@ export function AdminHub() {
         </g>
       </svg>
 
-      <div className="relative -mt-2 flex items-center gap-10" onPointerMove={onMove} aria-label="More">
+      <div className="relative -mt-2 flex items-center gap-9" onPointerMove={onMove} aria-label="More">
         {dock.map((d) => (
           <Link
             key={d.id}
-            ref={d.ref}
             href={d.href}
             aria-label={d.label}
             title={d.label}
             className={cx(
               "group flex flex-col items-center transition-opacity duration-300",
-              d.id === "aurum" ? "absolute right-full top-0 mr-10" : "relative",
+              d.id === "aurum" ? "absolute right-full top-0 mr-9" : "relative",
               d.id === "aurum" && level.kind === "root" && "pointer-events-none opacity-0",
             )}
             tabIndex={d.id === "aurum" && level.kind === "root" ? -1 : undefined}
-            onMouseEnter={() => {
+            onMouseEnter={(e) => {
               if (d.on) return;
-              hoverNode.current = dockNode(d.id, d.open);
+              const el = e.currentTarget;
+              hoverNode.current = dockNode(d.id, () => openDock(d.id, el));
               restartDwell();
             }}
             onMouseLeave={() => {
@@ -444,7 +405,7 @@ export function AdminHub() {
             }}
           >
             <span className={cx("block transition-transform duration-300 group-hover:scale-110", d.on && "scale-110")}>
-              <AurumMark size={d.id === "aurum" ? 34 : 40} color={d.color} />
+              <AurumMark size={d.id === "aurum" ? 30 : 36} color={d.color} />
             </span>
             {!!d.badge && (
               <span className="absolute -right-2.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ring-2 ring-[#F1EDE4]" style={{ background: d.color }}>

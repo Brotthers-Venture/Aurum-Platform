@@ -22,12 +22,9 @@ import {
 } from "lucide-react";
 import { cx } from "@/components/ui";
 import { AurumLogo, AurumMark } from "@/components/brand/Logo";
-import { totalUnread } from "@/lib/comms";
-import { BILLING, billingCounts } from "@/lib/billing";
+import { firmModules } from "@/lib/firm";
 import { onboarding } from "@/lib/data";
 
-const unread = totalUnread();
-const overdue = billingCounts().overdue;
 const openFiles = onboarding.filter((o) => o.status === "Submitted" || o.status === "Changes requested").length;
 
 const groups = [
@@ -120,26 +117,21 @@ export function FundSidebar() {
           ))}
         </div>
         <div className="border-t border-stone-200 p-3">
-          <div className="mb-1 grid grid-cols-2 gap-1.5">
-            {[
-              { href: "/admin/communication", label: "Messages", color: "#1F8A84", badge: unread },
-              { href: "/admin/billing", label: "Billing", color: BILLING, badge: overdue },
-            ].map((x) => {
-              const on = path.startsWith(x.href);
+          <div className="mb-1.5 flex items-center justify-between rounded-[12px] border border-stone-200 bg-white/70 px-2 py-1.5">
+            {firmModules.map((m) => {
+              const on = path.startsWith(m.href);
               return (
                 <Link
-                  key={x.href}
-                  href={x.href}
-                  className={cx(
-                    "relative flex items-center gap-2 rounded-[10px] border px-2.5 py-2 text-[12px] font-semibold transition-colors",
-                    on ? "border-transparent bg-white text-ink-900 shadow-card" : "border-stone-200 bg-white/60 text-stone-600 hover:bg-white hover:text-ink-900",
-                  )}
+                  key={m.id}
+                  href={m.href}
+                  title={`${m.name}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`}
+                  aria-label={m.name}
+                  className={cx("relative flex h-8 w-8 items-center justify-center rounded-[8px] transition-colors", on ? "bg-white shadow-card" : "hover:bg-white")}
                 >
-                  <AurumMark size={15} color={x.color} className="shrink-0" />
-                  {x.label}
-                  {x.badge > 0 && (
-                    <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold text-white" style={{ background: x.color }}>
-                      {x.badge}
+                  <AurumMark size={16} color={m.color} className="shrink-0" />
+                  {m.badge > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full px-0.5 text-[8.5px] font-bold text-white ring-2 ring-cream" style={{ background: m.color }}>
+                      {m.badge}
                     </span>
                   )}
                 </Link>

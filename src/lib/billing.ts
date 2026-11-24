@@ -6,7 +6,7 @@ import { clients } from "./comms";
 import { funds, fundTotals, toUSD } from "./data";
 import { solutions } from "./solutions";
 
-export const BILLING = "#2F7D4E";
+export const BILLING = "#4F8A2B";
 export const BILL_TODAY = "2026-11-24";
 
 export type FeeSchedule = {
