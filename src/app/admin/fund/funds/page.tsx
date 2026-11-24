@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Plus } from "lucide-react";
-import { Button, PageHeader, Panel } from "@/components/ui";
+import { ButtonLink, PageHeader, Panel } from "@/components/ui";
 import { FundsTable } from "@/components/fund/FundsTable";
 
 export const metadata: Metadata = { title: "Funds" };
@@ -13,9 +13,9 @@ export default function FundsPage() {
         title="Funds"
         description="Private funds, offshore vehicles and SPVs under Aurum administration."
         actions={
-          <Button>
+          <ButtonLink href="/admin/fund/funds/new">
             <Plus size={14} strokeWidth={2} /> New vehicle
-          </Button>
+          </ButtonLink>
         }
       />
       <Panel flush>

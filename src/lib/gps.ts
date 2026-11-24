@@ -13,6 +13,8 @@ export type Brand = {
 export type GpClient = {
   id: string;
   name: string;
+  /** Legal Entity Identifier, when the GP has one (used to match GLEIF fund-manager links) */
+  lei?: string;
   shortName: string;
   /** logo for light backgrounds */
   logo?: { src: string; width: number; height: number };
@@ -36,6 +38,7 @@ export const gps: GpClient[] = [
   {
     id: "strlex",
     name: "Strlex Capital Group Inc.",
+    lei: "9845005B81BCD1R1F202",
     shortName: "Strlex Capital",
     logo: { src: "/gp/strlex-logo.png", width: 921, height: 197 },
     logoDark: { src: "/gp/strlex-logo-dark.png", width: 921, height: 197 },

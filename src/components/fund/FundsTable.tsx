@@ -36,7 +36,7 @@ export function FundsTable({ gpId }: { gpId?: string } = {}) {
                     </span>
                   </Link>
                 </td>
-                <td className="text-stone-600">{f.domicile}</td>
+                <td className="whitespace-nowrap text-stone-600">{f.domicile}</td>
                 <td className="num text-stone-600">{f.vintage}</td>
                 <td>
                   <Status value={f.status} />
