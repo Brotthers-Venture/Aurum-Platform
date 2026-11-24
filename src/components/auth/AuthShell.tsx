@@ -1,42 +1,15 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { AurumLogo } from "@/components/brand/Logo";
-
-/** Concentric hexagon linework, echoing the mark, drawn off-canvas. */
-function HexLinework() {
-  const rings = [140, 220, 300, 380, 460, 540, 620];
-  const pts = (r: number) =>
-    Array.from({ length: 6 }, (_, i) => {
-      const a = (Math.PI / 180) * (60 * i - 90);
-      return `${(r * Math.cos(a)).toFixed(1)},${(r * Math.sin(a)).toFixed(1)}`;
-    }).join(" ");
-  return (
-    <svg
-      className="pointer-events-none absolute -right-[380px] -top-[300px] h-[1000px] w-[1000px]"
-      viewBox="-650 -650 1300 1300"
-      aria-hidden="true"
-    >
-      {rings.map((r, i) => (
-        <polygon
-          key={r}
-          points={pts(r)}
-          fill="none"
-          stroke={i === 1 ? "#F8C618" : "#ffffff"}
-          strokeOpacity={i === 1 ? 0.55 : 0.07}
-          strokeWidth={i === 1 ? 1.25 : 1}
-        />
-      ))}
-    </svg>
-  );
-}
 
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-screen lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
       <aside className="relative hidden overflow-hidden bg-ink-900 text-white lg:flex lg:flex-col">
-        <HexLinework />
+        <Image src="/brand/login-bg.jpg" alt="" fill priority sizes="55vw" className="object-cover" />
         <div className="relative px-14 pt-12">
-          <AurumLogo variant="white" height={52} priority />
+          <AurumLogo variant="dark" height={52} priority />
         </div>
         <div className="relative mt-auto max-w-[520px] px-14 pb-16">
           <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-400">Client Portal</div>
@@ -47,18 +20,6 @@ export function AuthShell({ children }: { children: ReactNode }) {
             Fiduciary administration for funds, offerings, companies and families operating across the United
             States, Brazil and offshore jurisdictions.
           </p>
-          <dl className="mt-12 grid max-w-[460px] grid-cols-3 gap-6 border-t border-white/15 pt-6">
-            {[
-              ["25", "Years of practice"],
-              ["25", "Jurisdictions served"],
-              ["3,000+", "Entities formed"],
-            ].map(([v, l]) => (
-              <div key={l}>
-                <dt className="num text-[22px] font-medium tracking-[-0.01em]">{v}</dt>
-                <dd className="mt-1 text-[12px] text-white/50">{l}</dd>
-              </div>
-            ))}
-          </dl>
         </div>
         <div className="relative flex items-center justify-between border-t border-white/10 px-14 py-5 text-[11px] text-white/40">
           <span>© 2026 Aurum Asset Management · Orlando, Florida</span>
