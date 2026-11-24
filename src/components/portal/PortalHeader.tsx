@@ -10,6 +10,7 @@ const nav = [
   { href: "/portal", label: "Overview", exact: true },
   { href: "/portal/documents", label: "Documents" },
   { href: "/portal/onboarding", label: "Subscriptions" },
+  { href: "/portal/profile", label: "Profile" },
 ];
 
 export function PortalHeader() {

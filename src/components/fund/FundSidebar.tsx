@@ -5,8 +5,11 @@ import { usePathname } from "next/navigation";
 import {
   ArrowDownToLine,
   ArrowLeft,
+  ArrowLeftRight,
   ArrowUpFromLine,
   BarChart3,
+  BookOpen,
+  Scale,
   Building2,
   ChevronsUpDown,
   FileText,
@@ -38,6 +41,14 @@ const groups = [
     items: [
       { href: "/admin/fund/capital-calls", label: "Capital calls", icon: ArrowDownToLine },
       { href: "/admin/fund/distributions", label: "Distributions", icon: ArrowUpFromLine },
+    ],
+  },
+  {
+    label: "Accounting",
+    items: [
+      { href: "/admin/fund/accounting", label: "General ledger", icon: BookOpen },
+      { href: "/admin/fund/transfers", label: "Transfers", icon: ArrowLeftRight },
+      { href: "/admin/fund/closes", label: "Closes & equalization", icon: Scale },
     ],
   },
   {

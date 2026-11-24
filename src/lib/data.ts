@@ -1,3 +1,4 @@
+import { buildBooks, partnerNav, type Alloc, type CallRecord, type DistributionRecord } from "./accounting/engine";
 /**
  * Mock data for the skeleton. Every shape here mirrors a future Supabase table
  * so the UI can be switched to live queries without restructuring pages.
@@ -27,9 +28,9 @@ export type Fund = {
   auditor: string;
   bank: string;
   coAdministrator?: string;
-  calledPct: number;
-  dpi: number;
-  rvpi: number;
+  /** waterfall terms */
+  hurdleRate: number;
+  carryRate: number;
 };
 
 export const FX_BRL_USD = 5.4; // reporting rate for consolidated USD figures
@@ -56,9 +57,8 @@ export const funds: Fund[] = [
     finalClose: "2024-03-15",
     auditor: "Grant Thornton LLP",
     bank: "City National Bank",
-    calledPct: 0.46,
-    dpi: 0.08,
-    rvpi: 1.12,
+    hurdleRate: 0.08,
+    carryRate: 0.2,
   },
   {
     id: "atlantico-vp-ii",
@@ -81,9 +81,8 @@ export const funds: Fund[] = [
     finalClose: null,
     auditor: "KPMG Cayman",
     bank: "Butterfield Bank (Cayman)",
-    calledPct: 0.1,
-    dpi: 0,
-    rvpi: 0.98,
+    hurdleRate: 0,
+    carryRate: 0.2,
   },
   {
     id: "serra-re-spv",
@@ -106,9 +105,8 @@ export const funds: Fund[] = [
     finalClose: "2024-06-01",
     auditor: "BDO",
     bank: "Bank of Butterfield",
-    calledPct: 1,
-    dpi: 0.22,
-    rvpi: 1.09,
+    hurdleRate: 0.07,
+    carryRate: 0.15,
   },
   {
     id: "fip-horizonte",
@@ -132,9 +130,8 @@ export const funds: Fund[] = [
     auditor: "PwC Brasil",
     bank: "Itaú Unibanco",
     coAdministrator: "MF Pepper (CVM-authorized administrator)",
-    calledPct: 0.72,
-    dpi: 0.31,
-    rvpi: 1.18,
+    hurdleRate: 0.06,
+    carryRate: 0.2,
   },
   {
     id: "meridian-cvc",
@@ -157,9 +154,8 @@ export const funds: Fund[] = [
     finalClose: "2024-11-30",
     auditor: "Deloitte & Touche LLP",
     bank: "J.P. Morgan Chase",
-    calledPct: 0.28,
-    dpi: 0,
-    rvpi: 1.04,
+    hurdleRate: 0,
+    carryRate: 0.1,
   },
 ];
 
@@ -205,82 +201,55 @@ export const investors: Investor[] = [
   { id: "inv-meridian", name: "Meridian Industrial Holdings, Inc.", type: "Corporation", jurisdiction: "Texas, US", taxForm: "W-9", kyc: "Clear", contact: "Gregory Lane", email: "glane@meridianindustrial.com", relationshipManager: "J. Teixeira" },
 ];
 
-type CommitmentSeed = { fundId: string; investorId: string; commitment: number; closeDate: string };
-
-const commitmentSeeds: CommitmentSeed[] = [
-  // Infrastructure Partners I (USD)
-  { fundId: "aurum-infra-i", investorId: "inv-brightwater", commitment: 50_000_000, closeDate: "2023-03-15" },
-  { fundId: "aurum-infra-i", investorId: "inv-northgate", commitment: 35_000_000, closeDate: "2023-03-15" },
-  { fundId: "aurum-infra-i", investorId: "inv-ridgeway", commitment: 30_000_000, closeDate: "2023-03-15" },
-  { fundId: "aurum-infra-i", investorId: "inv-corbel", commitment: 25_000_000, closeDate: "2023-09-29" },
-  { fundId: "aurum-infra-i", investorId: "inv-vasconcelos", commitment: 20_000_000, closeDate: "2023-09-29" },
-  { fundId: "aurum-infra-i", investorId: "inv-calloway", commitment: 15_000_000, closeDate: "2023-09-29" },
-  { fundId: "aurum-infra-i", investorId: "inv-sterling", commitment: 15_000_000, closeDate: "2024-03-15" },
-  { fundId: "aurum-infra-i", investorId: "inv-ferreira", commitment: 12_500_000, closeDate: "2024-03-15" },
-  { fundId: "aurum-infra-i", investorId: "inv-lakeshore", commitment: 10_000_000, closeDate: "2024-03-15" },
-  // Atlântico Venture II (USD) — first close done, second close onboarding
-  { fundId: "atlantico-vp-ii", investorId: "inv-vasconcelos", commitment: 20_000_000, closeDate: "2025-09-30" },
-  { fundId: "atlantico-vp-ii", investorId: "inv-ferreira", commitment: 15_000_000, closeDate: "2025-09-30" },
-  { fundId: "atlantico-vp-ii", investorId: "inv-corbel", commitment: 15_000_000, closeDate: "2025-09-30" },
-  { fundId: "atlantico-vp-ii", investorId: "inv-costa", commitment: 5_000_000, closeDate: "2025-09-30" },
-  { fundId: "atlantico-vp-ii", investorId: "inv-prado", commitment: 4_000_000, closeDate: "2025-09-30" },
-  { fundId: "atlantico-vp-ii", investorId: "inv-lakeshore", commitment: 5_000_000, closeDate: "2025-09-30" },
-  // Serra SPV (USD)
-  { fundId: "serra-re-spv", investorId: "inv-calloway", commitment: 8_000_000, closeDate: "2024-06-01" },
-  { fundId: "serra-re-spv", investorId: "inv-vasconcelos", commitment: 10_000_000, closeDate: "2024-06-01" },
-  { fundId: "serra-re-spv", investorId: "inv-monteiro", commitment: 2_400_000, closeDate: "2024-06-01" },
-  { fundId: "serra-re-spv", investorId: "inv-ferreira", commitment: 9_000_000, closeDate: "2024-06-01" },
-  { fundId: "serra-re-spv", investorId: "inv-costa", commitment: 4_000_000, closeDate: "2024-06-01" },
-  { fundId: "serra-re-spv", investorId: "inv-prado", commitment: 5_000_000, closeDate: "2024-06-01" },
-  // FIP Horizonte (BRL)
-  { fundId: "fip-horizonte", investorId: "inv-previ-sul", commitment: 180_000_000, closeDate: "2022-05-10" },
-  { fundId: "fip-horizonte", investorId: "inv-ferreira", commitment: 90_000_000, closeDate: "2022-05-10" },
-  { fundId: "fip-horizonte", investorId: "inv-vasconcelos", commitment: 75_000_000, closeDate: "2022-11-18" },
-  { fundId: "fip-horizonte", investorId: "inv-costa", commitment: 40_000_000, closeDate: "2023-05-10" },
-  { fundId: "fip-horizonte", investorId: "inv-prado", commitment: 35_000_000, closeDate: "2023-05-10" },
-  // Meridian CVC (USD)
-  { fundId: "meridian-cvc", investorId: "inv-meridian", commitment: 60_000_000, closeDate: "2024-01-22" },
-  { fundId: "meridian-cvc", investorId: "inv-calloway", commitment: 5_000_000, closeDate: "2024-11-30" },
-  { fundId: "meridian-cvc", investorId: "inv-lakeshore", commitment: 7_500_000, closeDate: "2024-11-30" },
-];
-
 export type CapitalAccount = {
   fundId: string;
   investorId: string;
+  closeDate: string;
   commitment: number;
+  called: number;
   contributed: number;
+  receivable: number;
   unfunded: number;
   distributed: number;
   nav: number;
-  closeDate: string;
+  alloc: Alloc;
 };
 
-export const capitalAccounts: CapitalAccount[] = commitmentSeeds.map((s) => {
-  const f = funds.find((x) => x.id === s.fundId)!;
-  const contributed = s.commitment * f.calledPct;
-  return {
-    ...s,
-    contributed,
-    unfunded: s.commitment - contributed,
-    distributed: contributed * f.dpi,
-    nav: contributed * f.rvpi,
-  };
-});
+/** Partner capital accounts, derived from each vehicle's general ledger. */
+export const capitalAccounts: CapitalAccount[] = funds.flatMap((f) =>
+  buildBooks(f.id).partners.map((p) => ({
+    fundId: f.id,
+    investorId: p.investorId,
+    closeDate: p.closeDate,
+    commitment: p.commitment,
+    called: p.called,
+    contributed: p.called - p.receivable,
+    receivable: p.receivable,
+    unfunded: p.commitment - p.called,
+    distributed: p.distributed,
+    nav: partnerNav(p),
+    alloc: p.alloc,
+  })),
+);
 
 export function fundTotals(fundId: string) {
   const rows = capitalAccounts.filter((c) => c.fundId === fundId);
-  const sum = (k: keyof Pick<CapitalAccount, "commitment" | "contributed" | "unfunded" | "distributed" | "nav">) =>
+  const sum = (k: "commitment" | "called" | "contributed" | "receivable" | "unfunded" | "distributed" | "nav") =>
     rows.reduce((a, r) => a + r[k], 0);
   const contributed = sum("contributed");
+  const navExReceivable = sum("nav") - sum("receivable");
   return {
     investors: rows.length,
     commitment: sum("commitment"),
+    called: sum("called"),
     contributed,
+    receivable: sum("receivable"),
     unfunded: sum("unfunded"),
     distributed: sum("distributed"),
     nav: sum("nav"),
     dpi: contributed ? sum("distributed") / contributed : 0,
-    tvpi: contributed ? (sum("distributed") + sum("nav")) / contributed : 0,
+    rvpi: contributed ? navExReceivable / contributed : 0,
+    tvpi: contributed ? (sum("distributed") + navExReceivable) / contributed : 0,
   };
 }
 
@@ -288,46 +257,16 @@ export function toUSD(amount: number, currency: Currency) {
   return currency === "BRL" ? amount / FX_BRL_USD : amount;
 }
 
-export type CapitalCall = {
-  id: string;
-  fundId: string;
-  number: number;
-  noticeDate: string;
-  dueDate: string;
-  amount: number;
-  received: number;
-  purpose: string;
-  status: "Draft" | "Issued" | "Partially funded" | "Funded";
-};
+export type CapitalCall = CallRecord;
+export type Distribution = DistributionRecord;
 
-export const capitalCalls: CapitalCall[] = [
-  { id: "cc-infra-07", fundId: "aurum-infra-i", number: 7, noticeDate: "2026-11-17", dueDate: "2026-12-01", amount: 12_750_000, received: 6_120_000, purpose: "Investment — Ribeira Solar Holdings; management fee Q1 2027", status: "Partially funded" },
-  { id: "cc-atl-02", fundId: "atlantico-vp-ii", number: 2, noticeDate: "2026-11-24", dueDate: "2026-12-08", amount: 6_400_000, received: 0, purpose: "Investments — Series A follow-ons; fund expenses", status: "Draft" },
-  { id: "cc-cvc-04", fundId: "meridian-cvc", number: 4, noticeDate: "2026-11-03", dueDate: "2026-11-17", amount: 4_350_000, received: 4_350_000, purpose: "Investment — Tessera Robotics Series B", status: "Funded" },
-  { id: "cc-fip-11", fundId: "fip-horizonte", number: 11, noticeDate: "2026-10-20", dueDate: "2026-11-04", amount: 28_000_000, received: 28_000_000, purpose: "Chamada de capital — Linha de Transmissão Norte", status: "Funded" },
-  { id: "cc-infra-06", fundId: "aurum-infra-i", number: 6, noticeDate: "2026-08-12", dueDate: "2026-08-26", amount: 18_200_000, received: 18_200_000, purpose: "Investment — Porto Verde Logistics; fees", status: "Funded" },
-  { id: "cc-atl-01", fundId: "atlantico-vp-ii", number: 1, noticeDate: "2025-10-14", dueDate: "2025-10-28", amount: 6_400_000, received: 6_400_000, purpose: "Initial capital — organizational expenses and first investments", status: "Funded" },
-  { id: "cc-cvc-03", fundId: "meridian-cvc", number: 3, noticeDate: "2026-06-02", dueDate: "2026-06-16", amount: 6_100_000, received: 6_100_000, purpose: "Investment — Lumen Grid Analytics Series A", status: "Funded" },
-];
+export const capitalCalls: CapitalCall[] = funds
+  .flatMap((f) => buildBooks(f.id).calls)
+  .sort((a, b) => b.noticeDate.localeCompare(a.noticeDate));
 
-export type Distribution = {
-  id: string;
-  fundId: string;
-  date: string;
-  amount: number;
-  type: "Return of capital" | "Income" | "Realized gain" | "Mixed";
-  source: string;
-  status: "Scheduled" | "Paid";
-};
-
-export const distributions: Distribution[] = [
-  { id: "d-fip-06", fundId: "fip-horizonte", date: "2026-12-15", amount: 24_500_000, type: "Income", source: "Dividends — Linha de Transmissão Sul", status: "Scheduled" },
-  { id: "d-serra-03", fundId: "serra-re-spv", date: "2026-10-31", amount: 2_150_000, type: "Income", source: "Net operating income Q3 2026", status: "Paid" },
-  { id: "d-infra-02", fundId: "aurum-infra-i", date: "2026-09-30", amount: 4_700_000, type: "Mixed", source: "Partial exit — Atlas Fiber minority stake", status: "Paid" },
-  { id: "d-fip-05", fundId: "fip-horizonte", date: "2026-06-15", amount: 31_000_000, type: "Realized gain", source: "Sale of 30% — Usina Eólica Serra Azul", status: "Paid" },
-  { id: "d-serra-02", fundId: "serra-re-spv", date: "2026-07-31", amount: 2_050_000, type: "Income", source: "Net operating income Q2 2026", status: "Paid" },
-  { id: "d-infra-01", fundId: "aurum-infra-i", date: "2025-12-19", amount: 3_120_000, type: "Income", source: "Portfolio yield — Porto Verde Logistics", status: "Paid" },
-];
+export const distributions: Distribution[] = funds
+  .flatMap((f) => buildBooks(f.id).distributions)
+  .sort((a, b) => b.date.localeCompare(a.date));
 
 export type OnboardingStatus =
   | "Invited"
@@ -407,7 +346,7 @@ export const activity: Activity[] = [
   { at: "2026-11-24T08:42:00", actor: "Beatriz Duarte", text: "uploaded ownership chart for Duarte Participações S.A.", fundId: "atlantico-vp-ii" },
   { at: "2026-11-24T08:15:00", actor: "System", text: "sent onboarding invitation to Kessler Revocable Trust", fundId: "atlantico-vp-ii" },
   { at: "2026-11-23T17:30:00", actor: "Margaret Calloway", text: "completed the tax information step", fundId: "atlantico-vp-ii" },
-  { at: "2026-11-23T11:04:00", actor: "City National Bank", text: "receipt of $2,040,000 matched to Capital Call No. 7 — Ridgeway Mutual", fundId: "aurum-infra-i" },
+  { at: "2026-11-23T11:04:00", actor: "City National Bank", text: "receipt matched to Capital Call No. 7 — Ridgeway Mutual Insurance Co.", fundId: "aurum-infra-i" },
   { at: "2026-11-21T15:52:00", actor: "Clara Huang", text: "submitted subscription documents for review", fundId: "atlantico-vp-ii" },
   { at: "2026-11-19T10:20:00", actor: "R. Mendes", text: "requested changes on Monteiro subscription — proof of address", fundId: "atlantico-vp-ii" },
   { at: "2026-11-17T09:00:00", actor: "L. Andrade", text: "issued Capital Call No. 7 to 9 limited partners", fundId: "aurum-infra-i" },
@@ -439,15 +378,44 @@ export const investorById = (id: string) => investors.find((i) => i.id === id);
 /** The investor signed in to the client portal in this preview. */
 export const PORTAL_INVESTOR_ID = "inv-calloway";
 
-/** Consolidated quarterly cash flows across all vehicles, USD millions (BRL at reporting rate). */
-export const quarterlyFlows: { q: string; contributions: number; distributions: number }[] = [
-  { q: "Q4 2024", contributions: 21.4, distributions: 3.9 },
-  { q: "Q1 2025", contributions: 14.8, distributions: 2.1 },
-  { q: "Q2 2025", contributions: 18.2, distributions: 6.6 },
-  { q: "Q3 2025", contributions: 9.6, distributions: 4.2 },
-  { q: "Q4 2025", contributions: 24.1, distributions: 7.4 },
-  { q: "Q1 2026", contributions: 12.3, distributions: 3.3 },
-  { q: "Q2 2026", contributions: 16.9, distributions: 9.8 },
-  { q: "Q3 2026", contributions: 23.7, distributions: 7.2 },
-  { q: "Q4 2026", contributions: 22.3, distributions: 4.5 },
+/** Consolidated quarterly cash flows across all vehicles, USD millions (BRL at reporting rate), from the ledger. */
+export const quarterlyFlows: { q: string; contributions: number; distributions: number }[] = (() => {
+  const quarters = ["2024-4", "2025-1", "2025-2", "2025-3", "2025-4", "2026-1", "2026-2", "2026-3", "2026-4"];
+  const acc = new Map(quarters.map((q) => [q, { contributions: 0, distributions: 0 }]));
+  for (const f of funds) {
+    for (const je of buildBooks(f.id).journal) {
+      const [y, m] = je.date.split("-").map(Number);
+      const q = acc.get(`${y}-${Math.ceil(m / 3)}`);
+      if (!q) continue;
+      for (const l of je.lines) {
+        if (je.source === "Receipt" && l.account === "1000") q.contributions += toUSD(l.debit / 100, f.currency);
+        if (je.source === "Distribution" && l.account === "3100") q.distributions += toUSD(l.debit / 100, f.currency);
+      }
+    }
+  }
+  return quarters.map((k) => {
+    const [y, q] = k.split("-");
+    const v = acc.get(k)!;
+    return { q: `Q${q} ${y}`, contributions: +(v.contributions / 1e6).toFixed(1), distributions: +(v.distributions / 1e6).toFixed(1) };
+  });
+})();
+
+export type ProfileChangeRequest = {
+  id: string;
+  investorId: string;
+  submitted: string;
+  submittedBy: string;
+  field: string;
+  from: string;
+  to: string;
+  control: string;
+  status: "Pending review" | "Approved";
+};
+
+/** Investor-initiated changes. Sensitive fields (bank, signatories) require out-of-band verification. */
+export const profileChangeRequests: ProfileChangeRequest[] = [
+  { id: "pcr-311", investorId: "inv-ferreira", submitted: "2026-11-22", submittedBy: "Paulo Ferreira", field: "Distribution bank account", from: "Itaú BBA Nassau ••0917", to: "UBS Switzerland ••5530", control: "Callback to signatory on file + 5-day hold", status: "Pending review" },
+  { id: "pcr-309", investorId: "inv-calloway", submitted: "2026-11-20", submittedBy: "Margaret Calloway", field: "Mailing address", from: "1200 Brickell Bay Dr, Miami, FL", to: "1450 Brickell Avenue, Suite 2100, Miami, FL", control: "Standard review", status: "Pending review" },
+  { id: "pcr-307", investorId: "inv-prado", submitted: "2026-11-18", submittedBy: "Helena Prado", field: "Identity document (KYC refresh)", from: "Passport — expires Dec 31, 2026", to: "Passport — expires Oct 2, 2036", control: "Document verification", status: "Pending review" },
+  { id: "pcr-301", investorId: "inv-brightwater", submitted: "2026-11-04", submittedBy: "Daniel Okafor", field: "Authorized contact added", from: "—", to: "Priya Raman, CFO (view + notices)", control: "Signatory confirmation", status: "Approved" },
 ];

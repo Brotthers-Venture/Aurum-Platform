@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Download, UserPlus } from "lucide-react";
 import { Avatar, Button, ButtonLink, PageHeader, Panel, Status } from "@/components/ui";
-import { capitalAccounts, fundById, investors, toUSD } from "@/lib/data";
-import { initials, moneyShort } from "@/lib/format";
+import { capitalAccounts, fundById, investorById, investors, profileChangeRequests, toUSD } from "@/lib/data";
+import { date, initials, moneyShort } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Investors" };
 
@@ -33,6 +33,51 @@ export default function InvestorsPage() {
           </>
         }
       />
+      <Panel
+        title="Profile change requests"
+        actions={<span className="text-stone-500">Submitted by investors from the portal</span>}
+        flush
+      >
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Investor</th>
+              <th>Change</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Control</th>
+              <th>Submitted</th>
+              <th>Status</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {profileChangeRequests.map((r) => (
+              <tr key={r.id}>
+                <td className="font-semibold">{investorById(r.investorId)?.name}</td>
+                <td>{r.field}</td>
+                <td className="text-[12px] text-stone-500">{r.from}</td>
+                <td className="text-[12px] text-ink-900">{r.to}</td>
+                <td className="text-[12px] text-stone-600">{r.control}</td>
+                <td className="num text-stone-600">
+                  {date(r.submitted)}
+                  <div className="text-[11px] text-stone-400">{r.submittedBy}</div>
+                </td>
+                <td>
+                  <Status value={r.status} />
+                </td>
+                <td className="r">
+                  {r.status === "Pending review" && (
+                    <Button size="sm" variant="secondary">
+                      Review
+                    </Button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Panel>
       <div className="flex flex-wrap items-center gap-2">
         {["All types", "Institutional", "Individuals & trusts", "Non-US"].map((f, i) => (
           <button

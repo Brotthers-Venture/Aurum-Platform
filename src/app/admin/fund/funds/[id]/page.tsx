@@ -73,7 +73,7 @@ export default async function FundDetail({ params }: { params: Promise<{ id: str
           <KeyValue
             items={[
               ["DPI", multiple(t.dpi)],
-              ["RVPI", multiple(t.nav / t.contributed)],
+              ["RVPI", multiple(t.rvpi)],
               ["TVPI", multiple(t.tvpi)],
               ["Called to date", pct(t.contributed / t.commitment, 0)],
             ]}

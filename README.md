@@ -25,6 +25,31 @@ Open http://localhost:3000. In the preview, any password and any 6-digit code wo
 | Investor portal | `/portal` | Holdings, capital call notice, documents, subscriptions |
 | Subscription flow | `/subscribe/[fundId]` | Passthrough-style 8-step onboarding with profile reuse |
 
+## Fund accounting engine (`src/lib/accounting/`)
+
+Every number on the platform — capital accounts, NAV, DPI/TVPI, calls, distributions — is derived from a double-entry general ledger:
+
+- `coa.ts` — chart of accounts; partner-level accounts (1200, 3000, 3100) are tagged by investor.
+- `schedules.ts` / `commitments.ts` — source events per vehicle (calls, distributions, valuations, transfers, closes). These become database rows in Supabase.
+- `engine.ts` — posts balanced entries chronologically in integer cents and maintains the partner subledger:
+  - capital calls allocated pro rata (largest-remainder rounding, so partner amounts always sum to the call)
+  - subsequent-close equalization with interest on prior contributions; existing partners refunded the excess
+  - P&L allocated to partners by commitment
+  - secondary transfers move commitment and every capital component to the transferee
+- `waterfall.ts` — European waterfall: return of capital → preferred return → GP catch-up → carried interest split.
+
+Screens: General ledger (trial balance, financial statements, partners' capital, journal, chart of accounts), Transfers, Closes & equalization, capital call detail and wizard, distribution wizard with waterfall, investor profile self-service with change review.
+
+## Database
+
+`supabase/migrations/20261124000000_fund_accounting_core.sql` — tables for funds, investors, closes, commitments, ledger, capital activity, transfers, equalizations, bank accounts/transactions and profile change requests. The database itself enforces:
+
+- every journal entry balances (deferred constraint trigger)
+- partner-level accounts carry an investor; others don't
+- posted entries are immutable — corrections use reversing entries
+- four-eyes: a capital call or profile change can't be reviewed by the person who prepared it
+- row-level security: staff see everything; investors see only their own entities
+
 ## Brand
 
 - Logos live in `public/brand/` (`aurum-logo-dark.png`, `aurum-logo-white.png`, `aurum-mark.svg`). Replace these files to update the logo everywhere.
@@ -39,6 +64,6 @@ Open http://localhost:3000. In the preview, any password and any 6-digit code wo
 
 ## Next phase
 
-1. Supabase: schema from `src/lib/data.ts`, Auth with MFA, row-level security (staff vs investor), Storage for documents.
-2. Replace the preview login with Supabase Auth.
-3. Plaid Link for fund operating accounts and investor distribution-account verification.
+1. Create the Supabase project, run the migration, load the sample data, and switch `src/lib/data.ts` to live queries.
+2. Replace the preview login with Supabase Auth (password + MFA).
+3. Integrations: Plaid (US accounts), statement import for non-US banks, KYC/AML screening, e-signature.

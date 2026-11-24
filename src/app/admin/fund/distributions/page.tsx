@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Plus } from "lucide-react";
-import { Button, PageHeader, Panel, Status } from "@/components/ui";
+import { ButtonLink, PageHeader, Panel, Status } from "@/components/ui";
 import { distributions, fundById } from "@/lib/data";
 import { date, money } from "@/lib/format";
 
@@ -12,11 +12,11 @@ export default function DistributionsPage() {
       <PageHeader
         eyebrow="Capital activity"
         title="Distributions"
-        description="Waterfall-based distributions with partner-level allocation, withholding and payment instructions."
+        description="Waterfall-based distributions with partner-level allocation, withholding and payment instructions. Paid distributions are posted from the ledger."
         actions={
-          <Button>
+          <ButtonLink href="/admin/fund/distributions/new">
             <Plus size={14} strokeWidth={2} /> New distribution
-          </Button>
+          </ButtonLink>
         }
       />
       <Panel flush>

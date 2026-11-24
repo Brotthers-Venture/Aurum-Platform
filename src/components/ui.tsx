@@ -150,6 +150,14 @@ const statusTone: Record<string, keyof typeof tone> = {
   Expiring: "caution",
   "Potential match": "negative",
   "Manual statements": "neutral",
+  Overdue: "negative",
+  Outstanding: "caution",
+  Completed: "positive",
+  Requested: "neutral",
+  "GP consent": "info",
+  Documentation: "info",
+  Posted: "positive",
+  "Pending review": "caution",
   "Not connected": "neutral",
 };
 

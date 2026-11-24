@@ -30,9 +30,8 @@ export default function PortalOverview() {
   );
   const pending = onboarding.find((o) => o.investorName === inv.name && o.status === "In progress");
   const call = capitalCalls.find((c) => c.status === "Partially funded")!;
-  const myCallAcct = accts.find((a) => a.fundId === call.fundId)!;
   const callFund = fundById(call.fundId)!;
-  const myCallShare = (call.amount * myCallAcct.commitment) / 212_500_000;
+  const myCallShare = call.allocations.find((a) => a.investorId === inv.id)?.amount ?? 0;
   const fundIds = new Set(accts.map((a) => a.fundId));
   const docs = documents.filter((d) => fundIds.has(d.fundId) && d.visibility !== "Internal").slice(0, 5);
 
