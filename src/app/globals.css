@@ -235,3 +235,11 @@ input:-webkit-autofill:focus {
 .orbit-mark:focus {
   outline: none;
 }
+
+/* Hub: no browser focus box on the hexagons after a click; a soft glow for keyboard focus instead */
+main svg g[tabindex]:focus {
+  outline: none;
+}
+main svg g[tabindex]:focus-visible {
+  filter: drop-shadow(0 0 6px rgba(15, 35, 64, 0.35));
+}
