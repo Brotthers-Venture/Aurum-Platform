@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CommsWorkspace } from "@/components/comms/CommsWorkspace";
 
-export const metadata: Metadata = { title: "Communication" };
+export const metadata: Metadata = { title: "Chat Room" };
 
 export default function CommunicationPage({ searchParams }: { searchParams: Promise<{ space?: string }> }) {
   return (

@@ -128,7 +128,7 @@ export function FundSidebar() {
             )}
           >
             <AurumMark size={16} color={COMM} className="shrink-0" />
-            <span className="flex-1">Communication</span>
+            <span className="flex-1">Chat Room</span>
             {unread > 0 && (
               <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white" style={{ background: COMM }}>
                 {unread}

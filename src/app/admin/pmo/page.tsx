@@ -9,7 +9,7 @@ const tabs: PmoTab[] = ["portfolio", "timeline", "tasks", "risks", "capacity", "
 
 export default function Page({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   return (
-    <ModulePage context="Project management office">
+    <ModulePage context="Project management office" wide>
       <Suspense fallback={<div className="min-h-[70vh]" />}>
         <Body searchParams={searchParams} />
       </Suspense>

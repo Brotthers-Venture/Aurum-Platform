@@ -34,7 +34,7 @@ async function BrandedShell({ children, params }: { children: ReactNode; params:
           { href: `${base}/investors`, label: "Investors" },
           { href: `${base}/activity`, label: "Capital activity" },
           { href: `${base}/reports`, label: "Reports" },
-          { href: `${base}/messages`, label: "Communication", mark: FIRM.communication },
+          { href: `${base}/messages`, label: "Chat Room", mark: FIRM.communication },
         ]}
         userName={principal?.name ?? gp.shortName}
         userTitle={`${gp.shortName} · GP principal`}

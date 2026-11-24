@@ -853,7 +853,7 @@ export function CommsWorkspace(props: Props) {
           {isAurum ? (
             <>
               <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.16em]" style={{ color: COMM }}>
-                <AurumMark size={11} color={COMM} /> Communication
+                <AurumMark size={11} color={COMM} /> Chat Room
               </div>
               <div className="mt-1.5 text-[17px] font-semibold tracking-[-0.01em] text-ink-900">{spaceById(spaceId)?.name}</div>
               <div className="mt-0.5 text-[11px] text-stone-500">
@@ -863,7 +863,7 @@ export function CommsWorkspace(props: Props) {
           ) : (
             <>
               <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.16em]" style={{ color: COMM }}>
-                <AurumMark size={11} color={COMM} /> Communication
+                <AurumMark size={11} color={COMM} /> Chat Room
               </div>
               <div className="mt-1.5 text-[17px] font-semibold tracking-[-0.01em] text-ink-900">Aurum</div>
               <div className="mt-0.5 text-[11px] text-stone-500">Your administration team</div>

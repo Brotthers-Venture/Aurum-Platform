@@ -1,22 +1,48 @@
 import type { Metadata } from "next";
-import { reportingRate } from "@/lib/fx-server";
+import { fxLabel, reportingRate } from "@/lib/fx-server";
+import { InvestorsView, type MasterRow, type Vehicle } from "@/components/fund/InvestorsView";
+import { gpById } from "@/lib/gps";
 import { Download, UserPlus } from "lucide-react";
-import { Avatar, Button, ButtonLink, PageHeader, Panel, Status } from "@/components/ui";
-import { capitalAccounts, fundById, investorById, investors, profileChangeRequests, toUSD } from "@/lib/data";
-import { date, initials, moneyShort } from "@/lib/format";
+import { Button, ButtonLink, PageHeader, Panel, Status } from "@/components/ui";
+import { capitalAccounts, fundById, funds, investorById, investors, profileChangeRequests, toUSD } from "@/lib/data";
+import { date } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Investors" };
 
 export default async function InvestorsPage() {
   const fx = await reportingRate();
-  const rows = investors
+  const vehicles: Vehicle[] = funds.map((f) => ({
+    id: f.id,
+    name: f.name,
+    shortName: f.shortName,
+    currency: f.currency,
+    gp: gpById(f.gpId)?.shortName ?? f.gp,
+    status: f.status,
+    rows: capitalAccounts
+      .filter((c) => c.fundId === f.id)
+      .map((c) => {
+        const inv = investorById(c.investorId)!;
+        return { investorId: inv.id, name: inv.name, contact: inv.contact, type: inv.type, kyc: inv.kyc, closeDate: c.closeDate, commitment: c.commitment, called: c.called, unfunded: c.unfunded, distributed: c.distributed, nav: c.nav };
+      }),
+  }));
+  const master: MasterRow[] = investors
     .map((inv) => {
       const accts = capitalAccounts.filter((c) => c.investorId === inv.id);
-      const commitment = accts.reduce((a, c) => a + toUSD(c.commitment, fundById(c.fundId)!.currency, fx.rate), 0);
-      const nav = accts.reduce((a, c) => a + toUSD(c.nav, fundById(c.fundId)!.currency, fx.rate), 0);
-      return { inv, accts, commitment, nav };
+      return {
+        id: inv.id,
+        name: inv.name,
+        contact: inv.contact,
+        type: inv.type,
+        jurisdiction: inv.jurisdiction,
+        taxForm: inv.taxForm,
+        kyc: inv.kyc,
+        rm: inv.relationshipManager,
+        vehicles: accts.map((a) => fundById(a.fundId)!.shortName),
+        commitmentUsd: accts.reduce((a, c) => a + toUSD(c.commitment, fundById(c.fundId)!.currency, fx.rate), 0),
+        navUsd: accts.reduce((a, c) => a + toUSD(c.nav, fundById(c.fundId)!.currency, fx.rate), 0),
+      };
     })
-    .sort((a, b) => b.commitment - a.commitment);
+    .sort((a, b) => b.commitmentUsd - a.commitmentUsd);
 
   return (
     <div className="space-y-6">
@@ -35,6 +61,7 @@ export default async function InvestorsPage() {
           </>
         }
       />
+      <InvestorsView vehicles={vehicles} master={master} fxNote={`Vehicle registers in fund currency · totals by investor in USD, ${fxLabel(fx)}`} />
       <Panel
         title="Profile change requests"
         actions={<span className="text-stone-500">Submitted by investors from the portal</span>}
@@ -79,68 +106,6 @@ export default async function InvestorsPage() {
             ))}
           </tbody>
         </table>
-      </Panel>
-      <div className="flex flex-wrap items-center gap-2">
-        {["All types", "Institutional", "Individuals & trusts", "Non-US"].map((f, i) => (
-          <button
-            key={f}
-            className={`h-8 rounded-[3px] border px-3 text-[12px] font-medium ${
-              i === 0 ? "border-ink-900 bg-ink-900 text-white" : "border-stone-200 bg-white text-stone-600 hover:border-stone-400"
-            }`}
-          >
-            {f}
-          </button>
-        ))}
-        <span className="num ml-auto text-[12px] text-stone-500">{investors.length} investors</span>
-      </div>
-      <Panel flush>
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Investor</th>
-                <th>Type</th>
-                <th>Jurisdiction</th>
-                <th>Tax form</th>
-                <th>KYC / AML</th>
-                <th>Vehicles</th>
-                <th className="r">Commitments (USD)</th>
-                <th className="r">NAV (USD)</th>
-                <th>Relationship</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(({ inv, accts, commitment, nav }) => (
-                <tr key={inv.id} className="row-link">
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <Avatar label={initials(inv.name)} />
-                      <div>
-                        <div className="font-semibold text-ink-900">{inv.name}</div>
-                        <div className="text-[12px] text-stone-500">{inv.contact}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="text-stone-600">{inv.type}</td>
-                  <td className="text-stone-600">{inv.jurisdiction}</td>
-                  <td className="font-mono text-[12px] text-stone-600">{inv.taxForm}</td>
-                  <td>
-                    <Status value={inv.kyc} />
-                  </td>
-                  <td className="text-stone-600">
-                    <span className="num">{accts.length}</span>
-                    <span className="ml-1 text-[12px] text-stone-400">
-                      {accts.map((a) => fundById(a.fundId)!.shortName.split(" ")[0]).join(", ")}
-                    </span>
-                  </td>
-                  <td className="num r">{moneyShort(commitment)}</td>
-                  <td className="num r">{moneyShort(nav)}</td>
-                  <td className="text-stone-600">{inv.relationshipManager}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </Panel>
     </div>
   );
