@@ -34,11 +34,26 @@ export type GleifEntity = {
   corroboration: string | null;
   hasFundManager: boolean;
   hasManagedFunds: boolean;
+  /** a fund by GLEIF category, or by its name / legal form when registered as a general entity */
+  fundLike: boolean;
 };
 
 export type GleifDetail = GleifEntity & {
   fundManager: GleifEntity | null;
   managedFunds: GleifEntity[];
+  /** when GLEIF has no fund-manager link: the candidate manager LEI sharing this vehicle's principal office */
+  addressMatch: string | null;
+};
+
+const FUND_WORDS = /\b(fund|fundo|fip|fia|fic|fidc|spv|l\.?p\.?|feeder|master|vehicle)\b/i;
+/** ELF codes treated as fund vehicles (T91T = Delaware limited partnership) */
+const LP_FORMS = new Set(["T91T"]);
+
+/** Street number + first street word + postal code: enough to recognise the same office. */
+export const officeKey = (a: GleifAddress | null) => {
+  if (!a?.lines[0]) return null;
+  const words = a.lines[0].toLowerCase().replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(Boolean);
+  return `${words.slice(0, 2).join(" ")}|${(a.postalCode ?? "").slice(0, 5)}`;
 };
 
 const JURISDICTIONS: Record<string, string> = {
@@ -106,9 +121,19 @@ export function normalize(rec: any): GleifEntity {
     corroboration: r.corroborationLevel ?? null,
     hasFundManager: Boolean(rel["fund-manager"]),
     hasManagedFunds: Boolean(rel["managed-funds"]),
+    fundLike: e.category === "FUND" || FUND_WORDS.test(e.legalName?.name ?? "") || LP_FORMS.has(e.legalForm?.id),
   };
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
+
+/** Lower-case, accent-free, punctuation-free; "STX-Anchor" and "stx anchor" compare equal. */
+export const simplify = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 
 export const isLei = (s: string) => /^[A-Z0-9]{18}[0-9]{2}$/.test(s.trim().toUpperCase());
 

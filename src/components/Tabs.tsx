@@ -1,10 +1,17 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { cx } from "./ui";
 
-export function Tabs({ tabs }: { tabs: { id: string; label: string; count?: number; content: ReactNode }[] }) {
+export function Tabs({ tabs }: { tabs: { id: string; label: string; count?: number; countOf?: number; content: ReactNode }[] }) {
   const [active, setActive] = useState(tabs[0].id);
+  // deep link: ?tab=<id>
+  useEffect(() => {
+    const want = new URLSearchParams(window.location.search).get("tab");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from the URL after hydration
+    if (want && tabs.some((t) => t.id === want)) setActive(want);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <div>
       <div role="tablist" className="flex gap-6 border-b border-stone-200">
@@ -20,7 +27,12 @@ export function Tabs({ tabs }: { tabs: { id: string; label: string; count?: numb
             )}
           >
             {t.label}
-            {t.count !== undefined && <span className="num ml-1.5 text-stone-400">{t.count}</span>}
+            {t.count !== undefined && (
+              <span className="num ml-1.5 text-stone-400">
+                {t.count}
+                {t.countOf !== undefined && `/${t.countOf}`}
+              </span>
+            )}
           </button>
         ))}
       </div>

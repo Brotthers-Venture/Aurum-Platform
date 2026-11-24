@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, CircleAlert, CircleCheck, Copy, ExternalLink, FileUp, Link2, Loader2, Search, X } from "lucide-react";
+import { ArrowLeft, Check, CircleAlert, CircleCheck, Copy, ExternalLink, Link2, Loader2, Search, X } from "lucide-react";
 import { Button, ButtonLink, cx } from "@/components/ui";
+import { CorporateDocuments } from "@/components/fund/CorporateDocuments";
+import { CORPORATE_DOC_TYPES, type CorporateFile } from "@/lib/corporateDocs";
 import { formatAddress, type GleifDetail, type GleifEntity } from "@/lib/gleif";
 import { funds } from "@/lib/data";
 import { gps } from "@/lib/gps";
@@ -22,10 +24,20 @@ const norm = (s: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+/** Short words that are ordinary words, not acronyms, when title-casing GLEIF's upper-case names. */
+const SMALL_WORDS = new Set(["of", "and", "the", "for", "inc", "ltd", "co", "de", "da", "do", "dos", "das", "del", "e", "em", "no", "na", "com", "y", "la", "le", "on", "at", "in", "to"]);
+/** GLEIF stores names in capitals; show them in title case but keep acronyms (STX, LP, LLC, II) intact. */
 const titleCase = (s: string) =>
   s === s.toUpperCase()
-    ? s.toLowerCase().replace(/\b([a-z])/g, (m) => m.toUpperCase()).replace(/\bLp\b/g, "LP").replace(/\bLlc\b/g, "LLC").replace(/\bSpv\b/g, "SPV").replace(/\bI{1,3}\b/gi, (m) => m.toUpperCase())
-    : s;
+    ? s
+        .toLowerCase()
+        .replace(/[a-z0-9]+/g, (w, i: number) => {
+          if (/^[ivx]+$/.test(w) && w.length <= 4) return w.toUpperCase(); // roman numerals
+          if (w.length <= 3 && !SMALL_WORDS.has(w)) return w.toUpperCase(); // STX, LP, LLC, SPV, FIP
+          if (SMALL_WORDS.has(w) && i > 0 && !["inc", "ltd", "co"].includes(w)) return w;
+          return w[0].toUpperCase() + w.slice(1);
+        })
+    : s
 
 function Section({ n, title, desc, aside, children }: { n: number; title: string; desc: string; aside?: ReactNode; children: ReactNode }) {
   return (
@@ -138,7 +150,7 @@ function ResultRow({ r, onPick }: { r: GleifEntity; onPick: () => void }) {
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          {r.category && <Pill tone={r.category === "FUND" ? "gold" : "muted"}>{r.category === "GENERAL" ? "Entity" : r.category}</Pill>}
+          <Pill tone={r.fundLike ? "gold" : "muted"}>{r.fundLike ? "Fund" : "Entity"}</Pill>
           <Pill tone={r.registrationStatus === "ISSUED" ? "ok" : "warn"}>{r.registrationStatus ?? "—"}</Pill>
         </div>
       </button>
@@ -151,7 +163,6 @@ const blankManual = (viaRapidLei: boolean): Manual => ({ legalName: "", domicile
 
 export function NewVehicleForm() {
   const [q, setQ] = useState("");
-  const [fundsOnly, setFundsOnly] = useState(true);
   const [results, setResults] = useState<GleifEntity[] | null>(null);
   const [total, setTotal] = useState(0);
   const [searching, setSearching] = useState(false);
@@ -166,7 +177,8 @@ export function NewVehicleForm() {
   const [currency, setCurrency] = useState<"USD" | "BRL">("USD");
   const [strategy, setStrategy] = useState("");
   const [vintage, setVintage] = useState("");
-  const [lpa, setLpa] = useState<{ name: string; kb: number } | null>(null);
+  const [docs, setDocs] = useState<CorporateFile[]>([]);
+  const [capturedAt, setCapturedAt] = useState<string | null>(null);
   const [created, setCreated] = useState(false);
   const [leiCheck, setLeiCheck] = useState<{ state: "idle" | "checking" | "pending" | "invalid" }>({ state: "idle" });
   const seq = useRef(0);
@@ -180,7 +192,7 @@ export function NewVehicleForm() {
       setSearching(true);
       setError(null);
       try {
-        const res = await fetch(`/api/gleif/search?q=${encodeURIComponent(term)}${fundsOnly ? "&funds=1" : ""}`);
+        const res = await fetch(`/api/gleif/search?q=${encodeURIComponent(term)}`);
         const json = await res.json();
         if (id !== seq.current) return;
         if (!res.ok) throw new Error(json.error);
@@ -193,21 +205,23 @@ export function NewVehicleForm() {
       }
     }, 350);
     return () => clearTimeout(t);
-  }, [q, fundsOnly]);
+  }, [q]);
 
   const pick = async (lei: string) => {
     setLoadingLei(lei);
     setError(null);
     try {
-      const res = await fetch(`/api/gleif/record?lei=${lei}`);
+      const known = gps.map((g) => g.lei).filter(Boolean).join(",");
+      const res = await fetch(`/api/gleif/record?lei=${lei}${known ? `&match=${known}` : ""}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       const d = json as GleifDetail;
       setDetail(d);
+      setCapturedAt(new Date().toISOString());
       setManual(null);
-      if (d.category === "FUND") {
-        // Match the GP: first by the GLEIF fund-manager LEI, then by manager name / mail routing.
-        const byLei = d.fundManager && gps.find((g) => g.lei && g.lei === d.fundManager!.lei);
+      if (d.fundLike) {
+        // Match the GP: GLEIF fund-manager LEI, then a GP sharing the principal office, then manager name / mail routing.
+        const byLei = (d.fundManager && gps.find((g) => g.lei && g.lei === d.fundManager!.lei)) || (d.addressMatch && gps.find((g) => g.lei === d.addressMatch));
         const hint = [d.fundManager?.legalName, d.hqAddress?.mailRouting, d.legalAddress?.mailRouting].filter(Boolean).map((s) => norm(s!));
         const byName = gps.find((g) => !g.sample && hint.some((h) => h.includes(norm(g.name)) || h.includes(norm(g.shortName))));
         setGpId((byLei || byName)?.id ?? "");
@@ -228,7 +242,7 @@ export function NewVehicleForm() {
     setShortName("");
     setStrategy("");
     setVintage("");
-    setLpa(null);
+    setDocs([]);
     setCreated(false);
     setLeiCheck({ state: "idle" });
   };
@@ -247,19 +261,23 @@ export function NewVehicleForm() {
     } else setLeiCheck({ state: res.status === 404 ? "pending" : "invalid" });
   };
 
-  const isManager = detail && detail.category !== "FUND";
+  const isManager = detail && !detail.fundLike;
   const vehicle = detail && !isManager ? detail : null;
   const legalName = vehicle ? titleCase(vehicle.legalName) : (manual?.legalName ?? "");
-  const gpMatchedByLei = Boolean(vehicle?.fundManager && gps.find((g) => g.id === gpId)?.lei === vehicle.fundManager.lei);
+  const selectedGpLei = gps.find((g) => g.id === gpId)?.lei;
+  const gpMatchedByLei = Boolean(vehicle?.fundManager && selectedGpLei === vehicle.fundManager.lei);
+  const gpMatchedByOffice = Boolean(!vehicle?.fundManager && vehicle?.addressMatch && selectedGpLei === vehicle.addressMatch);
 
   const duplicate = useMemo(() => {
     const n = norm(legalName);
-    return n ? funds.find((f) => norm(f.name) === n) : undefined;
-  }, [legalName]);
+    return funds.find((f) => (vehicle && f.lei === vehicle.lei) || (n && norm(f.name) === n));
+  }, [legalName, vehicle]);
 
   const manualOk = manual && manual.legalName && manual.domicile && (!manual.viaRapidLei || (manual.formationDate && manual.registeredAs && manual.address));
   const ready = (vehicle || manualOk) && gpId && shortName && !duplicate;
   const gp = gps.find((g) => g.id === gpId);
+  const lpaFile = docs.filter((d) => d.type === "lpa").sort((a, b) => b.version - a.version)[0];
+  const missingRequired = CORPORATE_DOC_TYPES.filter((t) => t.required && !docs.some((d) => d.type === t.id));
   const formationYear = vehicle?.creationDate?.slice(0, 4) ?? manual?.formationDate.slice(0, 4);
 
   if (created) {
@@ -276,7 +294,11 @@ export function NewVehicleForm() {
             <Row label="LEI" mono={Boolean(vehicle)}>{vehicle ? vehicle.lei : manual?.viaRapidLei ? "Requested via RapidLEI · attaches when GLEIF publishes it" : "None"}</Row>
             <Row label="Domicile">{vehicle?.jurisdictionLabel ?? manual?.domicile}</Row>
             <Row label="Currency">{currency}</Row>
-            <Row label="LPA">{lpa ? `${lpa.name} · queued for review` : "Not uploaded yet"}</Row>
+            <Row label="Corporate records">
+              {docs.length} document{docs.length === 1 ? "" : "s"} on file
+              {missingRequired.length ? ` · missing ${missingRequired.map((t) => t.label).join(", ")}` : " · all required documents present"}
+            </Row>
+            <Row label="LPA">{lpaFile ? `${lpaFile.name} · queued for LPA review` : "Not uploaded yet"}</Row>
           </dl>
           <p className="mt-6 text-[12px] text-stone-500">Preview only: this isn&apos;t saved yet. It will be once the platform is connected to its database (Supabase).</p>
           <div className="mt-6 flex gap-2">
@@ -336,10 +358,7 @@ export function NewVehicleForm() {
                 />
                 {searching && <Loader2 size={15} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-stone-400" />}
               </div>
-              <label className="flex items-center gap-2 whitespace-nowrap text-[12px] text-stone-600">
-                <input type="checkbox" checked={fundsOnly} onChange={(e) => setFundsOnly(e.target.checked)} className="accent-ink-900" />
-                Funds only
-              </label>
+
             </div>
 
             {error && <Notice tone="warn">{error}</Notice>}
@@ -360,7 +379,7 @@ export function NewVehicleForm() {
                   </ul>
                 ) : (
                   <p className="px-4 py-6 text-center text-[13px] text-stone-500">
-                    No match{fundsOnly ? " among funds. Try clearing “Funds only” to search the manager" : ""}.
+                    No match in GLEIF. Try the exact legal name, the manager&apos;s name, or the LEI.
                   </p>
                 )}
               </div>
@@ -374,7 +393,7 @@ export function NewVehicleForm() {
                 <Button variant="ghost" size="sm" onClick={() => setManual(blankManual(false))}>
                   Enter manually
                 </Button>
-                <Button variant="secondary" size="sm" onClick={() => setManual({ ...blankManual(true), legalName: results?.length === 0 ? titleCase(q.trim()) : "" })}>
+                <Button variant="secondary" size="sm" onClick={() => setManual({ ...blankManual(true), legalName: q.trim().length >= 3 && !/^[A-Z0-9]{18}[0-9]{2}$/i.test(q.trim()) ? q.trim() : "" })}>
                   Create an LEI with RapidLEI
                 </Button>
               </div>
@@ -389,7 +408,7 @@ export function NewVehicleForm() {
               </div>
               <Pill tone="muted">Manager / entity</Pill>
             </div>
-            <Notice tone="info">This is a management company, not a fund. Pick the vehicle it manages:</Notice>
+            <Notice tone="info">This looks like a management company or operating entity, not a fund.{detail!.managedFunds.length ? " Pick the vehicle it manages:" : ""}</Notice>
             {detail!.managedFunds.length ? (
               <ul className="divide-y divide-stone-100 rounded-[3px] border border-stone-200">
                 {detail!.managedFunds.map((r) => (
@@ -397,7 +416,12 @@ export function NewVehicleForm() {
                 ))}
               </ul>
             ) : (
-              <p className="text-[13px] text-stone-500">GLEIF lists no funds managed by this entity.</p>
+              <p className="text-[13px] text-stone-500">
+                GLEIF lists no funds linked to this entity.{" "}
+                <button type="button" className="font-semibold text-ink-900 underline underline-offset-2" onClick={() => setDetail({ ...detail!, fundLike: true })}>
+                  Onboard it as a vehicle anyway
+                </button>
+              </p>
             )}
           </>
         ) : (
@@ -459,6 +483,18 @@ export function NewVehicleForm() {
                 </Notice>
               )}
               {vehicle.entityStatus !== "ACTIVE" && <Notice tone="warn">GLEIF reports this entity as {vehicle.entityStatus?.toLowerCase()}.</Notice>}
+              {(vehicle.category !== "FUND" || !vehicle.fundManager) && (
+                <Notice tone="info">
+                  In GLEIF,{" "}
+                  {[vehicle.category !== "FUND" && "this vehicle is registered as a general entity rather than a fund", !vehicle.fundManager && "no fund manager is reported"]
+                    .filter(Boolean)
+                    .join(" and ")}
+                  . Banks, regulators and counterparties read these fields, so ask the issuer to correct the record.{" "}
+                  <a href={RAPIDLEI_URL} target="_blank" rel="noreferrer" className="font-semibold text-ink-900 underline">
+                    Update in RapidLEI
+                  </a>
+                </Notice>
+              )}
             </>
           ) : (
             <div className="grid grid-cols-2 gap-5">
@@ -484,9 +520,10 @@ export function NewVehicleForm() {
           )}
           {duplicate && (
             <Notice tone="warn">
-              <strong>{duplicate.name}</strong> is already administered by Aurum.{" "}
-              <Link className="underline" href={`/admin/fund/funds/${duplicate.id}`}>
-                Open it
+              <strong>{duplicate.name}</strong> is already administered by Aurum
+              {vehicle && duplicate.lei === vehicle.lei ? ", with this LEI on file" : ""}. Its documents are kept in its corporate records.{" "}
+              <Link className="font-semibold underline" href={`/admin/fund/funds/${duplicate.id}?tab=records`}>
+                Open corporate records
               </Link>
             </Notice>
           )}
@@ -506,6 +543,8 @@ export function NewVehicleForm() {
                     <span className="inline-flex items-center gap-1 text-positive">
                       <Link2 size={12} /> Matched through GLEIF&apos;s fund-manager link
                     </span>
+                  ) : gpMatchedByOffice ? (
+                    "Matched by shared principal office in GLEIF. Please confirm."
                   ) : vehicle ? (
                     "Matched by manager name. Please confirm."
                   ) : undefined
@@ -582,36 +621,33 @@ export function NewVehicleForm() {
         </Section>
       )}
 
+      {/* Corporate records */}
+      {(vehicle || manual) && !duplicate && (
+        <Section n={manual?.viaRapidLei ? 5 : 4} title="Corporate records" desc="Formation documents kept on file for this vehicle. Upload now or add them later from the fund page.">
+          <CorporateDocuments
+            files={docs}
+            onChange={setDocs}
+            gleif={vehicle && capturedAt ? { lei: vehicle.lei, legalName: vehicle.legalName, capturedAt, status: vehicle.registrationStatus } : null}
+          />
+        </Section>
+      )}
+
       {/* Economics */}
       {(vehicle || manual) && !duplicate && (
-        <Section n={manual?.viaRapidLei ? 5 : 4} title="Economics" desc="Read from the LPA, not typed in.">
-          <Notice tone="info">
-            Management fee, carry, hurdle, share classes and waterfall are extracted from the LPA by the review agent, with the clause cited for every term, and only take effect
-            after two people approve them. Until then the vehicle shows <em>economics pending LPA review</em>.
+        <Section n={manual?.viaRapidLei ? 6 : 5} title="Economics" desc="Read from the LPA, not typed in.">
+          <Notice tone={lpaFile ? "ok" : "info"}>
+            {lpaFile ? (
+              <>
+                <strong>{lpaFile.name}</strong> (v{lpaFile.version}) goes to the LPA review agent when the vehicle is created. Fees, carry, hurdle, classes and waterfall
+                are extracted with the clause cited for every term, and take effect only after two people approve them.
+              </>
+            ) : (
+              <>
+                Management fee, carry, hurdle, share classes and waterfall are extracted from the LPA by the review agent, with the clause cited for every term. Upload the
+                LPA under Corporate records to start the review. Until it is approved, the vehicle shows <em>economics pending LPA review</em>.
+              </>
+            )}
           </Notice>
-          <label className="flex cursor-pointer items-center gap-4 rounded-[3px] border border-dashed border-stone-300 px-5 py-4 hover:border-ink-900">
-            <FileUp size={18} className="text-stone-400" />
-            <span className="flex-1 text-[13px]">
-              {lpa ? (
-                <>
-                  <strong>{lpa.name}</strong> <span className="text-stone-500">· {lpa.kb} KB · will be queued for review</span>
-                </>
-              ) : (
-                <>
-                  <strong>Upload the executed LPA</strong> <span className="text-stone-500">(PDF). You can also do this later.</span>
-                </>
-              )}
-            </span>
-            <input
-              type="file"
-              accept="application/pdf"
-              className="sr-only"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) setLpa({ name: f.name, kb: Math.max(1, Math.round(f.size / 1024)) });
-              }}
-            />
-          </label>
         </Section>
       )}
 

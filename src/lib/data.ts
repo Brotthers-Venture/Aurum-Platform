@@ -12,6 +12,8 @@ export type Fund = {
   gpId: string;
   /** true until the LPA review has been approved — terms below are not yet set */
   economicsPending?: boolean;
+  /** Legal Entity Identifier, when the vehicle has one */
+  lei?: string;
   name: string;
   shortName: string;
   legalForm: string;
@@ -168,6 +170,7 @@ export const funds: Fund[] = [
   },
   {
     id: "stx-anchor",
+    lei: "984500A5C2CE8X650036",
     gpId: "strlex",
     economicsPending: true,
     name: "STX-Anchor Capital Formation Fund, LP",
