@@ -218,3 +218,20 @@ input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
   transition: background-color 9999s ease-out 0s;
 }
+
+/* Hub: firm workspaces orbiting the Aurum mark */
+.orbit-mark {
+  transition:
+    transform 460ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 320ms ease;
+}
+.orbit-inner {
+  transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.orbit-mark:hover .orbit-inner,
+.orbit-mark:focus-visible .orbit-inner {
+  transform: scale(1.18);
+}
+.orbit-mark:focus {
+  outline: none;
+}

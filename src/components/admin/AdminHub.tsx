@@ -1,14 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { cx } from "@/components/ui";
 import { ChevronRight } from "lucide-react";
 import { Band, BrandCenter, FRAME, DarkCenter, MarkCenter, R, hexPoints, offset, ringOrder, type Slot } from "./HexNav";
 import { GpLogo } from "@/components/brand/GpLogo";
 import { GoldField } from "@/components/admin/GoldField";
-import { AurumMark } from "@/components/brand/Logo";
 import { firmById, firmModules } from "@/lib/firm";
 import { solutions } from "@/lib/solutions";
 import { gps, gpById, type GpClient } from "@/lib/gps";
@@ -52,6 +49,13 @@ type Node = {
 };
 
 const CREAM = "#FBF3DC";
+/** The Aurum mark at orbit size (outer band, gap, inner band — radii from the master logo). */
+const ORBIT_MARK = [174, 142, 117, 86]
+  .map((r) => {
+    const p = hexPoints((r * 25) / 174).split(" ");
+    return `M${p.join("L")}Z`;
+  })
+  .join(" ");
 const DWELL_MS = 420;
 const MOVE_PX = 6;
 
@@ -215,28 +219,36 @@ export function AdminHub() {
     restartDwell(); // every movement resets the rest timer
   };
 
-  /** Where a dock mark sits, in honeycomb units relative to the centre — the mark glides in from there. */
-  const fromDock = (el: HTMLElement | null): Pt => {
-    const svg = svgRef.current;
-    if (!el || !svg) return { x: 0, y: 300 };
-    const a = svg.getBoundingClientRect();
-    const b = el.getBoundingClientRect();
-    const k = size / a.width;
-    return { x: (b.x + b.width / 2 - (a.x + a.width / 2)) * k, y: (b.y + b.height / 2 - (a.y + a.height / 2)) * k };
-  };
-  const dockNode = (id: string, open: () => void): Node => ({ id, slot: "ne", label: [""], sub: "", open });
-  const openDock = (id: string, el: HTMLElement) => (id === "aurum" ? toRoot() : go({ kind: "module", id, from: fromDock(el) }));
-  const dock: { id: string; color: string; label: string; href: string; badge?: number; on: boolean }[] = [
-    { id: "aurum", color: "#F8C618", label: "Aurum solutions", href: "/admin", on: false },
-    ...firmModules.map((m) => ({
-      id: m.id,
-      color: m.color,
-      label: `${m.name}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`,
-      href: m.href,
-      badge: m.badge,
-      on: level.kind === "module" && level.id === m.id,
-    })),
-  ];
+  /**
+   * The six firm workspaces orbit the hub, one at each corner of the Aurum mark. At rest they sit close;
+   * when a ring opens they move out into the notches between its cells, so they stay reachable.
+   * Resting on one opens its ring (it glides to the centre); clicking goes straight in.
+   */
+  const ORBIT_IN = 182;
+  const ORBIT_OUT = 238;
+  const orbitShown = level.kind === "root" || level.kind === "module";
+  const orbitR = level.kind === "root" && !revealed ? ORBIT_IN : ORBIT_OUT;
+  const orbit = firmModules.map((m, i) => {
+    const a = ((-90 + 60 * i) * Math.PI) / 180;
+    const here = level.kind === "module" && level.id === m.id;
+    return {
+      id: here ? "aurum" : m.id,
+      color: here ? "#F8C618" : m.color,
+      label: here ? "Aurum solutions" : `${m.name}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`,
+      href: here ? "/admin" : m.href,
+      badge: here ? 0 : m.badge,
+      x: Math.round(orbitR * Math.cos(a) * 100) / 100,
+      y: Math.round(orbitR * Math.sin(a) * 100) / 100,
+    };
+  });
+  const orbitNode = (o: (typeof orbit)[number]): Node => ({
+    id: `orbit-${o.id}`,
+    slot: "ne",
+    label: [""],
+    sub: "",
+    open: () => (o.id === "aurum" ? toRoot() : go({ kind: "module", id: o.id, from: { x: o.x, y: o.y } })),
+  });
+  const orbitGo = (o: (typeof orbit)[number]) => (o.id === "aurum" ? toRoot() : router.push(o.href));
 
   const levelKey = level.kind === "gp" ? `gp-${level.gpId}` : level.kind;
   const animateRing = level.kind !== "root";
@@ -276,7 +288,7 @@ export function AdminHub() {
 
       <svg
         viewBox={`${-size / 2} ${-h / 2} ${size} ${h}`}
-        className="h-auto w-full max-w-[640px] select-none"
+        className="h-auto w-full max-w-[640px] select-none overflow-visible"
         role="group"
         aria-label="Aurum navigation"
         ref={svgRef}
@@ -372,50 +384,48 @@ export function AdminHub() {
             {center}
           </g>
         </g>
-      </svg>
 
-      <div className="relative -mt-2 flex items-center gap-9" onPointerMove={onMove} aria-label="More">
-        {dock.map((d) => (
-          <Link
-            key={d.id}
-            href={d.href}
-            aria-label={d.label}
-            title={d.label}
-            className={cx(
-              "group flex flex-col items-center transition-opacity duration-300",
-              d.id === "aurum" ? "absolute right-full top-0 mr-9" : "relative",
-              d.id === "aurum" && level.kind === "root" && "pointer-events-none opacity-0",
-            )}
-            tabIndex={d.id === "aurum" && level.kind === "root" ? -1 : undefined}
-            onMouseEnter={(e) => {
-              if (d.on) return;
-              const el = e.currentTarget;
-              hoverNode.current = dockNode(d.id, () => openDock(d.id, el));
+        {orbit.map((o) => (
+          <g
+            key={o.id === "aurum" ? `aurum-${o.x}-${o.y}` : o.id}
+            className="orbit-mark"
+            role="link"
+            tabIndex={orbitShown ? 0 : -1}
+            aria-label={o.label}
+            style={{
+              transform: `translate(${o.x}px, ${o.y}px) scale(${orbitShown ? 1 : 0.4})`,
+              opacity: orbitShown ? 1 : 0,
+              pointerEvents: orbitShown ? "auto" : "none",
+              cursor: "pointer",
+            }}
+            onMouseEnter={() => {
+              hoverNode.current = orbitNode(o);
               restartDwell();
             }}
             onMouseLeave={() => {
-              if (hoverNode.current?.id === d.id) hoverNode.current = null;
+              if (hoverNode.current?.id === `orbit-${o.id}`) hoverNode.current = null;
               clearDwell();
             }}
-            onClick={(e) => {
-              if (d.id === "aurum") {
-                e.preventDefault();
-                toRoot();
-              }
-            }}
+            onClick={() => orbitGo(o)}
+            onKeyDown={(e) => e.key === "Enter" && orbitGo(o)}
           >
-            <span className={cx("block transition-transform duration-300 group-hover:scale-110", d.on && "scale-110")}>
-              <AurumMark size={d.id === "aurum" ? 30 : 36} color={d.color} />
-            </span>
-            {!!d.badge && (
-              <span className="absolute -right-2.5 -top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white ring-2 ring-[#F1EDE4]" style={{ background: d.color }}>
-                {d.badge}
-              </span>
+            <title>{o.label}</title>
+            <circle r={34} fill="transparent" />
+            <g className="orbit-inner">
+              <path d={ORBIT_MARK} fill={o.color} fillRule="evenodd" />
+            </g>
+            {o.badge > 0 && (
+              <g transform="translate(21 -24)">
+                <circle r={10} fill={o.color} stroke="#F1EDE4" strokeWidth={2.5} />
+                <text textAnchor="middle" y={3.6} fontSize={10.5} fontWeight={700} fill="#FFFFFF">
+                  {o.badge}
+                </text>
+              </g>
             )}
-            <span className={cx("mt-2 h-1 w-1 rounded-full transition-opacity", d.on ? "opacity-100" : "opacity-0")} style={{ background: d.color }} />
-          </Link>
+          </g>
         ))}
-      </div>
+      </svg>
+
     </main>
   );
 }
