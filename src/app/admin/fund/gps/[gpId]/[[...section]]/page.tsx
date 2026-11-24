@@ -366,7 +366,7 @@ export default async function GpWorkspace({ params }: { params: Promise<{ gpId: 
             href={`/admin/fund/gps/${gp.id}${s ? `/${s}` : ""}`}
             className={cx(
               "-mb-px border-b-2 pb-3 pt-1 text-[13px]",
-              current === s ? "border-ink-900 font-semibold text-ink-900" : "border-transparent text-stone-500 hover:text-ink-900",
+              current === s ? "border-gold-500 font-semibold text-ink-900" : "border-transparent text-stone-500 hover:text-ink-900",
             )}
           >
             {l}

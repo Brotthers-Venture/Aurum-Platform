@@ -46,10 +46,10 @@
 }
 
 :root {
-  --brand: #0b1519;
+  --brand: #e0b000;
   --brand-2: #f8c618;
-  --brand-ink: #ffffff;
-  --brand-soft: #f7f7f4;
+  --brand-ink: #0b1519;
+  --brand-soft: #fdf8e4;
 }
 
 @theme inline {
@@ -129,7 +129,7 @@ body {
   border-bottom: 0;
 }
 .data-table tbody tr.row-link:hover td {
-  background: var(--color-stone-50);
+  background: color-mix(in srgb, var(--brand-soft) 70%, white);
   cursor: pointer;
 }
 .data-table .r {

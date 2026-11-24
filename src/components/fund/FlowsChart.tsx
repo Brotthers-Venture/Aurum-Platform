@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { quarterlyFlows } from "@/lib/data";
 
-const C_CONTRIB = "#3A65A8";
-const C_DIST = "#C08F00";
+const C_CONTRIB = "#9A5B2E";
+const C_DIST = "#D4A20C";
 
 export function FlowsChart() {
   const [hover, setHover] = useState<number | null>(null);

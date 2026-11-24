@@ -16,7 +16,7 @@ export function Tabs({ tabs }: { tabs: { id: string; label: string; count?: numb
             onClick={() => setActive(t.id)}
             className={cx(
               "-mb-px border-b-2 pb-3 pt-1 text-[13px] transition-colors",
-              active === t.id ? "border-ink-900 font-semibold text-ink-900" : "border-transparent text-stone-500 hover:text-ink-900",
+              active === t.id ? "border-gold-500 font-semibold text-ink-900" : "border-transparent text-stone-500 hover:text-ink-900",
             )}
           >
             {t.label}
