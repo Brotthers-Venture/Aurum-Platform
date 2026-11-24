@@ -3,7 +3,8 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Check, CircleCheck, FileUp, Info, Landmark, Lock, Plus, X } from "lucide-react";
-import { AurumWordmark } from "@/components/brand/Logo";
+import { GpLogo, AdministeredByAurum } from "@/components/brand/GpLogo";
+import { brandStyle, type GpClient } from "@/lib/gps";
 import { Button, ButtonLink, cx } from "@/components/ui";
 
 const steps = [
@@ -36,10 +37,10 @@ function Grid({ children }: { children: ReactNode }) {
 
 function Prefilled() {
   return (
-    <div className="mb-7 flex items-start gap-3 border-l-2 border-gold-400 bg-gold-50 px-4 py-3 text-[13px] text-ink-800">
-      <Info size={15} strokeWidth={1.8} className="mt-px shrink-0 text-gold-700" />
+    <div className="mb-7 flex items-start gap-3 border-l-2 border-brand bg-brand-soft px-4 py-3 text-[13px] text-ink-800">
+      <Info size={15} strokeWidth={1.8} className="mt-px shrink-0 text-brand" />
       <span>
-        Prefilled from your Aurum investor profile, last confirmed for <span className="font-semibold">Meridian Corporate Venture Fund</span> on
+        Prefilled from your investor profile, last confirmed for <span className="font-semibold">Meridian Corporate Venture Fund</span> on
         Nov 30, 2024. Review and update anything that has changed.
       </span>
     </div>
@@ -91,7 +92,8 @@ function Check2({ label, defaultChecked }: { label: ReactNode; defaultChecked?: 
   );
 }
 
-export function SubscriptionFlow({ fundName, gp }: { fundName: string; gp: string }) {
+export function SubscriptionFlow({ fundName, gp, client }: { fundName: string; gp: string; client: GpClient }) {
+  const home = `/investor/${client.id}`;
   const [step, setStep] = useState(4); // investor resumes at Eligibility
   const [maxReached, setMaxReached] = useState(4);
   const [type, setType] = useState("trust");
@@ -424,9 +426,9 @@ export function SubscriptionFlow({ fundName, gp }: { fundName: string; gp: strin
 
   if (submitted) {
     return (
-      <Shell fundName={fundName}>
+      <Shell fundName={fundName} client={client}>
         <div className="mx-auto max-w-[560px] py-24 text-center">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-ink-900 text-gold-400">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand text-brand-ink">
             <Check size={22} strokeWidth={2.4} />
           </span>
           <h1 className="mt-6 text-[26px] font-semibold tracking-[-0.015em]">Subscription submitted</h1>
@@ -435,7 +437,7 @@ export function SubscriptionFlow({ fundName, gp }: { fundName: string; gp: strin
             countersigns. No further action is needed unless we contact you.
           </p>
           <div className="mt-8 flex justify-center gap-2">
-            <ButtonLink href="/portal" variant="primary">
+            <ButtonLink href={home} variant="primary">
               Return to portal
             </ButtonLink>
             <Button variant="secondary">Download signed copy</Button>
@@ -446,7 +448,7 @@ export function SubscriptionFlow({ fundName, gp }: { fundName: string; gp: strin
   }
 
   return (
-    <Shell fundName={fundName}>
+    <Shell fundName={fundName} client={client}>
       <div className="mx-auto grid max-w-[1120px] gap-12 px-8 py-10 lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="lg:sticky lg:top-8 lg:self-start">
           <div className="eyebrow">Subscription</div>
@@ -471,7 +473,7 @@ export function SubscriptionFlow({ fundName, gp }: { fundName: string; gp: strin
                     <span
                       className={cx(
                         "num flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold",
-                        done ? "bg-ink-900 text-white" : current ? "border border-ink-900 text-ink-900" : "border border-stone-300 text-stone-400",
+                        done ? "bg-brand text-brand-ink" : current ? "border border-brand text-ink-900" : "border border-stone-300 text-stone-400",
                       )}
                     >
                       {done ? <Check size={11} strokeWidth={3} /> : i + 1}
@@ -494,7 +496,7 @@ export function SubscriptionFlow({ fundName, gp }: { fundName: string; gp: strin
               Step {step + 1} of {steps.length}
             </div>
             <div className="mt-2 h-[3px] bg-stone-200">
-              <div className="h-full bg-ink-900 transition-all" style={{ width: `${((step + 1) / steps.length) * 100}%` }} />
+              <div className="h-full bg-brand transition-all" style={{ width: `${((step + 1) / steps.length) * 100}%` }} />
             </div>
             <h1 className="mt-6 text-[24px] font-semibold tracking-[-0.015em]">{steps[step]}</h1>
           </div>
@@ -504,7 +506,7 @@ export function SubscriptionFlow({ fundName, gp }: { fundName: string; gp: strin
               Back
             </Button>
             <div className="flex gap-2">
-              <ButtonLink href="/portal" variant="secondary">
+              <ButtonLink href={home} variant="secondary">
                 Save and exit
               </ButtonLink>
               {step < steps.length - 1 ? (
@@ -512,7 +514,7 @@ export function SubscriptionFlow({ fundName, gp }: { fundName: string; gp: strin
                   Save and continue
                 </Button>
               ) : (
-                <Button type="button" variant="gold" disabled={!signature.trim()} onClick={() => setSubmitted(true)}>
+                <Button type="button" variant="brand" disabled={!signature.trim()} onClick={() => setSubmitted(true)}>
                   Sign and submit
                 </Button>
               )}
@@ -524,22 +526,27 @@ export function SubscriptionFlow({ fundName, gp }: { fundName: string; gp: strin
   );
 }
 
-function Shell({ fundName, children }: { fundName: string; children: ReactNode }) {
+function Shell({ fundName, client, children }: { fundName: string; client: GpClient; children: ReactNode }) {
+  const tall = client.logo && client.logo.width / client.logo.height < 3;
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" style={brandStyle(client.brand)}>
       <header className="border-b border-stone-200 bg-white">
+        <div className="h-[3px] bg-brand" />
         <div className="mx-auto flex h-16 max-w-[1120px] items-center justify-between px-8">
           <div className="flex items-center gap-5">
-            <AurumWordmark />
+            <GpLogo gp={client} height={tall ? 40 : 24} />
             <span className="h-5 w-px bg-stone-200" />
             <span className="text-[13px] text-stone-600">{fundName}</span>
           </div>
-          <Link href="/portal" className="flex items-center gap-1.5 text-[12px] font-medium text-stone-500 hover:text-ink-900">
+          <Link href={`/investor/${client.id}`} className="flex items-center gap-1.5 text-[12px] font-medium text-stone-500 hover:text-ink-900">
             <X size={15} strokeWidth={1.8} /> Close
           </Link>
         </div>
       </header>
       {children}
+      <footer className="mx-auto flex max-w-[1120px] justify-end px-8 pb-8">
+        <AdministeredByAurum />
+      </footer>
     </div>
   );
 }

@@ -28,7 +28,7 @@ function StatementRow({ label, v, strong, indent, fmt }: { label: string; v: num
 }
 
 export function AccountingWorkspace() {
-  const [fundId, setFundId] = useState("aurum-infra-i");
+  const [fundId, setFundId] = useState("cordillera-infra-i");
   const [asOf, setAsOf] = useState(TODAY);
   const [source, setSource] = useState("All");
   const f = fundById(fundId)!;

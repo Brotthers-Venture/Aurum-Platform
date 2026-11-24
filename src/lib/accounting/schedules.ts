@@ -48,7 +48,7 @@ export type FundEvent = CallEvent | DistributionEvent | ValuationEvent | Transfe
 export const EQUALIZATION_RATE = 0.08;
 
 export const schedules: Record<string, FundEvent[]> = {
-  "aurum-infra-i": [
+  "cordillera-infra-i": [
     { t: "call", number: 1, notice: "2023-04-10", due: "2023-04-24", investments: [{ name: "Porto Verde Logistics", amount: 10_200_000 }], fees: 500_000, organizational: 800_000 },
     { t: "call", number: 2, notice: "2023-07-12", due: "2023-07-26", investments: [{ name: "Atlas Fiber Networks", amount: 12_800_000 }], fees: 1_000_000 },
     { t: "call", number: 3, notice: "2023-11-08", due: "2023-11-22", investments: [{ name: "Ribeira Solar Holdings", amount: 17_750_000 }], fees: 1_500_000 },
@@ -121,5 +121,22 @@ export const schedules: Record<string, FundEvent[]> = {
     { t: "call", number: 3, notice: "2026-06-02", due: "2026-06-16", investments: [{ name: "Lumen Grid Analytics — Series A", amount: 6_000_000 }], expenses: 100_000 },
     { t: "val", date: "2026-09-30", amount: 400_000, memo: "Q3 2026 valuation" },
     { t: "call", number: 4, notice: "2026-11-03", due: "2026-11-17", investments: [{ name: "Tessera Robotics — Series B", amount: 4_250_000 }], expenses: 100_000 },
+  ],
+  // Strlex Capital Group — sample activity (preview data; fees await LPA review)
+  "stx-achor": [
+    { t: "call", number: 1, notice: "2025-07-15", due: "2025-07-29", investments: [{ name: "Initial portfolio", amount: 5_115_000 }], organizational: 360_000 },
+    { t: "call", number: 2, notice: "2026-03-02", due: "2026-03-16", investments: [{ name: "Follow-on investments", amount: 4_380_000 }] },
+    { t: "val", date: "2026-06-30", amount: 520_000, memo: "Q2 2026 valuation" },
+    { t: "call", number: 3, notice: "2026-11-24", due: "2026-12-09", investments: [{ name: "New investments — Q4 2026", amount: 3_650_000 }], draft: true },
+  ],
+  "stx-brazil-housing": [
+    { t: "call", number: 1, notice: "2024-10-14", due: "2024-10-28", investments: [{ name: "Land and permits — São Paulo state", amount: 7_150_000 }], organizational: 250_000 },
+    { t: "call", number: 2, notice: "2025-05-05", due: "2025-05-19", investments: [{ name: "Construction — phase I units", amount: 8_880_000 }] },
+    { t: "call", number: 3, notice: "2026-02-09", due: "2026-02-23", investments: [{ name: "Construction — phase II units", amount: 6_660_000 }] },
+    { t: "val", date: "2025-12-31", amount: 1_400_000, memo: "Year-end valuation" },
+    { t: "dist", date: "2026-09-30", source: "Unit sales — phase I", income: 1_110_000 },
+  ],
+  "stx-global": [
+    { t: "call", number: 1, notice: "2026-08-03", due: "2026-08-17", investments: [{ name: "Initial investments", amount: 2_900_000 }], organizational: 300_000 },
   ],
 };

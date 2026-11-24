@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { SubscriptionFlow } from "@/components/subscribe/SubscriptionFlow";
 import { fundById, onboarding } from "@/lib/data";
+import { gpById } from "@/lib/gps";
 
 export function generateStaticParams() {
   return Array.from(new Set(onboarding.map((o) => o.fundId))).map((fundId) => ({ fundId }));
@@ -15,5 +16,5 @@ export default async function SubscribePage({ params }: { params: Promise<{ fund
   const { fundId } = await params;
   const f = fundById(fundId);
   if (!f) notFound();
-  return <SubscriptionFlow fundName={f.name} gp={f.gp} />;
+  return <SubscriptionFlow fundName={f.name} gp={f.gp} client={gpById(f.gpId)!} />;
 }

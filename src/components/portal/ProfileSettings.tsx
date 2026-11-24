@@ -55,7 +55,7 @@ export function ProfileSettings() {
       <div className="eyebrow">Calloway Family Trust</div>
       <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.02em]">Profile</h1>
       <p className="mt-1.5 max-w-[640px] text-[14px] text-stone-600">
-        Keep your information current. Changes are reviewed by Aurum before they take effect; bank and signatory changes are
+        Keep your information current. Changes are reviewed by the fund administrator before they take effect; bank and signatory changes are
         verified by phone with an authorized signatory.
       </p>
 
@@ -63,7 +63,7 @@ export function ProfileSettings() {
         <div className="mt-6 rounded-[4px] border border-caution/30 bg-caution-bg px-5 py-4">
           <div className="flex items-center gap-2 text-[13px] font-semibold text-ink-900">
             <Clock size={15} strokeWidth={1.8} className="text-caution" />
-            {pending.length} change{pending.length > 1 ? "s" : ""} pending Aurum review
+            {pending.length} change{pending.length > 1 ? "s" : ""} pending administrator review
           </div>
           <ul className="mt-2 space-y-1 text-[13px] text-stone-700">
             {pending.map((p, i) => (
@@ -201,7 +201,7 @@ export function ProfileSettings() {
               <div className="mt-4 flex items-start justify-between gap-6">
                 <p className="max-w-[520px] text-[12px] leading-relaxed text-stone-500">
                   For your protection, new bank details are verified by a call to an authorized signatory and held for five business
-                  days before any payment. Aurum will never ask you to change bank details by email.
+                  days before any payment. Your administrator will never ask you to change bank details by email.
                 </p>
                 <Button size="sm" variant="secondary" onClick={() => setBankModal(true)}>
                   Change account

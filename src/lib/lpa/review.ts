@@ -46,8 +46,8 @@ export type LpaReview = {
 };
 
 export const reviews: Record<string, LpaReview> = {
-  "aurum-infra-i": {
-    fundId: "aurum-infra-i",
+  "cordillera-infra-i": {
+    fundId: "cordillera-infra-i",
     version: 2,
     preparedBy: "Rafael Mendes",
     preparedAt: "2026-11-24T09:58:12",

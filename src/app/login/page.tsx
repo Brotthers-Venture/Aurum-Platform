@@ -109,7 +109,8 @@ export default function LoginPage() {
       <div className="mt-8 border border-dashed border-stone-300 px-3.5 py-3 text-[12px] leading-relaxed text-stone-500">
         <span className="font-semibold text-stone-600">Preview environment.</span> Any password works. Emails ending
         in <span className="font-mono text-[11px] text-ink-900">@aurumasset.us</span> open the administrator view;
-        all others open the investor portal.
+        a GP’s domain (e.g. <span className="font-mono text-[11px] text-ink-900">@strlex.com</span>) opens that GP’s portal; all others
+        open the investor portals.
       </div>
     </AuthShell>
   );

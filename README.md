@@ -58,6 +58,16 @@ Access = role × scope. Ten roles across Aurum staff, client GPs, investors and 
 
 `/admin/fund/funds/[id]/economics` — every extracted term shows its value, verbatim quote, clause and page; terms the documents don't state are "Not found" and stay blank unless an approver enters them with a source; conflicting clauses show both readings and require a recorded decision. Flow: prepared (fund accountant) → Aurum approval term by term → GP confirmation → applied as a new dated version. `src/app/api/lpa/extract` runs the two-pass extraction (needs `ANTHROPIC_API_KEY`; not yet tested against the live API).
 
+## GP clients and white-label portals
+
+Aurum's clients are GPs (`src/lib/gps.ts`). Each GP has a brand (logo, colours), a portal address, an email sender and sign-in domains.
+
+- **Admin honeycomb:** Client Portal → Fund Solution (GPs, Funds, Investors, Onboarding, Capital calls & distributions, Reports) → one GP (its logo at the centre; six shortcuts scoped to that GP). Hover previews, click commits, the centre steps back.
+- **GP portal** `/gp/[gpId]`: the GP's brand; overview, investors, capital activity with GP approvals, reports.
+- **Investor portal** `/investor/[gpId]` with branded sign-in at `/investor/[gpId]/login`: only that GP's funds. Investors with several managers pick a portal at `/portal`.
+- Every white-labeled page carries "Administered by Aurum Asset Management".
+- Real GP clients: Strlex Capital Group Inc. (three funds; economics pending LPA review; capital figures are preview data) and Arbor Partners Inc. (onboarding, no funds yet). Other GPs are sample clients.
+
 ## Brand
 
 - Logos live in `public/brand/` (`aurum-logo-dark.png`, `aurum-logo-white.png`, `aurum-mark.svg`). Replace these files to update the logo everywhere.

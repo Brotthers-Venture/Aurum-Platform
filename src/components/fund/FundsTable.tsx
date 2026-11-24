@@ -3,7 +3,7 @@ import { Status } from "@/components/ui";
 import { funds, fundTotals } from "@/lib/data";
 import { moneyShort, multiple, pct } from "@/lib/format";
 
-export function FundsTable() {
+export function FundsTable({ gpId }: { gpId?: string } = {}) {
   return (
     <div className="overflow-x-auto">
       <table className="data-table">
@@ -22,7 +22,7 @@ export function FundsTable() {
           </tr>
         </thead>
         <tbody>
-          {funds.map((f) => {
+          {funds.filter((f) => !gpId || f.gpId === gpId).map((f) => {
             const t = fundTotals(f.id);
             return (
               <tr key={f.id} className="row-link">
@@ -32,6 +32,7 @@ export function FundsTable() {
                     <span className="block text-[12px] text-stone-500">
                       {f.strategy} · {f.currency}
                       {f.coAdministrator ? " · with MF Pepper" : ""}
+                      {f.economicsPending ? " · economics pending LPA review" : ""}
                     </span>
                   </Link>
                 </td>

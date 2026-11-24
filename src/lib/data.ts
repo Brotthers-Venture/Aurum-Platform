@@ -8,6 +8,10 @@ export type Currency = "USD" | "BRL";
 
 export type Fund = {
   id: string;
+  /** the GP client this vehicle belongs to (white-label brand) */
+  gpId: string;
+  /** true until the LPA review has been approved — terms below are not yet set */
+  economicsPending?: boolean;
   name: string;
   shortName: string;
   legalForm: string;
@@ -37,9 +41,10 @@ export const FX_BRL_USD = 5.4; // reporting rate for consolidated USD figures
 
 export const funds: Fund[] = [
   {
-    id: "aurum-infra-i",
-    name: "Aurum Infrastructure Partners I, LP",
-    shortName: "Infrastructure Partners I",
+    id: "cordillera-infra-i",
+    gpId: "cordillera",
+    name: "Cordillera Infrastructure Partners I, LP",
+    shortName: "Cordillera Infrastructure I",
     legalForm: "Delaware limited partnership",
     domicile: "Delaware, US",
     currency: "USD",
@@ -47,7 +52,7 @@ export const funds: Fund[] = [
     strategy: "Infrastructure",
     status: "Investing",
     targetSize: 250_000_000,
-    gp: "Aurum Infrastructure GP I, LLC",
+    gp: "Cordillera Infrastructure GP I, LLC",
     manager: "Cordillera Infrastructure Advisors",
     managementFee: "1.75% on commitments",
     carry: "20%",
@@ -62,6 +67,7 @@ export const funds: Fund[] = [
   },
   {
     id: "atlantico-vp-ii",
+    gpId: "atlantico",
     name: "Atlântico Venture Partners II, L.P.",
     shortName: "Atlântico Venture II",
     legalForm: "Cayman Islands exempted limited partnership",
@@ -86,6 +92,7 @@ export const funds: Fund[] = [
   },
   {
     id: "serra-re-spv",
+    gpId: "serra",
     name: "Serra Real Estate Co-Invest SPV, Ltd.",
     shortName: "Serra RE Co-Invest SPV",
     legalForm: "BVI business company",
@@ -110,6 +117,7 @@ export const funds: Fund[] = [
   },
   {
     id: "fip-horizonte",
+    gpId: "horizonte",
     name: "FIP Horizonte Infraestrutura Multiestratégia",
     shortName: "FIP Horizonte",
     legalForm: "Fundo de Investimento em Participações (CVM 175)",
@@ -135,6 +143,7 @@ export const funds: Fund[] = [
   },
   {
     id: "meridian-cvc",
+    gpId: "meridian",
     name: "Meridian Corporate Venture Fund, LP",
     shortName: "Meridian CVC",
     legalForm: "Delaware limited partnership",
@@ -156,6 +165,85 @@ export const funds: Fund[] = [
     bank: "J.P. Morgan Chase",
     hurdleRate: 0,
     carryRate: 0.1,
+  },
+  {
+    id: "stx-achor",
+    gpId: "strlex",
+    economicsPending: true,
+    name: "STX-Achor Capital Formation Fund, LP",
+    shortName: "STX-Achor Capital Formation",
+    legalForm: "Limited partnership",
+    domicile: "Delaware, US",
+    currency: "USD",
+    vintage: 2025,
+    strategy: "Capital formation",
+    status: "Investing",
+    targetSize: 75_000_000,
+    gp: "Strlex Capital Group Inc.",
+    manager: "Strlex Capital Group Inc.",
+    managementFee: "Pending LPA review",
+    carry: "Pending LPA review",
+    hurdle: "Pending LPA review",
+    term: "Pending LPA review",
+    firstClose: "2025-06-30",
+    finalClose: null,
+    auditor: "Pending LPA review",
+    bank: "City National Bank",
+    hurdleRate: 0,
+    carryRate: 0,
+  },
+  {
+    id: "stx-brazil-housing",
+    gpId: "strlex",
+    economicsPending: true,
+    name: "STX-Brazil Affordable Housing Fund I, LP",
+    shortName: "STX-Brazil Affordable Housing I",
+    legalForm: "Limited partnership",
+    domicile: "Delaware, US",
+    currency: "USD",
+    vintage: 2024,
+    strategy: "Affordable housing — Brazil",
+    status: "Investing",
+    targetSize: 60_000_000,
+    gp: "Strlex Capital Group Inc.",
+    manager: "Strlex Capital Group Inc.",
+    managementFee: "Pending LPA review",
+    carry: "Pending LPA review",
+    hurdle: "Pending LPA review",
+    term: "Pending LPA review",
+    firstClose: "2024-09-30",
+    finalClose: null,
+    auditor: "Pending LPA review",
+    bank: "City National Bank",
+    coAdministrator: "MF Pepper (Brazilian property-level administration)",
+    hurdleRate: 0,
+    carryRate: 0,
+  },
+  {
+    id: "stx-global",
+    gpId: "strlex",
+    economicsPending: true,
+    name: "Strlex Global Engind Fund LP",
+    shortName: "Strlex Global Engind",
+    legalForm: "Limited partnership",
+    domicile: "Delaware, US",
+    currency: "USD",
+    vintage: 2026,
+    strategy: "Global",
+    status: "Fundraising",
+    targetSize: 150_000_000,
+    gp: "Strlex Capital Group Inc.",
+    manager: "Strlex Capital Group Inc.",
+    managementFee: "Pending LPA review",
+    carry: "Pending LPA review",
+    hurdle: "Pending LPA review",
+    term: "Pending LPA review",
+    firstClose: "2026-06-30",
+    finalClose: null,
+    auditor: "Pending LPA review",
+    bank: "City National Bank",
+    hurdleRate: 0,
+    carryRate: 0,
   },
 ];
 
@@ -326,17 +414,21 @@ export type DocumentRecord = {
 };
 
 export const documents: DocumentRecord[] = [
-  { id: "doc-01", name: "Capital Call Notice No. 7", fundId: "aurum-infra-i", category: "Capital call notice", date: "2026-11-17", visibility: "Investor-specific", size: "184 KB" },
-  { id: "doc-02", name: "Q3 2026 Quarterly Report", fundId: "aurum-infra-i", category: "Quarterly report", date: "2026-11-14", visibility: "All investors", size: "2.4 MB" },
-  { id: "doc-03", name: "Q3 2026 Capital Account Statement", fundId: "aurum-infra-i", category: "Quarterly report", date: "2026-11-14", visibility: "Investor-specific", size: "212 KB" },
+  { id: "doc-01", name: "Capital Call Notice No. 7", fundId: "cordillera-infra-i", category: "Capital call notice", date: "2026-11-17", visibility: "Investor-specific", size: "184 KB" },
+  { id: "doc-02", name: "Q3 2026 Quarterly Report", fundId: "cordillera-infra-i", category: "Quarterly report", date: "2026-11-14", visibility: "All investors", size: "2.4 MB" },
+  { id: "doc-03", name: "Q3 2026 Capital Account Statement", fundId: "cordillera-infra-i", category: "Quarterly report", date: "2026-11-14", visibility: "Investor-specific", size: "212 KB" },
   { id: "doc-04", name: "Distribution Notice — Q3 2026", fundId: "serra-re-spv", category: "Distribution notice", date: "2026-10-31", visibility: "Investor-specific", size: "141 KB" },
   { id: "doc-05", name: "Amended & Restated LPA", fundId: "atlantico-vp-ii", category: "Fund formation", date: "2025-09-30", visibility: "All investors", size: "1.8 MB" },
   { id: "doc-06", name: "Private Placement Memorandum", fundId: "atlantico-vp-ii", category: "Fund formation", date: "2025-07-15", visibility: "All investors", size: "3.1 MB" },
   { id: "doc-07", name: "Subscription Agreement — Second Close", fundId: "atlantico-vp-ii", category: "Subscription", date: "2026-11-01", visibility: "All investors", size: "640 KB" },
-  { id: "doc-08", name: "Schedule K-1 (2025)", fundId: "aurum-infra-i", category: "Tax", date: "2026-03-13", visibility: "Investor-specific", size: "322 KB" },
+  { id: "doc-08", name: "Schedule K-1 (2025)", fundId: "cordillera-infra-i", category: "Tax", date: "2026-03-13", visibility: "Investor-specific", size: "322 KB" },
   { id: "doc-09", name: "Audited Financial Statements FY2025", fundId: "meridian-cvc", category: "Financial statements", date: "2026-04-28", visibility: "All investors", size: "1.2 MB" },
   { id: "doc-10", name: "Informe Mensal — Outubro 2026", fundId: "fip-horizonte", category: "Quarterly report", date: "2026-11-10", visibility: "All investors", size: "880 KB" },
   { id: "doc-11", name: "Capital Call Notice No. 4", fundId: "meridian-cvc", category: "Capital call notice", date: "2026-11-03", visibility: "Investor-specific", size: "176 KB" },
+  { id: "doc-13", name: "Capital Call Notice No. 2", fundId: "stx-achor", category: "Capital call notice", date: "2026-03-02", visibility: "Investor-specific", size: "168 KB" },
+  { id: "doc-14", name: "Q3 2026 Investor Report", fundId: "stx-brazil-housing", category: "Quarterly report", date: "2026-11-12", visibility: "All investors", size: "1.6 MB" },
+  { id: "doc-15", name: "Q3 2026 Capital Account Statement", fundId: "stx-achor", category: "Quarterly report", date: "2026-11-12", visibility: "Investor-specific", size: "204 KB" },
+  { id: "doc-16", name: "Limited Partnership Agreement", fundId: "stx-global", category: "Fund formation", date: "2026-06-30", visibility: "All investors", size: "2.2 MB" },
   { id: "doc-12", name: "AML Risk Assessment — Second Close", fundId: "atlantico-vp-ii", category: "KYC", date: "2026-11-20", visibility: "Internal", size: "96 KB" },
 ];
 
@@ -346,10 +438,10 @@ export const activity: Activity[] = [
   { at: "2026-11-24T08:42:00", actor: "Beatriz Duarte", text: "uploaded ownership chart for Duarte Participações S.A.", fundId: "atlantico-vp-ii" },
   { at: "2026-11-24T08:15:00", actor: "System", text: "sent onboarding invitation to Kessler Revocable Trust", fundId: "atlantico-vp-ii" },
   { at: "2026-11-23T17:30:00", actor: "Margaret Calloway", text: "completed the tax information step", fundId: "atlantico-vp-ii" },
-  { at: "2026-11-23T11:04:00", actor: "City National Bank", text: "receipt matched to Capital Call No. 7 — Ridgeway Mutual Insurance Co.", fundId: "aurum-infra-i" },
+  { at: "2026-11-23T11:04:00", actor: "City National Bank", text: "receipt matched to Capital Call No. 7 — Ridgeway Mutual Insurance Co.", fundId: "cordillera-infra-i" },
   { at: "2026-11-21T15:52:00", actor: "Clara Huang", text: "submitted subscription documents for review", fundId: "atlantico-vp-ii" },
   { at: "2026-11-19T10:20:00", actor: "R. Mendes", text: "requested changes on Monteiro subscription — proof of address", fundId: "atlantico-vp-ii" },
-  { at: "2026-11-17T09:00:00", actor: "L. Andrade", text: "issued Capital Call No. 7 to 9 limited partners", fundId: "aurum-infra-i" },
+  { at: "2026-11-17T09:00:00", actor: "L. Andrade", text: "issued Capital Call No. 7 to 9 limited partners", fundId: "cordillera-infra-i" },
 ];
 
 export type BankAccount = {
@@ -365,10 +457,11 @@ export type BankAccount = {
 };
 
 export const bankAccounts: BankAccount[] = [
-  { id: "ba-1", fundId: "aurum-infra-i", institution: "City National Bank", accountName: "Aurum Infrastructure Partners I — Operating", mask: "4471", type: "Operating", currency: "USD", connection: "Manual statements", lastStatement: "2026-10-31" },
+  { id: "ba-1", fundId: "cordillera-infra-i", institution: "City National Bank", accountName: "Cordillera Infrastructure Partners I — Operating", mask: "4471", type: "Operating", currency: "USD", connection: "Manual statements", lastStatement: "2026-10-31" },
   { id: "ba-2", fundId: "atlantico-vp-ii", institution: "Butterfield Bank (Cayman)", accountName: "Atlântico VP II — Subscription", mask: "0928", type: "Subscription escrow", currency: "USD", connection: "Not connected", lastStatement: "2026-10-31" },
   { id: "ba-3", fundId: "meridian-cvc", institution: "J.P. Morgan Chase", accountName: "Meridian CVC — Operating", mask: "7310", type: "Operating", currency: "USD", connection: "Manual statements", lastStatement: "2026-10-31" },
   { id: "ba-4", fundId: "serra-re-spv", institution: "Bank of Butterfield", accountName: "Serra SPV — Distribution", mask: "5582", type: "Distribution", currency: "USD", connection: "Not connected", lastStatement: "2026-09-30" },
+  { id: "ba-6", fundId: "stx-achor", institution: "City National Bank", accountName: "STX-Achor Capital Formation Fund — Operating", mask: "8814", type: "Operating", currency: "USD", connection: "Not connected", lastStatement: "2026-10-31" },
   { id: "ba-5", fundId: "fip-horizonte", institution: "Itaú Unibanco", accountName: "FIP Horizonte — Conta Movimento", mask: "2209", type: "Operating", currency: "BRL", connection: "Manual statements", lastStatement: "2026-10-31" },
 ];
 

@@ -5,7 +5,7 @@ export function cx(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(" ");
 }
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "gold";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "gold" | "brand";
 
 const buttonBase =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[3px] text-[13px] font-semibold tracking-[0.01em] transition-colors disabled:opacity-50 disabled:pointer-events-none";
@@ -14,6 +14,7 @@ const buttonVariants: Record<ButtonVariant, string> = {
   secondary: "border border-stone-300 bg-white text-ink-900 hover:border-ink-900",
   ghost: "text-ink-900 hover:bg-stone-100",
   gold: "bg-gold-400 text-ink-900 hover:bg-gold-500",
+  brand: "bg-brand text-brand-ink hover:opacity-90",
 };
 const buttonSizes = { sm: "h-8 px-3", md: "h-9 px-4", lg: "h-11 px-5 text-[14px]" };
 
@@ -183,7 +184,7 @@ export function Status({ value, className }: { value: string; className?: string
 export function Progress({ value, className }: { value: number; className?: string }) {
   return (
     <div className={cx("h-1 w-full overflow-hidden rounded-full bg-stone-100", className)}>
-      <div className="h-full bg-ink-900" style={{ width: `${Math.round(value * 100)}%` }} />
+      <div className="h-full bg-brand" style={{ width: `${Math.round(value * 100)}%` }} />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui";
+import { gpForEmail } from "@/lib/gps";
 
 function maskEmail(email: string) {
   const [user, domain] = email.split("@");
@@ -54,7 +55,8 @@ export default function VerifyPage() {
     e.preventDefault();
     setBusy(true);
     const isStaff = email.endsWith("@aurumasset.us");
-    setTimeout(() => router.push(isStaff ? "/admin" : "/portal"), 400);
+    const gp = gpForEmail(email);
+    setTimeout(() => router.push(isStaff ? "/admin" : gp ? `/gp/${gp.id}` : "/portal"), 400);
   }
 
   const complete = code.every((d) => d !== "");

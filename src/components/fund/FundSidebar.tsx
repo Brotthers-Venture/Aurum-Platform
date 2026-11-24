@@ -9,6 +9,7 @@ import {
   ArrowUpFromLine,
   BarChart3,
   BookOpen,
+  Briefcase,
   Scale,
   Building2,
   ChevronsUpDown,
@@ -31,6 +32,7 @@ const groups = [
   {
     label: "Administration",
     items: [
+      { href: "/admin/fund/gps", label: "GPs", icon: Briefcase },
       { href: "/admin/fund/funds", label: "Funds", icon: Building2 },
       { href: "/admin/fund/investors", label: "Investors", icon: Users },
       { href: "/admin/fund/onboarding", label: "Onboarding", icon: UserPlus, badge: openFiles },
