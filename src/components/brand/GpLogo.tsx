@@ -8,10 +8,13 @@ export function GpLogo({
   height = 32,
   className,
   tone = "light",
+  compact = false,
 }: {
   gp: GpClient;
   height?: number;
   className?: string;
+  /** Tighter tracking and a wrapping subtitle, for narrow containers such as hub cells */
+  compact?: boolean;
   /** "dark" when placed on a dark or brand-coloured surface */
   tone?: "light" | "dark";
 }) {
@@ -30,14 +33,14 @@ export function GpLogo({
   }
   const w = gp.wordmark!;
   return (
-    <span className={cx("inline-flex flex-col leading-none", className)} style={{ color: tone === "dark" ? "#FFFFFF" : gp.brand.primary }} aria-label={gp.name}>
+    <span className={cx("inline-flex flex-col leading-none", compact && "max-w-[124px] items-center text-center", className)} style={{ color: tone === "dark" ? "#FFFFFF" : gp.brand.primary }} aria-label={gp.name}>
       <span
-        className={w.serif ? "font-serif font-semibold" : "font-sans font-semibold tracking-[0.18em]"}
+        className={w.serif ? "font-serif font-semibold" : cx("font-sans font-semibold", compact ? "tracking-[0.12em]" : "tracking-[0.18em]")}
         style={{ fontSize: height * (w.serif ? 0.72 : 0.56) }}
       >
         {w.text}
       </span>
-      <span className="mt-[3px] whitespace-nowrap font-sans font-medium uppercase tracking-[0.24em] opacity-80" style={{ fontSize: Math.max(8, height * 0.24) }}>
+      <span className={cx("mt-[3px] font-sans font-medium uppercase opacity-80", compact ? "leading-[1.35] tracking-[0.14em]" : "whitespace-nowrap tracking-[0.24em]")} style={{ fontSize: Math.max(8, height * 0.24) }}>
         {w.sub}
       </span>
     </span>

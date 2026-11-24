@@ -18,7 +18,7 @@ export function hexPoints(r: number) {
   }).join(" ");
 }
 
-function offset(slot: Slot) {
+export function offset(slot: Slot) {
   const a = (Math.PI / 180) * slotAngle[slot];
   return { x: Math.round(STEP * Math.cos(a) * 100) / 100, y: Math.round(STEP * Math.sin(a) * 100) / 100 };
 }
