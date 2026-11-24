@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, CalendarRange, ChevronDown, ChevronRight, Copy, Download, FileText, MessageSquare, Paperclip, Plus, Printer, Send, Table2, X } from "lucide-react";
 import { cx } from "@/components/ui";
 import { FIRM } from "@/lib/firm-colors";
@@ -17,8 +17,17 @@ const longDate = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateStrin
 
 type View = "grid" | "gantt" | "requests";
 
-export function PlanSheet({ plan: seed }: { plan: Plan }) {
+export function PlanSheet({ plan: seed, crumbs = [], onChange }: { plan: Plan; crumbs?: string[]; onChange?: (rows: PlanRow[]) => void }) {
   const [rows, setRows] = useState<PlanRow[]>(seed.rows);
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    onChange?.(rows);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows]);
   const [party, setParty] = useState<string>("all");
   const [view, setView] = useState<View>("grid");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -119,13 +128,16 @@ export function PlanSheet({ plan: seed }: { plan: Plan }) {
       {/* header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: C }}>
-            Project plan
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color: C }}>
+            {(crumbs.length ? crumbs : ["Project plan"]).map((c, i) => (
+              <span key={i} className="flex items-center gap-1.5">
+                {i > 0 && <span className="text-stone-300">/</span>}
+                <span className={i === crumbs.length - 1 ? "" : "text-stone-500"}>{c}</span>
+              </span>
+            ))}
           </div>
           <h1 className="mt-0.5 text-[24px] font-semibold tracking-[-0.015em] text-ink-900">{seed.name}</h1>
-          <div className="mt-0.5 text-[12.5px] text-stone-500">
-            {seed.vehicle} · Owner {seed.owner} · Report date {longDate(PLAN_TODAY)}
-          </div>
+          <div className="mt-0.5 text-[12.5px] text-stone-500">{[seed.vehicle, `Owner ${seed.owner}`, `Report date ${longDate(PLAN_TODAY)}`].filter(Boolean).join(" · ")}</div>
         </div>
         <div className="flex gap-2">
           <button

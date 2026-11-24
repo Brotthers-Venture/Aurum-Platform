@@ -1,29 +1,16 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
-import {
-  CalendarRange,
-  ChevronDown,
-  FileSpreadsheet,
-  ChevronRight,
-  Columns3,
-  Filter,
-  KanbanSquare,
-  LayoutList,
-  Maximize2,
-  Plus,
-  Search,
-  SendHorizontal,
-  Users,
-  X,
-} from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { CalendarRange, ChevronDown, ChevronRight, Columns3, Filter, KanbanSquare, LayoutList, Maximize2, Plus, Search, SendHorizontal, Users, X } from "lucide-react";
 import { cx } from "@/components/ui";
 import { FIRM } from "@/lib/firm-colors";
 import { solutions } from "@/lib/solutions";
 import { PMO_TODAY, WEEKS, capacity, projects, risks, tasks, type Project } from "@/lib/pmo";
 import { Initials, fmtShort, useTab } from "./kit";
 import { PlanSheet } from "./PlanSheet";
-import { plans, summary as planSummary } from "@/lib/plans";
+import { folderPath, loadPlans, planFolders, plans as seedPlans, savePlans, type Plan, type PlanFolder } from "@/lib/plans";
+import { PlanTree } from "./PlanTree";
+import { solutionById } from "@/lib/solutions";
 
 /* A board-based PMO: every list is a board of groups and items, every column has a type, status
    columns are coloured labels you click to change, and each board can be seen as a table,
@@ -189,8 +176,20 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
   const [groupBy, setGroupBy] = useState<string>("group");
   const [openItem, setOpenItem] = useState<string | null>(null);
   const [adding, setAdding] = useState(initial === "new");
-  const [planId, setPlanId] = useState<string | null>(initial === "plan" ? plans[0].id : null);
-  const plan = plans.find((p) => p.id === planId);
+  const [planId, setPlanId] = useState<string | null>(initial === "plan" ? seedPlans[0].id : null);
+  const [planData, setPlanData] = useState<{ plans: Plan[]; folders: PlanFolder[] }>({ plans: seedPlans, folders: planFolders });
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    const saved = loadPlans();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (saved) setPlanData(saved);
+    setLoaded(true);
+  }, []);
+  useEffect(() => {
+    if (loaded) savePlans(planData);
+  }, [planData, loaded]);
+  const plan = planData.plans.find((p) => p.id === planId);
+  const planCrumbs = plan ? [solutionById(plan.solution)?.name ?? plan.solution, ...folderPath(planData.folders, plan.folder).map((f) => f.name)] : [];
   const board = boards.find((b) => b.id === boardId)!;
 
   const update = (fn: (b: Board) => Board) => setBoards((all) => all.map((b) => (b.id === boardId ? fn(b) : b)));
@@ -246,7 +245,7 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
   return (
     <div className="-mx-8 -mt-4 flex min-h-[calc(100vh-64px)]">
       {/* workspace rail */}
-      <aside className="w-[230px] shrink-0 border-r border-stone-200 px-3 py-5">
+      <aside className="w-[260px] shrink-0 border-r border-stone-200 px-3 py-5">
         <div className="flex items-center gap-2 px-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-[8px] text-[12px] font-bold text-white" style={{ background: C }}>
             P
@@ -278,35 +277,29 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
           </button>
         ))}
         <div className="mb-1 mt-6 px-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">Project plans</div>
-        {plans.map((p) => {
-          const ps = planSummary(p.rows);
-          return (
-            <button
-              key={p.id}
-              onClick={() => {
-                setPlanId(p.id);
-                setTab("plan");
-              }}
-              className={cx(
-                "flex w-full items-start gap-2 rounded-[8px] px-2 py-2 text-left text-[13px]",
-                p.id === planId ? "bg-champagne font-semibold text-ink-900" : "text-stone-600 hover:bg-white",
-              )}
-            >
-              <FileSpreadsheet size={14} className="mt-0.5 shrink-0" style={{ color: p.id === planId ? C : undefined }} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate">{p.name}</span>
-                <span className="block text-[11px] font-normal text-stone-400">
-                  {Math.round(ps.pct * 100)}% complete{ps.overdue ? ` · ${ps.overdue} overdue` : ""}
-                </span>
-              </span>
-            </button>
-          );
-        })}
+        <PlanTree
+          data={planData}
+          selected={planId}
+          color={C}
+          onChange={(d) => {
+            setPlanData(d);
+            if (planId && !d.plans.some((p) => p.id === planId)) setPlanId(null);
+          }}
+          onSelect={(id) => {
+            setPlanId(id);
+            setTab("plan");
+          }}
+        />
       </aside>
 
       {plan ? (
         <div className="min-w-0 flex-1 px-7 py-5">
-          <PlanSheet key={plan.id} plan={plan} />
+          <PlanSheet
+            key={plan.id}
+            plan={plan}
+            crumbs={planCrumbs}
+            onChange={(rows) => setPlanData((d) => ({ ...d, plans: d.plans.map((p) => (p.id === plan.id ? { ...p, rows } : p)) }))}
+          />
         </div>
       ) : (
         <div className="min-w-0 flex-1 px-7 py-5">

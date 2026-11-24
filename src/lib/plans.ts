@@ -27,6 +27,8 @@ export type PlanRow = {
 
 export type Plan = {
   id: string;
+  solution: string; // Solution id — every plan lives in one solution's workspace
+  folder: string | null; // PlanFolder id, or null for the solution's top level
   name: string;
   vehicle: string;
   owner: string;
@@ -42,6 +44,8 @@ const T = (id: string, title: string, party: string, p: Partial<PlanRow> = {}): 
 export const plans: Plan[] = [
   {
     id: "stx-bahf-pp",
+    solution: "fund",
+    folder: "f-stx-bahf",
     name: "STX-BAHF I — Private Placement",
     vehicle: "STX-Brazil Affordable Housing Fund I, LP",
     owner: "Luca Ott (Aurum)",
@@ -91,6 +95,67 @@ export const plans: Plan[] = [
     ],
   },
 ];
+
+/* ───────────────────────── folders ───────────────────────── */
+
+/** Folders nest without limit: a folder's parent is another folder, or null for the solution's top level. */
+export type PlanFolder = { id: string; name: string; solution: string; parent: string | null };
+
+export const planFolders: PlanFolder[] = [
+  { id: "f-strlex", name: "Strlex Capital", solution: "fund", parent: null },
+  { id: "f-stx-bahf", name: "STX-BAHF I", solution: "fund", parent: "f-strlex" },
+  { id: "f-cascade", name: "Cascade Ridge", solution: "fund", parent: null },
+  { id: "f-onboarding", name: "GP onboarding", solution: "fund", parent: null },
+  { id: "f-form-2026", name: "Formations 2026", solution: "corporate", parent: null },
+  { id: "f-offer-castle", name: "Castle Placement mandates", solution: "offering", parent: null },
+];
+
+export function blankPlan(solution: string, folder: string | null, name = "Untitled plan"): Plan {
+  return {
+    id: `pl-${Date.now().toString(36)}`,
+    solution,
+    folder,
+    name,
+    vehicle: "",
+    owner: "Luca Ott (Aurum)",
+    parties: [{ id: "aurum", name: "Aurum", contact: "Luca Ott", color: "#B8975A" }],
+    rows: [T("1", "First topic", "aurum"), T("1.1", "First task", "aurum", { owner: "Luca Ott", priority: "Medium", status: "Not started", start: PLAN_TODAY, deadline: PLAN_TODAY })],
+  };
+}
+
+/** Folder path from the top of the solution down to (and including) this folder. */
+export function folderPath(folders: PlanFolder[], id: string | null): PlanFolder[] {
+  const out: PlanFolder[] = [];
+  let cur = folders.find((f) => f.id === id);
+  while (cur) {
+    out.unshift(cur);
+    cur = folders.find((f) => f.id === cur!.parent);
+  }
+  return out;
+}
+
+/** Every folder id inside this one, at any depth. */
+export function descendants(folders: PlanFolder[], id: string): string[] {
+  const kids = folders.filter((f) => f.parent === id).map((f) => f.id);
+  return kids.flatMap((k) => [k, ...descendants(folders, k)]);
+}
+
+const STORE = "aurum-pmo-plans";
+export function loadPlans(): { plans: Plan[]; folders: PlanFolder[] } | null {
+  try {
+    const raw = window.localStorage.getItem(STORE);
+    return raw ? (JSON.parse(raw) as { plans: Plan[]; folders: PlanFolder[] }) : null;
+  } catch {
+    return null;
+  }
+}
+export function savePlans(v: { plans: Plan[]; folders: PlanFolder[] }) {
+  try {
+    window.localStorage.setItem(STORE, JSON.stringify(v));
+  } catch {
+    /* storage unavailable: changes last for this visit only */
+  }
+}
 
 /* ───────────────────────── calculations ───────────────────────── */
 

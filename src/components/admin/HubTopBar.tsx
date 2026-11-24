@@ -29,7 +29,13 @@ function useDismiss(open: boolean, close: () => void) {
 
 function RoundButton({ label, onClick, active, children }: { label: string; onClick: () => void; active: boolean; children: ReactNode }) {
   return (
-    <button onClick={onClick} aria-label={label} title={label} aria-expanded={active} className={cx("flex h-10 w-10 items-center justify-center rounded-full text-stone-600 transition-colors hover:bg-stone-200/70", active && "bg-stone-200/70")}>
+    <button
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      aria-expanded={active}
+      className={cx("flex h-10 w-10 items-center justify-center rounded-full text-stone-600 transition-colors hover:bg-stone-200/70", active && "bg-stone-200/70")}
+    >
       {children}
     </button>
   );
@@ -39,7 +45,7 @@ function RoundButton({ label, onClick, active, children }: { label: string; onCl
  * The hub's top bar, kept as quiet as a search engine's home page: the mark on the left, one search
  * field in the middle, and on the right a menu, an app launcher and the account.
  */
-export function HubTopBar() {
+export function HubTopBar({ context, logo = true }: { context?: string; logo?: boolean } = {}) {
   const [open, setOpen] = useState<null | "menu" | "apps" | "account">(null);
   const close = () => setOpen(null);
   const ref = useDismiss(open !== null, close);
@@ -50,9 +56,15 @@ export function HubTopBar() {
 
   return (
     <header className="relative z-30 grid h-16 grid-cols-[1fr_minmax(0,640px)_1fr] items-center gap-6 px-5">
-      <Link href="/admin" aria-label="Aurum home" className="justify-self-start">
-        <AurumLogo variant="dark" height={30} priority />
-      </Link>
+      <div className="flex min-w-0 items-center gap-4 justify-self-start">
+        {logo && (
+          <Link href="/admin" aria-label="Aurum home" className="shrink-0">
+            <AurumLogo variant="dark" height={30} priority />
+          </Link>
+        )}
+        {logo && context && <span className="h-5 w-px shrink-0 bg-stone-300" />}
+        {context && <span className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500">{context}</span>}
+      </div>
 
       <label className="flex h-11 items-center gap-3 rounded-full border border-stone-200 bg-white px-5 shadow-[0_1px_6px_rgba(32,33,36,0.08)] transition-shadow focus-within:shadow-[0_1px_10px_rgba(32,33,36,0.16)] hover:shadow-[0_1px_10px_rgba(32,33,36,0.14)]">
         <Search size={18} className="text-stone-500" />
@@ -67,7 +79,12 @@ export function HubTopBar() {
         <RoundButton label="Aurum apps" onClick={() => toggle("apps")} active={open === "apps"}>
           <Grip size={20} />
         </RoundButton>
-        <button onClick={() => toggle("account")} aria-label={`Account: ${user.name}`} aria-expanded={open === "account"} className="ml-1 flex h-10 w-10 items-center justify-center rounded-full p-1 hover:bg-stone-200/70">
+        <button
+          onClick={() => toggle("account")}
+          aria-label={`Account: ${user.name}`}
+          aria-expanded={open === "account"}
+          className="ml-1 flex h-10 w-10 items-center justify-center rounded-full p-1 hover:bg-stone-200/70"
+        >
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink-900 text-[14px] font-semibold text-[#F8C618]">{user.name[0]}</span>
         </button>
 
@@ -107,7 +124,10 @@ export function HubTopBar() {
                     <AurumMark size={26} color={m.color} />
                     <span className="text-[12px] leading-tight text-ink-900">{m.id === "pmo" ? "PMO" : m.name}</span>
                     {m.badge > 0 && (
-                      <span className="absolute right-5 top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold text-white" style={{ background: m.color }}>
+                      <span
+                        className="absolute right-5 top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold text-white"
+                        style={{ background: m.color }}
+                      >
                         {m.badge}
                       </span>
                     )}
@@ -137,7 +157,9 @@ export function HubTopBar() {
                   <span className="block truncate text-[13px] text-stone-600">{email}</span>
                   <span className="mt-0.5 block truncate text-[11.5px] text-stone-500">{user.title}</span>
                 </span>
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-100 text-stone-600">{roleList ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</span>
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-100 text-stone-600">
+                  {roleList ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </span>
               </button>
               {roleList && (
                 <div className="border-t border-stone-100 py-1">
