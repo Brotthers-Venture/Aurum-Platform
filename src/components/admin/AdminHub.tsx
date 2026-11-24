@@ -6,6 +6,7 @@ import { ChevronRight } from "lucide-react";
 import { Band, BrandCenter, FRAME, DarkCenter, MarkCenter, R, hexPoints, offset, ringOrder, type Slot } from "./HexNav";
 import { GpLogo } from "@/components/brand/GpLogo";
 import { GoldField } from "@/components/admin/GoldField";
+import { CommHex } from "@/components/admin/CommHex";
 import { solutions } from "@/lib/solutions";
 import { gps, gpById, type GpClient } from "@/lib/gps";
 import { gpTotals } from "@/lib/gpData";
@@ -196,6 +197,7 @@ export function AdminHub() {
       }}
     >
       <GoldField className="pointer-events-none absolute inset-0 -z-10 h-full w-full [mask-image:radial-gradient(ellipse_75%_70%_at_50%_50%,#000_45%,transparent_100%)]" />
+      <CommHex />
       {crumbs.length > 0 && (
         <nav className="absolute left-8 top-8 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500" aria-label="Breadcrumb">
           {crumbs.map((c, i) => (
