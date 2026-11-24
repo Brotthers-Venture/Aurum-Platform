@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowLeft, ArrowRight, Building2, Check, CircleAlert, CircleCheck, FileUp, Lock, Mail, Pencil, Plus, Printer, ShieldCheck, Trash2, User } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, Check, CircleAlert, CircleCheck, FileUp, Lock, Mail, Pencil, Plus, Printer, Trash2, User } from "lucide-react";
 import { cx } from "@/components/ui";
 import { AurumLogo } from "@/components/brand/Logo";
 import {
@@ -28,8 +28,9 @@ import {
    Progress is kept on this device until the client submits. */
 
 const GOLD = "#B8975A";
-const input = "h-10 w-full rounded-[8px] border border-stone-300 bg-white px-3 text-[13.5px] text-ink-900 placeholder:text-stone-400 focus:border-ink-900 focus:outline-none";
-const label = "mb-1.5 block text-[12px] font-semibold text-stone-600";
+const input =
+  "h-11 w-full rounded-[6px] border border-[#D9D2C3] bg-white px-3.5 text-[14px] text-ink-900 placeholder:text-stone-400 transition-shadow focus:border-[#B8975A] focus:outline-none focus:ring-4 focus:ring-[#B8975A]/15";
+const label = "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500";
 const COUNTRIES = ["United States", "Brazil", "United Kingdom", "Canada", "Cayman Islands", "Portugal", "Spain", "Switzerland", "Mexico", "Other"];
 const PURPOSES = ["Holding company", "Operating business", "Fund vehicle", "Special purpose vehicle", "Real estate", "Other"];
 const FUNDS = ["Business income", "Investment returns", "Sale of a business or property", "Savings from employment", "Capital from investors", "Other"];
@@ -99,17 +100,25 @@ export function IncorporationFlow() {
     top.current?.scrollIntoView();
   };
 
+  if (d.step === 0 && !done)
+    return (
+      <div ref={top}>
+        <Landing d={d} set={set} resume={resume} onResume={() => (setD(resume!), setResume(null))} onBegin={() => go(1)} ready={ok[0]} />
+      </div>
+    );
+
+  const flow = STEPS.slice(1);
   return (
-    <div ref={top} className="min-h-screen bg-[#F7F4EE]">
-      <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto flex h-16 max-w-[1280px] items-center gap-5 px-6">
-          <AurumLogo />
-          <span className="h-6 w-px bg-stone-200" />
-          <span className="text-[12px] font-semibold uppercase tracking-[0.18em] text-stone-500">Company formation</span>
-          <span className="ml-auto hidden items-center gap-4 text-[12px] text-stone-500 md:flex">
-            {d.step > 0 && !done && (
+    <div ref={top} className="min-h-screen bg-[#F6F2EA]">
+      <header className="sticky top-0 z-20 border-b border-[#E6E0D4] bg-[#FBF9F5]/95 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-[1180px] items-center gap-5 px-6">
+          <AurumLogo height={28} />
+          <span className="h-6 w-px bg-[#E0D9CB]" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-stone-500">Corporate Services</span>
+          <span className="ml-auto hidden items-center gap-5 text-[12px] text-stone-500 md:flex">
+            {!done && (
               <span className="flex items-center gap-1.5">
-                <CircleCheck size={13} className="text-[#1F8A4C]" /> Progress saved on this device
+                <CircleCheck size={13} style={{ color: GOLD }} /> Saved as you go
               </span>
             )}
             <a href="mailto:formation@aurumasset.us" className="flex items-center gap-1.5 hover:text-ink-900">
@@ -117,51 +126,42 @@ export function IncorporationFlow() {
             </a>
           </span>
         </div>
-      </header>
-
-      {done ? (
-        <Confirmation d={d} />
-      ) : (
-        <div className="mx-auto grid max-w-[1280px] gap-8 px-6 py-10 lg:grid-cols-[200px_minmax(0,1fr)_320px]">
-          {/* step rail */}
-          <nav className="hidden lg:block">
-            <ol className="sticky top-8 space-y-1">
-              {STEPS.map((s, i) => {
+        {!done && (
+          <div className="mx-auto max-w-[1180px] px-6">
+            <ol className="grid" style={{ gridTemplateColumns: `repeat(${flow.length}, minmax(0,1fr))` }}>
+              {flow.map((s, k) => {
+                const i = k + 1;
                 const reachable = i <= d.step || ok.slice(0, i).every(Boolean);
-                const complete = i < d.step && ok[i];
+                const state = i < d.step ? "done" : i === d.step ? "now" : "next";
                 return (
                   <li key={s}>
-                    <button
-                      disabled={!reachable}
-                      onClick={() => go(i)}
-                      className={cx(
-                        "flex w-full items-center gap-3 rounded-[8px] px-2 py-2 text-left text-[13px]",
-                        i === d.step ? "bg-white font-semibold text-ink-900 shadow-card" : reachable ? "text-stone-600 hover:text-ink-900" : "text-stone-400",
-                      )}
-                    >
+                    <button disabled={!reachable} onClick={() => go(i)} className="group block w-full pb-0 pt-1 text-left disabled:cursor-default">
                       <span
                         className={cx(
-                          "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold",
-                          complete ? "text-white" : i === d.step ? "border-2 border-ink-900 text-ink-900" : "border border-stone-300 text-stone-400",
+                          "flex items-baseline gap-2 pb-2.5 text-[12px]",
+                          state === "now" ? "font-semibold text-ink-900" : state === "done" ? "text-stone-600 group-hover:text-ink-900" : "text-stone-400",
                         )}
-                        style={complete ? { background: GOLD } : undefined}
                       >
-                        {complete ? <Check size={12} strokeWidth={3} /> : i + 1}
+                        <span className="num font-serif text-[13px]" style={state !== "next" ? { color: GOLD } : undefined}>
+                          {String(i).padStart(2, "0")}
+                        </span>
+                        <span className="hidden truncate md:inline">{s}</span>
                       </span>
-                      {s}
+                      <span className="block h-[2px]" style={{ background: state === "next" ? "#E6E0D4" : GOLD, opacity: state === "done" ? 0.55 : 1 }} />
                     </button>
                   </li>
                 );
               })}
             </ol>
-          </nav>
+          </div>
+        )}
+      </header>
 
-          {/* step body */}
-          <main className="min-w-0">
-            <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: GOLD }}>
-              Step {d.step + 1} of {STEPS.length}
-            </div>
-            {d.step === 0 && <Start d={d} set={set} resume={resume} onResume={() => (setD(resume!), setResume(null))} />}
+      {done ? (
+        <Confirmation d={d} />
+      ) : (
+        <div className="mx-auto grid max-w-[1180px] gap-12 px-6 pb-20 pt-12 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <main className="min-w-0 max-w-[720px]">
             {d.step === 1 && <Where d={d} set={set} />}
             {d.step === 2 && <Company d={d} set={set} />}
             {d.step === 3 && <People d={d} set={set} words={words} owned={owned} />}
@@ -169,28 +169,24 @@ export function IncorporationFlow() {
             {d.step === 5 && <Services d={d} set={set} />}
             {d.step === 6 && <Review d={d} set={set} go={go} words={words} />}
 
-            <div className="mt-8 flex items-center gap-3 border-t border-stone-200 pt-6">
-              {d.step > 0 && (
-                <button onClick={() => go(d.step - 1)} className="flex h-11 items-center gap-1.5 rounded-[8px] px-4 text-[13.5px] font-semibold text-stone-600 hover:text-ink-900">
-                  <ArrowLeft size={15} /> Back
-                </button>
-              )}
-              <span className="ml-auto text-[12px] text-stone-500">{!ok[d.step] && d.step > 0 ? hint(d.step, d, owned) : ""}</span>
+            <div className="mt-10 flex items-center gap-4 border-t border-[#E6E0D4] pt-6">
+              <button onClick={() => go(d.step - 1)} className="flex items-center gap-1.5 text-[13px] font-semibold text-stone-500 hover:text-ink-900">
+                <ArrowLeft size={14} /> Back
+              </button>
+              <span className="ml-auto text-right text-[12px] text-[#9A6A2E]">{!ok[d.step] ? hint(d.step, d, owned) : ""}</span>
               {d.step < STEPS.length - 1 ? (
                 <button
                   disabled={!ok[d.step]}
                   onClick={() => go(d.step + 1)}
-                  className="flex h-11 items-center gap-2 rounded-[8px] bg-ink-900 px-6 text-[13.5px] font-semibold text-white hover:bg-ink-700 disabled:opacity-35"
+                  className="flex h-12 shrink-0 items-center gap-2.5 rounded-[6px] bg-ink-900 px-6 text-[13.5px] font-semibold text-white transition-colors hover:bg-[#1B3358] disabled:bg-[#C9C3B6]"
                 >
-                  Continue <ArrowRight size={15} />
+                  Continue to {STEPS[d.step + 1].toLowerCase()} <ArrowRight size={15} />
                 </button>
               ) : (
                 <SubmitButton onSubmit={submit} pay={d.pay} />
               )}
             </div>
           </main>
-
-          {/* quote */}
           <aside>
             <Quote d={d} />
           </aside>
@@ -215,15 +211,15 @@ function hint(step: number, d: Draft, owned: number) {
 
 function H({ title, sub }: { title: string; sub?: string }) {
   return (
-    <div className="mb-6">
-      <h1 className="font-serif text-[32px] leading-[1.15] tracking-[-0.01em] text-ink-900">{title}</h1>
-      {sub && <p className="mt-2 max-w-[600px] text-[14px] leading-relaxed text-stone-600">{sub}</p>}
+    <div className="mb-8">
+      <h1 className="font-serif text-[38px] leading-[1.1] tracking-[-0.015em] text-ink-900">{title}</h1>
+      {sub && <p className="mt-3 max-w-[580px] text-[14.5px] leading-[1.65] text-stone-600">{sub}</p>}
     </div>
   );
 }
 
 function Panel({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cx("rounded-[12px] border border-stone-200 bg-white p-5", className)}>{children}</div>;
+  return <div className={cx("rounded-[10px] border border-[#E6E0D4] bg-white p-6 shadow-[0_1px_2px_rgba(15,35,64,0.04)]", className)}>{children}</div>;
 }
 
 function Tick({ on, onClick, children, required }: { on: boolean; onClick: () => void; children: ReactNode; required?: boolean }) {
@@ -239,59 +235,169 @@ function Tick({ on, onClick, children, required }: { on: boolean; onClick: () =>
       </span>
       <span>
         {children}
-        {required && <span className="text-[#9A4422]"> *</span>}
+        {required && <span className="whitespace-nowrap text-[#9A4422]">&nbsp;*</span>}
       </span>
     </button>
   );
 }
 
-/* ───────────────────────── 1 start ───────────────────────── */
+/* ───────────────────────── landing ───────────────────────── */
 
-function Start({ d, set, resume, onResume }: { d: Draft; set: (p: Partial<Draft>) => void; resume: Draft | null; onResume: () => void }) {
+function HexField() {
+  // Large hairline hexagons — an echo of the Aurum mark, drawn at architectural scale.
+  const hex = (cx: number, cy: number, r: number) =>
+    Array.from({ length: 6 }, (_, i) => {
+      const a = (Math.PI / 3) * i - Math.PI / 2;
+      return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`;
+    }).join(" ");
   return (
-    <>
-      <H
-        title="Form a company with Aurum"
-        sub="Tell us where and what you want to set up. We prepare the filings, check identities, file with the registry and hand over a company that is ready to open a bank account."
-      />
-      {resume && (
-        <div className="mb-5 flex items-center justify-between gap-4 rounded-[10px] border px-4 py-3 text-[13px]" style={{ borderColor: GOLD, background: "#FBF7EE" }}>
-          <span className="text-ink-900">
-            You have an application in progress{resume.name ? ` for ${resume.name}` : ""}, saved at step {resume.step + 1}.
-          </span>
-          <button onClick={onResume} className="shrink-0 font-semibold text-ink-900 underline underline-offset-4">
-            Pick up where you left off
-          </button>
+    <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden>
+      {[
+        [620, 180, 260],
+        [620, 180, 200],
+        [700, 760, 330],
+        [90, 980, 240],
+      ].map(([x, y, r], i) => (
+        <polygon key={i} points={hex(x, y, r)} fill="none" stroke="#B8975A" strokeOpacity={i === 1 ? 0.1 : 0.16} strokeWidth={1} />
+      ))}
+    </svg>
+  );
+}
+
+function Landing({
+  d,
+  set,
+  resume,
+  onResume,
+  onBegin,
+  ready,
+}: {
+  d: Draft;
+  set: (p: Partial<Draft>) => void;
+  resume: Draft | null;
+  onResume: () => void;
+  onBegin: () => void;
+  ready: boolean;
+}) {
+  return (
+    <div className="grid min-h-screen lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)]">
+      {/* left: the firm */}
+      <section className="relative flex flex-col overflow-hidden bg-[#0F2340] px-10 py-10 text-white lg:px-16 lg:py-12">
+        <HexField />
+        <div className="relative">
+          <AurumLogo variant="white" height={30} />
         </div>
-      )}
-      <div className="mb-6 grid gap-3 sm:grid-cols-3">
-        {[
-          ["6 jurisdictions", "United States, Caribbean and Brazil"],
-          ["1–5 business days", "In most US and offshore jurisdictions"],
-          ["One fixed quote", "Shown before you pay, item by item"],
-        ].map(([a, b]) => (
-          <div key={a} className="border-l-2 pl-3" style={{ borderColor: GOLD }}>
-            <div className="text-[14px] font-semibold text-ink-900">{a}</div>
-            <div className="text-[12px] text-stone-500">{b}</div>
+        <div className="relative mt-16 max-w-[560px] lg:mt-auto">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: GOLD }}>
+            Corporate Services
           </div>
-        ))}
-      </div>
-      <Panel className="max-w-[520px] space-y-4">
-        <div>
-          <label className={label} htmlFor="em">
-            Your email
-          </label>
-          <input id="em" type="email" value={d.email} onChange={(e) => set({ email: e.target.value })} placeholder="name@company.com" className={input} />
-          <p className="mt-1.5 text-[11.5px] text-stone-500">We send status updates and documents here. A company address works best.</p>
+          <h1 className="mt-5 font-serif text-[44px] leading-[1.06] tracking-[-0.015em] lg:text-[54px]">Companies formed with institutional care.</h1>
+          <p className="mt-6 max-w-[480px] text-[15px] leading-[1.7] text-white/70">
+            One application covers the filing, the identity checks and the paperwork that follows. A named Aurum officer reviews every submission before anything reaches a
+            registry.
+          </p>
         </div>
-        <Tick on={d.consent} onClick={() => set({ consent: !d.consent })} required>
-          I accept Aurum’s engagement terms and have read the privacy notice.
-        </Tick>
-        <Tick on={d.updates} onClick={() => set({ updates: !d.updates })}>
-          Send me occasional updates about Aurum services.
-        </Tick>
-      </Panel>
-    </>
+        <div className="relative mt-12 max-w-[560px]">
+          <div className="mb-3 text-[10.5px] font-semibold uppercase tracking-[0.22em] text-white/45">Where we form</div>
+          <ul className="divide-y divide-white/10 border-y border-white/10">
+            {jurisdictions.map((j) => (
+              <li key={j.id} className="grid grid-cols-[52px_minmax(0,1fr)_auto] items-baseline gap-3 py-2.5 text-[13.5px]">
+                <span className="font-serif text-[15px]" style={{ color: GOLD }}>
+                  {j.code.replace("US-", "")}
+                </span>
+                <span>
+                  {j.name} <span className="text-white/45">· {j.types.map((t) => t.short).join(", ")}</span>
+                </span>
+                <span className="num text-[12.5px] text-white/60">from {usd(Math.min(...j.types.map((t) => t.govFee)) + j.serviceFee)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="relative mt-10 flex flex-wrap gap-x-6 gap-y-1 text-[11.5px] text-white/45">
+          <span>Aurum Asset Management · Orlando, Florida</span>
+          <a href="mailto:formation@aurumasset.us" className="hover:text-white">
+            formation@aurumasset.us
+          </a>
+        </div>
+      </section>
+
+      {/* right: begin */}
+      <section className="flex items-center bg-[#F6F2EA] px-8 py-16 lg:px-16">
+        <div className="mx-auto w-full max-w-[440px]">
+          {resume && (
+            <div className="mb-10 border-l-2 bg-white px-5 py-4" style={{ borderColor: GOLD }}>
+              <div className="text-[13px] text-ink-900">Welcome back. Your application{resume.name ? ` for ${resume.name}` : ""} is saved.</div>
+              <button
+                onClick={onResume}
+                className="mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold text-ink-900 underline decoration-[#B8975A] decoration-2 underline-offset-[5px]"
+              >
+                Continue where you left off <ArrowRight size={13} />
+              </button>
+            </div>
+          )}
+          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">Begin an application</div>
+          <h2 className="mt-3 font-serif text-[34px] leading-[1.12] text-ink-900">Start with your email.</h2>
+          <p className="mt-3 text-[14px] leading-[1.65] text-stone-600">
+            We use it for your reference number, status updates and the finished company documents. Most clients finish in about fifteen minutes.
+          </p>
+          <form
+            className="mt-8 space-y-5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (ready) onBegin();
+            }}
+          >
+            <div>
+              <label className={label} htmlFor="em">
+                Email address
+              </label>
+              <input
+                id="em"
+                type="email"
+                value={d.email}
+                onChange={(e) => set({ email: e.target.value })}
+                placeholder="name@company.com"
+                className={cx(input, "h-12")}
+                autoComplete="email"
+              />
+            </div>
+            <div className="space-y-3">
+              <Tick on={d.consent} onClick={() => set({ consent: !d.consent })} required>
+                I accept Aurum’s engagement terms and have read the privacy notice.
+              </Tick>
+              <Tick on={d.updates} onClick={() => set({ updates: !d.updates })}>
+                Keep me informed about Aurum services.
+              </Tick>
+            </div>
+            <button
+              disabled={!ready}
+              className="flex h-12 w-full items-center justify-center gap-2.5 rounded-[6px] bg-ink-900 text-[14px] font-semibold text-white transition-colors hover:bg-[#1B3358] disabled:bg-[#C9C3B6]"
+            >
+              Begin application <ArrowRight size={15} />
+            </button>
+          </form>
+          <div className="mt-10 border-t border-[#E0D9CB] pt-6">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">Have these to hand</div>
+            <ul className="mt-3 space-y-2 text-[13px] text-stone-700">
+              {[
+                "A passport or national ID for each owner and director",
+                "Proof of address dated within three months",
+                "How ownership is split between the owners",
+                "Two or three name ideas, in order of preference",
+              ].map((x) => (
+                <li key={x} className="flex gap-3">
+                  <span className="mt-[9px] h-px w-3 shrink-0" style={{ background: GOLD }} />
+                  {x}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p className="mt-10 text-[11px] leading-relaxed text-stone-400">
+            Aurum prepares and files formation documents and keeps statutory records. We do not provide legal or tax advice; we are glad to work alongside your advisers.
+          </p>
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -307,17 +413,15 @@ function Where({ d, set }: { d: Draft; set: (p: Partial<Draft>) => void }) {
         title="Where should the company be formed?"
         sub="Pick the jurisdiction first, then the entity type. Prices include our work; the government fee is passed through at cost."
       />
-      <div className="mb-4 flex gap-1.5">
+      <div className="mb-5 flex gap-6 border-b border-[#E6E0D4]">
         {regions.map((r) => (
           <button
             key={r}
             onClick={() => setRegion(r)}
-            className={cx(
-              "h-8 rounded-full px-3.5 text-[12.5px] font-semibold",
-              region === r ? "bg-ink-900 text-white" : "border border-stone-300 bg-white text-stone-600 hover:border-ink-900",
-            )}
+            className={cx("-mb-px border-b-2 pb-2.5 text-[13px] font-semibold", region === r ? "text-ink-900" : "border-transparent text-stone-500 hover:text-ink-900")}
+            style={region === r ? { borderColor: GOLD } : undefined}
           >
-            {r}
+            {r === "All" ? "All jurisdictions" : r}
           </button>
         ))}
       </div>
@@ -332,35 +436,39 @@ function Where({ d, set }: { d: Draft; set: (p: Partial<Draft>) => void }) {
                 key={x.id}
                 onClick={() => set({ jurisdiction: x.id, entityType: x.types.length === 1 ? x.types[0].id : undefined, suffix: "" })}
                 className={cx(
-                  "rounded-[12px] border bg-white p-4 text-left transition-shadow",
-                  sel ? "border-ink-900 shadow-card ring-1 ring-ink-900" : "border-stone-200 hover:border-stone-400",
+                  "group relative flex gap-4 rounded-[10px] border bg-white p-5 text-left transition-all",
+                  sel ? "border-[#B8975A] shadow-[0_0_0_3px_rgba(184,151,90,0.15)]" : "border-[#E6E0D4] hover:border-[#CFC6B3] hover:shadow-[0_4px_14px_rgba(15,35,64,0.06)]",
                 )}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="text-[15px] font-semibold text-ink-900">{x.name}</div>
-                    <div className="text-[11.5px] text-stone-500">
-                      {x.region} · {x.code}
-                    </div>
-                  </div>
-                  <span className={cx("flex h-5 w-5 items-center justify-center rounded-full border", sel ? "border-ink-900 bg-ink-900 text-white" : "border-stone-300")}>
-                    {sel && <Check size={11} strokeWidth={3} />}
+                <span
+                  className={cx(
+                    "flex h-12 w-12 shrink-0 items-center justify-center rounded-[6px] font-serif text-[17px] transition-colors",
+                    sel ? "bg-ink-900 text-[#E2C98F]" : "bg-[#F3EEE4] text-ink-900",
+                  )}
+                >
+                  {x.code.replace("US-", "")}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-baseline justify-between gap-3">
+                    <span className="font-serif text-[19px] leading-tight text-ink-900">{x.name}</span>
+                    {sel && <Check size={16} strokeWidth={2.5} style={{ color: GOLD }} />}
                   </span>
-                </div>
-                <p className="mt-2 text-[12.5px] leading-relaxed text-stone-600">{x.about}</p>
-                <div className="mt-3 text-[12px] text-stone-500">
-                  From <b className="num font-semibold text-ink-900">{usd(from)}</b>
-                </div>
+                  <span className="mt-0.5 block text-[11px] uppercase tracking-[0.14em] text-stone-400">{x.region}</span>
+                  <span className="mt-2.5 block text-[13px] leading-relaxed text-stone-600">{x.about}</span>
+                  <span className="mt-3 block text-[12px] text-stone-500">
+                    From <span className="num font-semibold text-ink-900">{usd(from)}</span> · {x.types.map((t) => t.short).join(", ")}
+                  </span>
+                </span>
               </button>
             );
           })}
       </div>
       {j && (
         <div className="mt-8">
-          <div className="mb-3 text-[15px] font-semibold text-ink-900">Entity type in {j.name}</div>
-          <div className="divide-y divide-stone-100 overflow-hidden rounded-[12px] border border-stone-200 bg-white">
+          <div className="mb-4 font-serif text-[22px] text-ink-900">Entity type in {j.name}</div>
+          <div className="divide-y divide-[#EFEAE0] overflow-hidden rounded-[10px] border border-[#E6E0D4] bg-white">
             {j.types.map((t) => (
-              <label key={t.id} className={cx("flex cursor-pointer items-start gap-3 px-5 py-4", d.entityType === t.id && "bg-[#FBF7EE]")}>
+              <label key={t.id} className={cx("flex cursor-pointer items-start gap-3 px-5 py-4", d.entityType === t.id && "bg-[#FBF7EE] shadow-[inset_3px_0_0_#B8975A]")}>
                 <input type="radio" checked={d.entityType === t.id} onChange={() => set({ entityType: t.id, suffix: "" })} className="mt-1 h-4 w-4 accent-[#0F2340]" />
                 <span className="flex-1">
                   <span className="block text-[14px] font-semibold text-ink-900">
@@ -720,7 +828,7 @@ function Services({ d, set }: { d: Draft; set: (p: Partial<Draft>) => void }) {
   return (
     <>
       <H title="Add services" sub="Formation comes with a registered agent and office. Add what you want us to handle after the company exists." />
-      <div className="divide-y divide-stone-100 overflow-hidden rounded-[12px] border border-stone-200 bg-white">
+      <div className="divide-y divide-[#EFEAE0] overflow-hidden rounded-[10px] border border-[#E6E0D4] bg-white">
         {list.map((s) => {
           const on = d.services.includes(s.id);
           return (
@@ -863,46 +971,57 @@ function Quote({ d }: { d: Draft }) {
   const j = jurisdictionOf(d);
   const t = typeOf(d);
   const q = quote(d);
+  const title = d.name ? `${d.name} ${d.suffix}`.trim() : t ? `Your new ${t.short}` : "Your new company";
   return (
-    <div className="sticky top-8 overflow-hidden rounded-[12px] border border-stone-200 bg-white">
-      <div className="bg-ink-900 px-5 py-4 text-white">
-        <div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-white/60">Your quote</div>
-        <div className="mt-1 text-[15px] font-semibold">{d.name ? `${d.name} ${d.suffix}`.trim() : t ? `New ${t.short}` : "New company"}</div>
-        <div className="text-[12px] text-white/70">{j ? `${j.name}${t ? ` · ${t.name}` : ""}` : "Choose a jurisdiction"}</div>
-      </div>
-      <div className="px-5 py-4">
-        {q.lines.length ? (
-          <ul className="space-y-2 text-[12.5px]">
-            {q.lines.map((l) => (
-              <li key={l.label} className="flex justify-between gap-3">
-                <span className="text-stone-600">
-                  {l.label}
-                  {l.note && <span className="text-stone-400"> ({l.note})</span>}
-                </span>
-                <span className="num shrink-0 text-ink-900">{usd(l.amount)}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-[12.5px] text-stone-500">Prices appear as you choose.</p>
-        )}
-        <div className="mt-4 flex items-baseline justify-between border-t border-stone-200 pt-3">
-          <span className="text-[13px] font-semibold text-ink-900">Due today</span>
-          <span className="num text-[22px] font-semibold text-ink-900">{usd(q.today)}</span>
+    <div className="sticky top-[150px]">
+      <div className="overflow-hidden rounded-[10px] border border-[#E6E0D4] bg-white shadow-[0_10px_30px_rgba(15,35,64,0.06)]">
+        <div className="h-[3px]" style={{ background: GOLD }} />
+        <div className="px-6 pb-5 pt-6">
+          <div className="text-[10.5px] font-semibold uppercase tracking-[0.2em] text-stone-500">Quote</div>
+          <div className="mt-2 font-serif text-[22px] leading-tight text-ink-900">{title}</div>
+          <div className="mt-1 text-[12.5px] text-stone-500">{j ? `${t ? t.name : "Choose an entity type"} · ${j.name}` : "Choose a jurisdiction to begin"}</div>
         </div>
-        {j && (
-          <p className="mt-1 text-right text-[11.5px] text-stone-500">
-            From year two: about <span className="num">{usd(q.yearly)}</span> a year
-          </p>
-        )}
-        {t && (
-          <div className="mt-4 rounded-[8px] bg-[#F7F4EE] px-3 py-2.5 text-[12px] text-stone-600">
-            Typical time to incorporate: <b className="text-ink-900">{t.days}</b> after identity checks clear.
+        <div className="border-t border-dashed border-[#E0D9CB] px-6 py-5">
+          {q.lines.length ? (
+            <ul className="space-y-2.5 text-[13px]">
+              {q.lines.map((l) => (
+                <li key={l.label} className="flex items-baseline gap-2">
+                  <span className="text-stone-700">{l.label}</span>
+                  {l.note && <span className="text-[11px] text-stone-400">{l.note}</span>}
+                  <span className="mb-[3px] min-w-[12px] flex-1 border-b border-dotted border-stone-300" />
+                  <span className="num text-ink-900">{usd(l.amount)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-[13px] leading-relaxed text-stone-500">
+              Your quote builds here as you choose where to form the company and which services to add. Every fee is shown before you submit.
+            </p>
+          )}
+        </div>
+        {q.lines.length > 0 && (
+          <div className="border-t border-[#E6E0D4] bg-[#FBF9F5] px-6 py-5">
+            <div className="flex items-baseline justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-500">Due at submission</span>
+              <span className="num font-serif text-[30px] leading-none text-ink-900">{usd(q.today)}</span>
+            </div>
+            <div className="mt-2 text-right text-[12px] text-stone-500">
+              Then about <span className="num">{usd(q.yearly)}</span> a year from year two
+            </div>
           </div>
         )}
       </div>
-      <div className="flex items-center gap-2 border-t border-stone-100 px-5 py-3 text-[11.5px] text-stone-500">
-        <ShieldCheck size={13} /> No payment is taken until you submit.
+      {t && (
+        <div className="mt-4 flex gap-3 px-1 text-[12.5px] leading-relaxed text-stone-600">
+          <span className="mt-[9px] h-px w-4 shrink-0" style={{ background: GOLD }} />
+          <span>
+            Typically incorporated in <b className="font-semibold text-ink-900">{t.days}</b> once identity checks clear.
+          </span>
+        </div>
+      )}
+      <div className="mt-3 flex gap-3 px-1 text-[12.5px] leading-relaxed text-stone-600">
+        <span className="mt-[9px] h-px w-4 shrink-0" style={{ background: GOLD }} />
+        <span>Nothing is charged until you submit, and nothing is filed until an Aurum officer has reviewed it.</span>
       </div>
     </div>
   );

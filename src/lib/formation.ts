@@ -304,7 +304,7 @@ export function quote(d: Draft) {
     lines.push({ label: `Formation — ${t.short}, ${j.name}`, amount: j.serviceFee });
     lines.push({ label: "Government filing fee", amount: t.govFee, note: "estimate" });
   }
-  const chosen = servicesFor(j).filter((s) => d.services.includes(s.id));
+  const chosen = j && t ? servicesFor(j).filter((s) => d.services.includes(s.id)) : [];
   for (const s of chosen) if (s.price) lines.push({ label: s.name, amount: s.price, note: s.per === "year" ? "first year" : undefined });
   const today = lines.reduce((a, l) => a + l.amount, 0);
   const yearly = chosen.filter((s) => s.per === "year").reduce((a, s) => a + s.price, 0) + (j ? (j.offshore ? 1200 : 300) : 0);
