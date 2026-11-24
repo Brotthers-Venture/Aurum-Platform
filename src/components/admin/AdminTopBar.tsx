@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, ShieldCheck } from "lucide-react";
 import { AurumWordmark } from "@/components/brand/Logo";
-import { Avatar } from "@/components/ui";
+import { RoleSwitcher } from "./PreviewRole";
 
 export function AdminTopBar({ context }: { context?: string }) {
   return (
@@ -30,13 +30,13 @@ export function AdminTopBar({ context }: { context?: string }) {
           <Bell size={16} strokeWidth={1.6} />
           <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-gold-400" />
         </button>
-        <div className="ml-2 flex items-center gap-2.5 border-l border-stone-200 pl-4">
-          <Avatar label="LA" />
-          <div className="hidden leading-tight sm:block">
-            <div className="text-[12px] font-semibold text-ink-900">Luiza Andrade</div>
-            <div className="text-[11px] text-stone-500">Head of Fund Services</div>
-          </div>
-        </div>
+        <Link
+          href="/admin/access"
+          className="flex h-8 items-center gap-1.5 rounded-[3px] px-2 text-[12px] font-medium text-stone-500 hover:bg-stone-100 hover:text-ink-900"
+        >
+          <ShieldCheck size={15} strokeWidth={1.6} /> Access
+        </Link>
+        <RoleSwitcher />
       </div>
     </header>
   );

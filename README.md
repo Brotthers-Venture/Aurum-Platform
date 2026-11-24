@@ -50,6 +50,14 @@ Screens: General ledger (trial balance, financial statements, partners' capital,
 - four-eyes: a capital call or profile change can't be reviewed by the person who prepared it
 - row-level security: staff see everything; investors see only their own entities
 
+## Access model (`src/lib/access.ts`, Access & permissions screen)
+
+Access = role × scope. Ten roles across Aurum staff, client GPs, investors and external auditors; scopes limit users to assigned funds or investing entities; auditor grants expire. Four-eyes is enforced in the UI and in the database: whoever prepares a capital call, distribution or LPA review cannot approve it, and the GP confirmation must come from a third person. The audit log is append-only. In the preview, switch roles from the name menu at the top right.
+
+## LPA review with human approval
+
+`/admin/fund/funds/[id]/economics` — every extracted term shows its value, verbatim quote, clause and page; terms the documents don't state are "Not found" and stay blank unless an approver enters them with a source; conflicting clauses show both readings and require a recorded decision. Flow: prepared (fund accountant) → Aurum approval term by term → GP confirmation → applied as a new dated version. `src/app/api/lpa/extract` runs the two-pass extraction (needs `ANTHROPIC_API_KEY`; not yet tested against the live API).
+
 ## Brand
 
 - Logos live in `public/brand/` (`aurum-logo-dark.png`, `aurum-logo-white.png`, `aurum-mark.svg`). Replace these files to update the logo everywhere.
@@ -67,4 +75,4 @@ Screens: General ledger (trial balance, financial statements, partners' capital,
 1. Create the Supabase project, run the migration, load the sample data, and switch `src/lib/data.ts` to live queries.
 2. Replace the preview login with Supabase Auth (password + MFA).
 3. Integrations: Plaid (US accounts), statement import for non-US banks, KYC/AML screening, e-signature.
-4. **LPA review agent.** For each fund, upload the LPA; an AI agent extracts the economics (share classes, management fee basis and rates, hurdle, catch-up, carry, waterfall type, equalization interest, clawback, fee offsets, recycling, terms) and configures the fund. Rule: nothing implied. Every value cites the clause and page it came from, terms the LPA does not state are flagged as not found rather than defaulted, and a person approves each term before it is applied.
+4. **LPA review agent — built, awaiting API key.** For each fund, upload the LPA; an AI agent extracts the economics (share classes, management fee basis and rates, hurdle, catch-up, carry, waterfall type, equalization interest, clawback, fee offsets, recycling, terms) and configures the fund. Rule: nothing implied. Every value cites the clause and page it came from, terms the LPA does not state are flagged as not found rather than defaulted, and a person approves each term before it is applied.

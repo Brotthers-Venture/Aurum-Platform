@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Download, FileText, Plus } from "lucide-react";
-import { Button, KeyValue, PageHeader, Panel, Stat, StatRow, Status } from "@/components/ui";
+import { ArrowLeft, Download, FileText, Plus, Scale } from "lucide-react";
+import { Button, ButtonLink, KeyValue, PageHeader, Panel, Stat, StatRow, Status } from "@/components/ui";
 import { Tabs } from "@/components/Tabs";
 import {
   capitalAccounts,
@@ -240,8 +240,11 @@ export default async function FundDetail({ params }: { params: Promise<{ id: str
         }
         actions={
           <>
+            <ButtonLink href={`/admin/fund/funds/${f.id}/economics`} variant="secondary">
+              <Scale size={14} strokeWidth={1.8} /> LPA &amp; economics
+            </ButtonLink>
             <Button variant="secondary">
-              <Download size={14} strokeWidth={1.8} /> Capital account statements
+              <Download size={14} strokeWidth={1.8} /> Statements
             </Button>
             <Button>
               <Plus size={14} strokeWidth={2} /> Capital call
