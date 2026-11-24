@@ -76,7 +76,7 @@ export function InvestorOverview({ gp }: { gp: GpClient }) {
             </div>
           )}
           {openCalls.map(({ c, a }) => (
-            <div key={c.id} className="rounded-[4px] border border-stone-200 bg-white p-6">
+            <div key={c.id} className="rounded-[8px] border border-stone-200/70 bg-white shadow-card p-6">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-caution">Capital call · due {date(c.dueDate)}</span>
                 <Status value="Issued" />
@@ -239,7 +239,7 @@ export function InvestorSubscriptions({ gp }: { gp: GpClient }) {
         <>
           <h2 className="eyebrow mb-3 mt-10">In progress</h2>
           {mine.map((o) => (
-            <Link key={o.id} href={`/subscribe/${o.fundId}`} className="group flex items-center gap-8 rounded-[4px] border border-stone-200 bg-white p-6 hover:border-brand">
+            <Link key={o.id} href={`/subscribe/${o.fundId}`} className="group flex items-center gap-8 rounded-[8px] border border-stone-200/70 bg-white shadow-card p-6 hover:border-brand">
               <div className="flex-1">
                 <div className="flex items-center gap-3">
                   <span className="text-[17px] font-semibold">{fundById(o.fundId)!.name}</span>

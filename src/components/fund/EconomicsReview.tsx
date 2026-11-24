@@ -101,7 +101,7 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[4px] border border-stone-200 bg-stone-200 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[8px] border border-stone-200/70 bg-stone-200 shadow-card md:grid-cols-4">
             {[
               ["Extracted with source", counts.extracted, "text-ink-900"],
               ["Not found in documents", counts.notFound, "text-stone-600"],
@@ -116,7 +116,7 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
           </div>
 
           {canDecide && (
-            <div className="flex items-center justify-between rounded-[4px] border border-stone-200 bg-white px-4 py-3 text-[13px]">
+            <div className="flex items-center justify-between rounded-[8px] border border-stone-200/70 bg-white shadow-card px-4 py-3 text-[13px]">
               <span className="text-stone-600">
                 Each verified term still needs your approval. Not-found and conflicting terms must be decided one by one.
               </span>

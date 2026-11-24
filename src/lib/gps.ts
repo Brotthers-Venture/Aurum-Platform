@@ -22,6 +22,8 @@ export type GpClient = {
   logoDark?: { src: string; width: number; height: number };
   mark?: { src: string; width: number; height: number };
   markDark?: { src: string; width: number; height: number };
+  /** photo for the left side of the investor sign-in page (uploaded on GP creation) */
+  hero?: string;
   /** typographic wordmark for sample clients without artwork */
   wordmark?: { text: string; sub: string; serif?: boolean };
   brand: Brand;
@@ -162,5 +164,5 @@ export function contrast(a: string, b: string) {
   return (x + 0.05) / (y + 0.05);
 }
 export function inkFor(primary: string) {
-  return contrast(primary, "#FFFFFF") >= contrast(primary, "#0B1519") ? "#FFFFFF" : "#0B1519";
+  return contrast(primary, "#FFFFFF") >= contrast(primary, "#0F2340") ? "#FFFFFF" : "#0F2340";
 }

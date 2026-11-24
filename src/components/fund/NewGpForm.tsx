@@ -27,14 +27,14 @@ const isHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v);
 
 type Logo = { url: string; name: string; kb: number } | null;
 
-function Section({ n, title, desc, children }: { n: number; title: string; desc: string; children: ReactNode }) {
+function Section({ n, title, desc, children }: { n: number; title: string; desc?: string; children: ReactNode }) {
   return (
-    <section className="rounded-[4px] border border-stone-200 bg-white">
-      <header className="flex gap-4 border-b border-stone-200 px-6 py-4">
+    <section className="rounded-[8px] border border-stone-200/70 bg-white shadow-card">
+      <header className="flex items-center gap-4 border-b border-stone-200 px-6 py-3.5">
         <span className="num flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-ink-900 text-[11px] font-semibold">{n}</span>
         <div>
           <h2 className="text-[14px] font-semibold">{title}</h2>
-          <p className="text-[12px] text-stone-500">{desc}</p>
+          {desc && <p className="text-[12px] text-stone-500">{desc}</p>}
         </div>
       </header>
       <div className="space-y-5 p-6">{children}</div>
@@ -115,6 +115,54 @@ function LogoDrop({ label, hint, surface, value, onChange, error }: { label: str
   );
 }
 
+/** Wide photo for the left side of the GP's investor sign-in page. */
+function HeroDrop({ value, onChange, tint }: { value: Logo; onChange: (l: Logo) => void; tint: string }) {
+  const [problem, setProblem] = useState<string | null>(null);
+  return (
+    <div>
+      <div className="text-[12px] font-semibold">Portal image</div>
+      <div className="relative mt-1.5 flex h-[150px] items-center justify-center overflow-hidden rounded-[6px] border border-stone-300 bg-stone-50">
+        {value ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={value.url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 40%, ${tint}cc)` }} />
+            <button
+              type="button"
+              onClick={() => onChange(null)}
+              className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/90 text-stone-600 hover:text-ink-900"
+              aria-label="Remove portal image"
+            >
+              <X size={13} />
+            </button>
+          </>
+        ) : (
+          <label className="flex cursor-pointer flex-col items-center gap-1.5 text-[12px] text-stone-500">
+            <ImageUp size={20} strokeWidth={1.5} />
+            <span className="font-semibold text-ink-900">Upload JPG, PNG or WebP</span>
+            <span>Shown on the left of the investor sign-in page</span>
+            <input
+              type="file"
+              aria-label="Portal image"
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (!f) return;
+                if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) return setProblem("Use JPG, PNG or WebP.");
+                if (f.size > 8 * 1024 * 1024) return setProblem("Maximum 8 MB.");
+                setProblem(null);
+                onChange({ url: URL.createObjectURL(f), name: f.name, kb: Math.round(f.size / 1024) });
+              }}
+            />
+          </label>
+        )}
+      </div>
+      <div className="mt-1 text-[12px] text-stone-500">{problem ? <span className="text-negative">{problem}</span> : value ? `${value.name} · ${value.kb} KB` : "Optional. Landscape, at least 1600 px wide."}</div>
+    </div>
+  );
+}
+
 function ColorField({ label, value, onChange, hint }: { label: string; value: string; onChange: (v: string) => void; hint: string }) {
   return (
     <Field label={label} required hint={hint} error={isHex(value) ? null : "Enter a 6-digit hex colour, e.g. #1F3A5F"}>
@@ -148,6 +196,7 @@ export function NewGpForm() {
   const [contactEmail, setContactEmail] = useState("");
   const [logoLight, setLogoLight] = useState<Logo>(null);
   const [logoDark, setLogoDark] = useState<Logo>(null);
+  const [hero, setHero] = useState<Logo>(null);
   const [primary, setPrimary] = useState("#1F3A5F");
   const [secondary, setSecondary] = useState("#C9A94B");
   const [subdomain, setSubdomain] = useState("");
@@ -189,7 +238,7 @@ export function NewGpForm() {
             to the GP and investors until the steps below are complete.
           </p>
         </div>
-        <div className="rounded-[4px] border border-stone-200 bg-white">
+        <div className="rounded-[8px] border border-stone-200/70 bg-white shadow-card">
           <div className="border-b border-stone-200 px-5 py-3 text-[13px] font-semibold">Before the portals go live</div>
           <ol className="divide-y divide-stone-100">
             {[
@@ -244,7 +293,7 @@ export function NewGpForm() {
             if (valid) setSubmitted(true);
           }}
         >
-          <Section n={1} title="Legal identity" desc="As it appears on the certificate of formation. Used for KYB and the administration agreement.">
+          <Section n={1} title="Legal identity">
             <Field label="Legal name" required error={err("legal")} hint="e.g. Arbor Partners Inc.">
               <input className={input} value={legal} onChange={(e) => setLegal(e.target.value)} />
             </Field>
@@ -279,7 +328,7 @@ export function NewGpForm() {
             </div>
           </Section>
 
-          <Section n={2} title="Primary contact" desc="Becomes the first GP principal and receives the portal invitation.">
+          <Section n={2} title="Primary contact">
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Full name" required error={err("contactName")}>
                 <input className={input} value={contactName} onChange={(e) => setContactName(e.target.value)} />
@@ -290,7 +339,7 @@ export function NewGpForm() {
             </div>
           </Section>
 
-          <Section n={3} title="Brand" desc="Transparent SVG or PNG files work best. Both logo versions are required.">
+          <Section n={3} title="Brand">
             <div className="grid gap-5 sm:grid-cols-2">
               <LogoDrop
                 label="Logo — light backgrounds"
@@ -303,12 +352,13 @@ export function NewGpForm() {
               <LogoDrop
                 label="Logo — dark backgrounds"
                 hint="Light artwork, shown on your primary colour."
-                surface={ok.primary ? primary : "#0B1519"}
+                surface={ok.primary ? primary : "#0F2340"}
                 value={logoDark}
                 onChange={setLogoDark}
                 error={err("logoDark")}
               />
             </div>
+            <HeroDrop value={hero} onChange={setHero} tint={ok.primary ? primary : "#0F2340"} />
             <div className="grid gap-5 sm:grid-cols-2">
               <ColorField label="Primary colour" value={primary} onChange={setPrimary} hint="Buttons, navigation and brand surfaces." />
               <ColorField label="Secondary colour" value={secondary} onChange={setSecondary} hint="Accents: rules, highlights and labels." />
@@ -332,7 +382,7 @@ export function NewGpForm() {
             </div>
           </Section>
 
-          <Section n={4} title="Portal address" desc="Investors sign in here. A custom domain can be added once DNS is verified.">
+          <Section n={4} title="Portal address">
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Portal address" required hint="Lowercase letters, numbers and hyphens.">
                 <div className="flex items-center rounded-[3px] border border-stone-300 bg-white focus-within:border-ink-900">
@@ -360,7 +410,7 @@ export function NewGpForm() {
 
         <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
           <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500">Live preview</div>
-          <div className="overflow-hidden rounded-[4px] border border-stone-200 bg-white">
+          <div className="overflow-hidden rounded-[8px] border border-stone-200/70 bg-white shadow-card">
             <div className="h-[3px]" style={{ background: ok.secondary ? secondary : "#ddd" }} />
             <div className="flex h-12 items-center gap-5 px-4">
               {logoLight ? (
@@ -377,7 +427,7 @@ export function NewGpForm() {
             <div className="border-t border-stone-100 bg-stone-50 px-4 py-4">
               <div className="h-2 w-24 rounded-full bg-stone-200" />
               <div className="mt-3 flex gap-2">
-                <span className="rounded-[3px] px-3 py-1.5 text-[11px] font-semibold" style={{ background: ok.primary ? primary : "#0B1519", color: ink }}>
+                <span className="rounded-[3px] px-3 py-1.5 text-[11px] font-semibold" style={{ background: ok.primary ? primary : "#0F2340", color: ink }}>
                   Primary action
                 </span>
                 <span className="rounded-[3px] border border-stone-300 bg-white px-3 py-1.5 text-[11px] font-semibold">Secondary</span>
@@ -385,16 +435,23 @@ export function NewGpForm() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[4px] border border-stone-200">
+          <div className="overflow-hidden rounded-[8px] border border-stone-200/70 shadow-card">
             <div className="grid grid-cols-[1.1fr_1fr]">
-              <div className="flex min-h-[170px] flex-col justify-between p-4" style={{ background: ok.primary ? primary : "#0B1519", color: ink }}>
-                {logoDark ? (
+              <div className="relative flex min-h-[170px] flex-col justify-between overflow-hidden p-4" style={{ background: ok.primary ? primary : "#0F2340", color: ink }}>
+                {hero && (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={hero.url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                    <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${ok.primary ? primary : "#0F2340"}55 0%, ${ok.primary ? primary : "#0F2340"}e6 100%)` }} />
+                  </>
+                )}
+                <div className="relative">{logoDark ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={logoDark.url} alt="" className="max-h-9 max-w-[130px] object-contain" />
                 ) : (
                   <span className="text-[13px] font-semibold">{shown || "Logo (dark)"}</span>
-                )}
-                <div>
+                )}</div>
+                <div className="relative">
                   <div className="text-[9px] font-semibold uppercase tracking-[0.18em]" style={{ color: ok.secondary ? secondary : undefined }}>
                     Investor Portal
                   </div>
@@ -405,14 +462,14 @@ export function NewGpForm() {
                 <div className="text-[12px] font-semibold">Sign in</div>
                 <div className="mt-3 h-6 rounded-[2px] border border-stone-200" />
                 <div className="mt-2 h-6 rounded-[2px] border border-stone-200" />
-                <div className="mt-3 flex h-7 items-center justify-center rounded-[2px] text-[10px] font-semibold" style={{ background: ok.primary ? primary : "#0B1519", color: ink }}>
+                <div className="mt-3 flex h-7 items-center justify-center rounded-[2px] text-[10px] font-semibold" style={{ background: ok.primary ? primary : "#0F2340", color: ink }}>
                   Continue
                 </div>
               </div>
             </div>
           </div>
           <p className="text-[11px] leading-relaxed text-stone-500">
-            Investor sign-in shown with the dark-background logo on the primary colour; portal pages use the light-background logo.
+            Investor sign-in: portal image (if any) under the primary colour, with the dark-background logo.
           </p>
         </aside>
       </div>

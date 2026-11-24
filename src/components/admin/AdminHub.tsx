@@ -101,7 +101,7 @@ export function AdminHub() {
   let nodes: Node[] = [];
   let center: ReactNode;
   let centerFrom: Slot | null = null;
-  let accent = "#0B1519";
+  let accent = "#0F2340";
   let outlineColor = "#F8C618";
   let bandOn = "#F8C618"; // frame colour on hover
   let ringShown = true;
@@ -258,7 +258,7 @@ export function AdminHub() {
                 onKeyDown={(e) => e.key === "Enter" && activate(n)}
               >
                 <polygon points={hexPoints(R)} fill={on ? n.accent ?? accent : "#FFFFFF"} style={{ transition: "fill 220ms" }} />
-                <Band w={FRAME.outer} color={on ? n.band ?? bandOn : n.outline ? outlineColor : "#E3E0D6"} style={{ transition: "fill 220ms" }} />
+                <Band w={FRAME.outer} color={on ? n.band ?? bandOn : n.outline ? outlineColor : "#DDE3EA"} style={{ transition: "fill 220ms" }} />
                 <Band
                   r={R - FRAME.outer - FRAME.gap}
                   w={FRAME.inner}
@@ -270,7 +270,7 @@ export function AdminHub() {
                     <div className="flex h-full w-full items-center justify-center">{n.art(on)}</div>
                   </foreignObject>
                 )}
-                <text textAnchor="middle" fill={on ? "#FFFFFF" : "#0B1519"} style={{ transition: "fill 200ms" }}>
+                <text textAnchor="middle" fill={on ? "#FFFFFF" : "#0F2340"} style={{ transition: "fill 200ms" }}>
                   {!n.art && (
                     <tspan x={0} y={n.label[1] ? -4 : 6} fontSize={16} fontWeight={600} letterSpacing="-0.01em">
                       {n.label[0]}
@@ -287,7 +287,7 @@ export function AdminHub() {
                     fontSize={9.5}
                     fontWeight={600}
                     letterSpacing="0.16em"
-                    fill={n.subTone === "accent" ? (on ? outlineColor : "#8A6A00") : on ? "rgba(255,255,255,0.65)" : "#A3A39B"}
+                    fill={n.subTone === "accent" ? (on ? outlineColor : "#8A6A00") : on ? "rgba(255,255,255,0.65)" : "#98A3B3"}
                   >
                     {n.sub}
                   </tspan>

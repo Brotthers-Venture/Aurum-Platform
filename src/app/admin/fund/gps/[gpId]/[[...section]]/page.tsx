@@ -295,7 +295,7 @@ export default async function GpWorkspace({ params }: { params: Promise<{ gpId: 
                 <FundsTable gpId={gp.id} />
               </Panel>
             ) : (
-              <div className="rounded-[4px] border border-stone-200 bg-white p-6">
+              <div className="rounded-[8px] border border-stone-200/70 bg-white shadow-card p-6">
                 <div className="text-[14px] font-semibold">Client onboarding</div>
                 <ol className="mt-4 space-y-3 text-[13px]">
                   {[

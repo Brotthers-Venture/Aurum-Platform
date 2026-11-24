@@ -107,7 +107,7 @@ export default function AccessPage() {
       {audiences.map((a) => (
         <section key={a}>
           <h2 className="eyebrow mb-3">{a}</h2>
-          <div className="grid gap-px overflow-hidden rounded-[4px] border border-stone-200 bg-stone-200 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-px overflow-hidden rounded-[8px] border border-stone-200/70 bg-stone-200 shadow-card md:grid-cols-2 xl:grid-cols-3">
             {roles
               .filter((r) => r.audience === a)
               .map((r) => (
@@ -127,7 +127,7 @@ export default function AccessPage() {
   );
 
   const controlsTab = (
-    <div className="grid gap-px overflow-hidden rounded-[4px] border border-stone-200 bg-stone-200 md:grid-cols-2">
+    <div className="grid gap-px overflow-hidden rounded-[8px] border border-stone-200/70 bg-stone-200 shadow-card md:grid-cols-2">
       {controls.map(([t, d]) => (
         <div key={t} className="bg-white p-5">
           <h3 className="text-[14px] font-semibold">{t}</h3>
@@ -187,7 +187,7 @@ export default function AccessPage() {
             <UserPlus size={14} strokeWidth={1.8} /> Invite user
           </Button>
         </div>
-        <div className={cx("grid grid-cols-2 md:grid-cols-4 gap-px overflow-hidden rounded-[4px] border border-stone-200 bg-stone-200")}>
+        <div className={cx("grid grid-cols-2 md:grid-cols-4 gap-px overflow-hidden rounded-[8px] border border-stone-200/70 bg-stone-200 shadow-card")}>
           {audiences.map((a) => (
             <div key={a} className="bg-white px-5 py-4">
               <div className="eyebrow">{a}</div>

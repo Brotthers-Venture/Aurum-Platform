@@ -3,17 +3,17 @@ import { Bell, Search, ShieldCheck } from "lucide-react";
 import { AurumWordmark } from "@/components/brand/Logo";
 import { RoleSwitcher } from "./PreviewRole";
 
-/** Aurum chrome: black bar, gold rule — the administrator's own brand. */
+/** Aurum chrome: one navy surface shared with the sidebar. */
 export function AdminTopBar({ context }: { context?: string }) {
   return (
-    <header className="relative z-20 bg-ink-950 text-white">
+    <header className="relative z-20 border-b border-white/10 bg-ink-900 text-white">
       <div className="flex h-14 items-center justify-between px-6">
         <div className="flex items-center gap-5">
           <Link href="/admin" aria-label="Aurum home">
             <AurumWordmark tone="light" />
           </Link>
           <span className="h-5 w-px bg-white/15" />
-          <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-gold-400">{context ?? "Administration"}</span>
+          <span className="text-[12px] font-semibold uppercase tracking-[0.14em] text-white/70">{context ?? "Administration"}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative hidden md:block">
@@ -37,7 +37,6 @@ export function AdminTopBar({ context }: { context?: string }) {
           <RoleSwitcher />
         </div>
       </div>
-      <div className="h-[2px] bg-gradient-to-r from-gold-400 via-gold-500 to-gold-700" />
     </header>
   );
 }

@@ -98,7 +98,7 @@ export function Widget({
 
   return (
     <>
-      <section className={cx("flex h-full min-w-0 flex-col rounded-[4px] border border-stone-200 bg-white break-inside-avoid", className)}>{body}</section>
+      <section className={cx("flex h-full min-w-0 flex-col rounded-[8px] border border-stone-200/70 bg-white shadow-card break-inside-avoid", className)}>{body}</section>
       {full && (
         <div className="fixed inset-0 z-50 flex bg-ink-950/40 p-8 backdrop-blur-[2px]" onClick={() => setFull(false)}>
           <section className="flex w-full flex-col rounded-[4px] bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>

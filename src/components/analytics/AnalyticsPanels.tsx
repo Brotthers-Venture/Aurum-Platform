@@ -78,7 +78,7 @@ export function KpiStrip({ v }: { v: View }) {
     ["Net IRR", pctFmt(v.irr), "since inception"],
   ];
   return (
-    <div className="grid grid-cols-2 divide-stone-200 overflow-hidden rounded-[4px] border border-stone-200 bg-white sm:grid-cols-4 lg:grid-cols-7 lg:divide-x">
+    <div className="grid grid-cols-2 divide-stone-200 overflow-hidden rounded-[8px] border border-stone-200/70 bg-white shadow-card sm:grid-cols-4 lg:grid-cols-7 lg:divide-x">
       {items.map(([l, val, sub]) => (
         <div key={l} className="px-4 py-3">
           <div className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-stone-500">{l}</div>

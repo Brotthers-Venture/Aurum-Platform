@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Check, CircleAlert, CircleCheck, Copy, ExternalLink, Link2, Loader2, Search, X } from "lucide-react";
 import { Button, ButtonLink, cx } from "@/components/ui";
 import { DataRoom, LpaUpload } from "@/components/fund/DataRoom";
+import { FundCard } from "@/components/fund/FundCard";
 import { currentFiles, type RoomFile } from "@/lib/corporateDocs";
 import { formatAddress, type GleifDetail, type GleifEntity } from "@/lib/gleif";
 import { funds } from "@/lib/data";
@@ -41,7 +42,7 @@ const titleCase = (s: string) =>
 
 function Section({ n, title, desc, aside, children }: { n: number; title: string; desc?: string; aside?: ReactNode; children: ReactNode }) {
   return (
-    <section className="rounded-[4px] border border-stone-200 bg-white">
+    <section className="rounded-[8px] border border-stone-200/70 bg-white shadow-card">
       <header className="flex items-center gap-4 border-b border-stone-200 px-6 py-3.5">
         <span className="num flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-ink-900 text-[11px] font-semibold">{n}</span>
         <div className="flex-1">
@@ -187,6 +188,7 @@ export function NewVehicleForm() {
   const [strategy, setStrategy] = useState("");
   const [vintage, setVintage] = useState("");
   const [docs, setDocs] = useState<RoomFile[]>([]);
+  const [card, setCard] = useState({ code: "", tagline: "", min: "", liquidity: "Closed-end", tags: "", badge: "Fundraising", cover: "" });
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
   const [created, setCreated] = useState(false);
   const [leiCheck, setLeiCheck] = useState<{ state: "idle" | "checking" | "pending" | "invalid" }>({ state: "idle" });
@@ -291,7 +293,7 @@ export function NewVehicleForm() {
   if (created) {
     return (
       <div className="mx-auto max-w-3xl space-y-6">
-        <div className="rounded-[4px] border border-stone-200 bg-white p-8">
+        <div className="rounded-[8px] border border-stone-200/70 bg-white shadow-card p-8">
           <CircleCheck className="text-gold-500" size={28} />
           <h1 className="mt-4 text-[22px] font-semibold">{legalName} is set up</h1>
           <p className="mt-1 text-[13px] text-stone-600">{gp?.name} · economics pending LPA review</p>
@@ -589,16 +591,92 @@ export function NewVehicleForm() {
         </Section>
       )}
 
+      {/* Offering card */}
+      {(vehicle || manual) && !duplicate && (
+        <Section n={manual?.viaRapidLei ? 5 : 4} title="Offering card">
+          <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+            <div className="grid content-start gap-5 sm:grid-cols-2">
+              <Field label="Cover title">
+                <input aria-label="Cover title" className={input} placeholder={(shortName || legalName).split(" ")[0].toUpperCase() || "e.g. ANCHOR"} value={card.code} onChange={(e) => setCard({ ...card, code: e.target.value.toUpperCase().slice(0, 14) })} />
+              </Field>
+              <Field label="Badge">
+                <select className={input} value={card.badge} onChange={(e) => setCard({ ...card, badge: e.target.value })}>
+                  {["Fundraising", "Investing", "Evergreen", "Final close", "Closed", ""].map((b) => (
+                    <option key={b} value={b}>
+                      {b || "None"}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <div className="sm:col-span-2">
+                <Field label="Short description">
+                  <textarea aria-label="Short description" rows={2} maxLength={160} className={cx(input, "h-auto py-2.5")} placeholder="One sentence on what the fund invests in" value={card.tagline} onChange={(e) => setCard({ ...card, tagline: e.target.value })} />
+                </Field>
+              </div>
+              <Field label="Minimum investment">
+                <input className={input} placeholder="e.g. $250K" value={card.min} onChange={(e) => setCard({ ...card, min: e.target.value })} />
+              </Field>
+              <Field label="Liquidity">
+                <input className={input} value={card.liquidity} onChange={(e) => setCard({ ...card, liquidity: e.target.value })} />
+              </Field>
+              <Field label="Tags">
+                <input className={input} placeholder="Comma separated" value={card.tags} onChange={(e) => setCard({ ...card, tags: e.target.value })} />
+              </Field>
+              <Field label="Cover image">
+                <label className="flex h-10 cursor-pointer items-center justify-between rounded-[3px] border border-stone-300 bg-white px-3 text-[13px] text-stone-500 hover:border-ink-900">
+                  {card.cover ? "Image selected" : "Generated from GP colours"}
+                  <span className="font-semibold text-ink-900">{card.cover ? "Change" : "Upload"}</span>
+                  <input
+                    type="file"
+                    aria-label="Cover image"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="sr-only"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) setCard({ ...card, cover: URL.createObjectURL(f) });
+                    }}
+                  />
+                </label>
+              </Field>
+            </div>
+            <div>
+              {gp ? (
+                <FundCard
+                  fund={{ id: vehicle?.lei ?? legalName ?? "new", name: legalName || "New vehicle" }}
+                  gp={gp}
+                  offering={{
+                    code: card.code || (shortName || legalName).split(" ")[0].toUpperCase(),
+                    tagline: card.tagline || "Short description of the strategy.",
+                    minInvestment: card.min || "—",
+                    liquidity: card.liquidity || "—",
+                    tags: card.tags.split(",").map((t) => t.trim()).filter(Boolean),
+                    badge: card.badge || undefined,
+                    cover: card.cover || undefined,
+                  }}
+                  terms={[
+                    ["Min. investment", card.min || "—"],
+                    ["Management fee", "Pending LPA"],
+                    ["Liquidity", card.liquidity || "—"],
+                  ]}
+                />
+              ) : (
+                <div className="flex h-full min-h-[300px] items-center justify-center rounded-[10px] border border-dashed border-stone-300 text-[12px] text-stone-400">Select the GP client to preview</div>
+              )}
+            </div>
+          </div>
+        </Section>
+      )}
+
       {/* Economics */}
       {(vehicle || manual) && !duplicate && (
-        <Section n={manual?.viaRapidLei ? 5 : 4} title="Economics">
+        <Section n={manual?.viaRapidLei ? 6 : 5} title="Economics">
           <LpaUpload files={docs} onChange={setDocs} />
         </Section>
       )}
 
       {/* Corporate documents */}
       {(vehicle || manual) && !duplicate && (
-        <Section n={manual?.viaRapidLei ? 6 : 5} title="Corporate documents">
+        <Section n={manual?.viaRapidLei ? 7 : 6} title="Corporate documents">
           <DataRoom files={docs} onChange={setDocs} gleif={vehicle && capturedAt ? { lei: vehicle.lei, capturedAt } : null} />
         </Section>
       )}

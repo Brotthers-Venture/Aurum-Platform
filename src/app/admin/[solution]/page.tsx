@@ -44,7 +44,7 @@ export default async function ComingSoon({ params }: { params: Promise<{ solutio
               ))}
             </ol>
           </div>
-          <aside className="self-start rounded-[4px] border border-stone-200 bg-white p-6">
+          <aside className="self-start rounded-[8px] border border-stone-200/70 bg-white shadow-card p-6">
             <AurumMark size={26} />
             <h2 className="mt-5 text-[15px] font-semibold text-ink-900">Fund Solution is available now</h2>
             <p className="mt-2 text-[13px] leading-relaxed text-stone-600">

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Download, FileText } from "lucide-react";
 import { Panel, Progress, Status } from "@/components/ui";
+import { FundCards } from "@/components/fund/FundCards";
 import { ApproveButton } from "@/components/gp/ApproveButton";
 import { gps, gpById } from "@/lib/gps";
 import { callsForGp, distributionsForGp, documentsForGp, fundsForGp, gpTotals, investorsForGp, onboardingForGp } from "@/lib/gpData";
@@ -223,8 +224,13 @@ async function GpPortal({ params }: { params: Promise<{ gpId: string; section?: 
           ))}
         </dl>
 
+        <section>
+          <h2 className="eyebrow mb-3">Funds</h2>
+          <FundCards gpId={gp.id} linkTo="report" />
+        </section>
+
         {pendingCalls.length > 0 && (
-          <div className="rounded-[4px] border border-stone-200 bg-white">
+          <div className="rounded-[8px] border border-stone-200/70 bg-white shadow-card">
             <div className="flex items-center gap-2 border-b border-stone-200 px-5 py-3">
               <span className="h-2 w-2 rounded-full bg-brand" />
               <span className="text-[13px] font-semibold">Awaiting your approval</span>

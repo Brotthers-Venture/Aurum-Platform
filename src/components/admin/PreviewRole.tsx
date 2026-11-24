@@ -44,7 +44,7 @@ export function RoleSwitcher() {
         <ChevronDown size={14} className="text-white/40" />
       </button>
       {open && (
-        <div className="absolute right-0 top-11 z-50 w-[300px] text-ink-900 rounded-[4px] border border-stone-200 bg-white py-2 shadow-[0_8px_24px_rgba(11,21,25,0.10)]">
+        <div className="absolute right-0 top-11 z-50 w-[300px] text-ink-900 rounded-[8px] border border-stone-200/70 bg-white shadow-card py-2 shadow-[0_8px_24px_rgba(11,21,25,0.10)]">
           <div className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-400">Preview as role</div>
           {staffAndGp.map((r) => (
             <button

@@ -38,7 +38,7 @@ export default function PortalChooser() {
               <li key={gp.id}>
                 <Link
                   href={`/investor/${gp.id}`}
-                  className="group flex items-center gap-8 rounded-[4px] border border-stone-200 bg-white px-6 py-5 hover:border-ink-900"
+                  className="group flex items-center gap-8 rounded-[8px] border border-stone-200/70 bg-white shadow-card px-6 py-5 hover:border-ink-900"
                 >
                   <span className="flex h-[52px] w-[200px] items-center">
                     <GpLogo gp={gp} height={tall ? 48 : 24} />

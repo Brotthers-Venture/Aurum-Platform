@@ -289,7 +289,7 @@ export function DataRoom({ files, onChange, gleif, uploader = "Luiza Andrade" }:
       )}
 
       {current.length ? (
-        <div className="overflow-hidden rounded-[4px] border border-stone-200 bg-white">
+        <div className="overflow-hidden rounded-[8px] border border-stone-200/70 bg-white shadow-card">
           <table className="w-full table-fixed">
             <thead>
               <tr className="text-left text-[10.5px] font-semibold uppercase tracking-[0.1em] text-stone-500">

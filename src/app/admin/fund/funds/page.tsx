@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Plus } from "lucide-react";
 import { ButtonLink, PageHeader, Panel } from "@/components/ui";
 import { FundsTable } from "@/components/fund/FundsTable";
+import { FundCards } from "@/components/fund/FundCards";
+import { FundsView } from "@/components/fund/FundsView";
 
 export const metadata: Metadata = { title: "Funds" };
 
@@ -18,9 +20,14 @@ export default function FundsPage() {
           </ButtonLink>
         }
       />
-      <Panel flush>
-        <FundsTable />
-      </Panel>
+      <FundsView
+        cards={<FundCards />}
+        table={
+          <Panel flush>
+            <FundsTable />
+          </Panel>
+        }
+      />
     </div>
   );
 }

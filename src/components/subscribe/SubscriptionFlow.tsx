@@ -500,7 +500,7 @@ export function SubscriptionFlow({ fundName, gp, client }: { fundName: string; g
             </div>
             <h1 className="mt-6 text-[24px] font-semibold tracking-[-0.015em]">{steps[step]}</h1>
           </div>
-          <div className="rounded-[4px] border border-stone-200 bg-white p-7">{content[step]}</div>
+          <div className="rounded-[8px] border border-stone-200/70 bg-white shadow-card p-7">{content[step]}</div>
           <div className="mt-6 flex items-center justify-between">
             <Button variant="ghost" type="button" disabled={step === 0} onClick={() => go(step - 1)}>
               Back

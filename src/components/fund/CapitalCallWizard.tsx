@@ -208,7 +208,7 @@ export function CapitalCallWizard() {
           ))}
         </ul>
       </Panel>
-      <div className="rounded-[4px] border border-stone-200 bg-white px-10 py-9 font-serif text-[13px] leading-relaxed text-ink-800">
+      <div className="rounded-[8px] border border-stone-200/70 bg-white shadow-card px-10 py-9 font-serif text-[13px] leading-relaxed text-ink-800">
         <div className="flex items-start justify-between font-sans">
           <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-900">{f.name}</div>
           <div className="num text-[12px] text-stone-500">{date(notice)}</div>

@@ -22,7 +22,7 @@ export default function GpsPage() {
           </ButtonLink>
         }
       />
-      <div className="grid gap-px overflow-hidden rounded-[4px] border border-stone-200 bg-stone-200 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-px overflow-hidden rounded-[8px] border border-stone-200/70 bg-stone-200 shadow-card md:grid-cols-2 xl:grid-cols-3">
         {gps.map((g) => {
           const t = gpTotals(g.id);
           return (

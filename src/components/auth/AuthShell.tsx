@@ -5,40 +5,26 @@ import { AurumLogo } from "@/components/brand/Logo";
 
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-h-screen lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-      <aside className="relative hidden overflow-hidden bg-ink-900 text-white lg:flex lg:flex-col">
+    <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(560px,0.85fr)]">
+      <aside className="relative hidden overflow-hidden lg:block" aria-hidden>
         <Image src="/brand/login-bg.jpg" alt="" fill priority sizes="55vw" className="object-cover" />
-        <div className="relative px-14 pt-12">
-          <AurumLogo variant="dark" height={52} priority />
-        </div>
-        <div className="relative mt-auto max-w-[520px] px-14 pb-16">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-400">Client Portal</div>
-          <h1 className="mt-5 font-serif text-[52px] font-normal leading-[1.04] tracking-[-0.01em]">
-            Built to endure.
-          </h1>
-          <p className="mt-5 max-w-[440px] text-[15px] leading-relaxed text-white/65">
-            Fiduciary administration for funds, offerings, companies and families operating across the United
-            States, Brazil and offshore jurisdictions.
-          </p>
-        </div>
-        <div className="relative flex items-center justify-between border-t border-white/10 px-14 py-5 text-[11px] text-white/40">
-          <span>© 2026 Aurum Asset Management · Orlando, Florida</span>
-          <span>Not an investment adviser or broker-dealer</span>
-        </div>
       </aside>
 
-      <main className="flex flex-col bg-white">
-        <div className="px-8 pt-8 lg:hidden">
-          <AurumLogo variant="dark" height={34} priority />
+      <main className="flex min-h-screen flex-col bg-ink-900 text-white">
+        <div className="flex flex-1 flex-col items-center justify-center px-8 py-12">
+          <div className="w-full max-w-[400px]">
+            <AurumLogo variant="white" height={46} priority />
+            <h1 className="mt-10 font-serif text-[30px] font-normal leading-tight tracking-[-0.01em]">Welcome to Aurum Asset Management</h1>
+            <p className="mt-2 text-[14px] text-white/60">Access your account, follow your investments and documents.</p>
+            <div className="mt-8 rounded-[10px] bg-white p-7 text-ink-900 shadow-[0_24px_60px_-24px_rgba(0,0,0,0.55)]">{children}</div>
+          </div>
         </div>
-        <div className="flex flex-1 items-center justify-center px-8 py-14">
-          <div className="w-full max-w-[380px]">{children}</div>
-        </div>
-        <footer className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-stone-100 px-8 py-5 text-[12px] text-stone-500">
-          <Link href="#" className="hover:text-ink-900">Privacy Policy</Link>
-          <Link href="#" className="hover:text-ink-900">Legal Disclaimer</Link>
-          <Link href="#" className="hover:text-ink-900">Regulatory Notices</Link>
-          <a href="mailto:clientservices@aurumasset.us" className="hover:text-ink-900">Client Services</a>
+        <footer className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-white/10 px-8 py-5 text-[12px] text-white/45">
+          <Link href="#" className="hover:text-white">Privacy Policy</Link>
+          <Link href="#" className="hover:text-white">Legal Disclaimer</Link>
+          <Link href="#" className="hover:text-white">Regulatory Notices</Link>
+          <a href="mailto:clientservices@aurumasset.us" className="hover:text-white">Client Services</a>
+          <span className="w-full text-center text-[11px] text-white/30">© 2026 Aurum Asset Management · Orlando, Florida</span>
         </footer>
       </main>
     </div>

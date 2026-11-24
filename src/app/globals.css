@@ -11,21 +11,21 @@
   --font-serif: "Source Serif 4 Variable", Georgia, serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
-  --color-ink-950: #070c0e;
-  --color-ink-900: #0b1519;
-  --color-ink-800: #141f24;
-  --color-ink-700: #222f35;
-  --color-ink-600: #3a474d;
+  --color-ink-950: #0a1830;
+  --color-ink-900: #0f2340;
+  --color-ink-800: #1a3152;
+  --color-ink-700: #2b4366;
+  --color-ink-600: #475b7a;
 
-  --color-stone-25: #fcfcfa;
-  --color-stone-50: #f7f7f4;
-  --color-stone-100: #efefea;
-  --color-stone-200: #e2e2dc;
-  --color-stone-300: #cfcfc7;
-  --color-stone-400: #a3a39b;
-  --color-stone-500: #77776f;
-  --color-stone-600: #5a5a53;
-  --color-stone-700: #3f3f3a;
+  --color-stone-25: #fbfcfd;
+  --color-stone-50: #f3f5f8;
+  --color-stone-100: #eceff4;
+  --color-stone-200: #e1e6ed;
+  --color-stone-300: #cbd3de;
+  --color-stone-400: #98a3b3;
+  --color-stone-500: #6a7687;
+  --color-stone-600: #505c6d;
+  --color-stone-700: #374253;
 
   --color-gold-50: #fdf8e4;
   --color-gold-100: #fbeeb8;
@@ -34,22 +34,26 @@
   --color-gold-700: #8a6a00;
 
   /* Status colours stay inside the brand: ink for done, gold for attention, red only for problems */
-  --color-positive: #16232b;
-  --color-positive-bg: #efeee8;
+  --color-positive: #0f2340;
+  --color-positive-bg: #eceff4;
   --color-caution: #7a5c00;
   --color-caution-bg: #fbf3d9;
   --color-negative: #9b3424;
   --color-negative-bg: #f6e7e3;
-  --color-info: #3f4b52;
-  --color-info-bg: #f1f0eb;
+  --color-info: #374253;
+  --color-info-bg: #eef1f5;
 
   --text-2xs: 0.6875rem;
+
+  /* soft card elevation used for every panel */
+  --shadow-card: 0 1px 2px rgba(15, 35, 64, 0.04), 0 2px 8px -2px rgba(15, 35, 64, 0.08);
+  --shadow-lift: 0 2px 4px rgba(15, 35, 64, 0.05), 0 12px 28px -10px rgba(15, 35, 64, 0.22);
 }
 
 :root {
   --brand: #e0b000;
   --brand-2: #f8c618;
-  --brand-ink: #0b1519;
+  --brand-ink: #0f2340;
   --brand-soft: #fdf8e4;
 }
 

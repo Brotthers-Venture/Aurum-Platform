@@ -29,10 +29,9 @@ export default function LoginPage() {
 
   return (
     <AuthShell>
-      <h2 className="text-[26px] font-semibold tracking-[-0.015em] text-ink-900">Sign in</h2>
-      <p className="mt-1.5 text-[14px] text-stone-600">Access your Aurum client account.</p>
+      <h2 className="text-[20px] font-semibold tracking-[-0.015em] text-ink-900">Sign in</h2>
 
-      <form onSubmit={submit} className="mt-9 space-y-5" noValidate>
+      <form onSubmit={submit} className="mt-6 space-y-5" noValidate>
         <Field label="Email address">
           <input
             type="email"
@@ -86,7 +85,7 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <div className="my-7 flex items-center gap-4 text-[11px] uppercase tracking-[0.14em] text-stone-400">
+      <div className="my-5 flex items-center gap-4 text-[11px] uppercase tracking-[0.14em] text-stone-400">
         <span className="h-px flex-1 bg-stone-200" />
         or
         <span className="h-px flex-1 bg-stone-200" />
@@ -96,17 +95,12 @@ export default function LoginPage() {
         Continue with single sign-on
       </Button>
 
-      <div className="mt-10 space-y-3 text-[13px] text-stone-600">
-        <p>
-          New investor? Use the secure invitation link sent by your fund administrator to create your account.
-        </p>
-        <p className="flex items-start gap-2 text-[12px] text-stone-500">
-          <Lock size={13} strokeWidth={1.8} className="mt-[2px] shrink-0" />
-          Multi-factor authentication is required for every session. Sessions end after 15 minutes of inactivity.
-        </p>
-      </div>
+      <p className="mt-6 flex items-start gap-2 text-[12px] text-stone-500">
+        <Lock size={13} strokeWidth={1.8} className="mt-[2px] shrink-0" />
+        New investors sign up from the invitation sent by their administrator. Every session requires multi-factor authentication.
+      </p>
 
-      <div className="mt-8 border border-dashed border-stone-300 px-3.5 py-3 text-[12px] leading-relaxed text-stone-500">
+      <div className="mt-5 rounded-[6px] bg-stone-50 px-3.5 py-3 text-[11.5px] leading-relaxed text-stone-500">
         <span className="font-semibold text-stone-600">Preview environment.</span> Any password works. Emails ending
         in <span className="font-mono text-[11px] text-ink-900">@aurumasset.us</span> open the administrator view;
         a GP’s domain (e.g. <span className="font-mono text-[11px] text-ink-900">@strlex.com</span>) opens that GP’s portal; all others

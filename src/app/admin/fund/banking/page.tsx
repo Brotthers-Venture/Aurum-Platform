@@ -20,7 +20,7 @@ export default function BankingPage() {
         }
       />
 
-      <div className="flex gap-4 rounded-[4px] border border-stone-200 bg-white p-5">
+      <div className="flex gap-4 rounded-[8px] border border-stone-200/70 bg-white shadow-card p-5">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[3px] bg-stone-100">
           <Landmark size={18} strokeWidth={1.6} />
         </span>

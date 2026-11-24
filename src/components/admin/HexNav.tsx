@@ -58,7 +58,7 @@ export function HexNav({
   center,
   centerLabel,
   revealOnHover = false,
-  accent = "#0B1519",
+  accent = "#0F2340",
   outlineColor = "#F8C618",
   onHover,
   onCenterClick,
@@ -124,7 +124,7 @@ export function HexNav({
             <polygon
               points={hexPoints(R)}
               fill={isActive ? c.accent ?? accent : "#FFFFFF"}
-              stroke={isActive ? c.accent ?? accent : "#CFCFC7"}
+              stroke={isActive ? c.accent ?? accent : "#CBD3DE"}
               strokeWidth={1}
               style={{ transition: "fill 200ms, stroke 200ms" }}
             />
@@ -134,7 +134,7 @@ export function HexNav({
                 <div className="flex h-full w-full items-center justify-center">{c.art(isActive)}</div>
               </foreignObject>
             )}
-            <text textAnchor="middle" fill={isActive ? "#FFFFFF" : "#0B1519"} style={{ transition: "fill 200ms" }}>
+            <text textAnchor="middle" fill={isActive ? "#FFFFFF" : "#0F2340"} style={{ transition: "fill 200ms" }}>
               {!c.art && (
                 <tspan x={0} y={c.lines[1] ? -4 : 6} fontSize={16} fontWeight={600} letterSpacing="-0.01em">
                   {c.lines[0]}
@@ -151,7 +151,7 @@ export function HexNav({
                 fontSize={9.5}
                 fontWeight={600}
                 letterSpacing="0.16em"
-                fill={c.subTone === "accent" ? (isActive ? outlineColor : "#8A6A00") : isActive ? "rgba(255,255,255,0.65)" : "#A3A39B"}
+                fill={c.subTone === "accent" ? (isActive ? outlineColor : "#8A6A00") : isActive ? "rgba(255,255,255,0.65)" : "#98A3B3"}
               >
                 {c.sub}
               </tspan>
@@ -180,7 +180,7 @@ export function HexNav({
 export function DarkCenter({ lines, expanded = true }: { lines: [string, string]; expanded?: boolean }) {
   return (
     <g className="hex-cell" style={{ transform: `scale(${expanded ? 1 : 1.16})` }}>
-      <polygon points={hexPoints(R)} fill="#0B1519" />
+      <polygon points={hexPoints(R)} fill="#0F2340" />
       <Band w={FRAME.outer} color="#F8C618" />
       <Band r={R - FRAME.outer - FRAME.gap} w={FRAME.inner} color="#F8C618" />
       <text textAnchor="middle" fill="#FFFFFF">

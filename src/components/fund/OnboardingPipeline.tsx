@@ -66,7 +66,7 @@ export function OnboardingPipeline() {
       </div>
 
       {/* stage summary — click to filter */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[4px] border border-stone-200 bg-stone-200 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[8px] border border-stone-200/70 bg-stone-200 shadow-card md:grid-cols-3 xl:grid-cols-6">
         {stages.slice(1).map((s) => {
           const r = fundRows.filter((o) => o.status === s);
           const on = stage === s;

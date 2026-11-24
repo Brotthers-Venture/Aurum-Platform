@@ -21,9 +21,16 @@ export function BrandedLogin({ gp }: { gp: GpClient }) {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" style={brandStyle(gp.brand)}>
-      <aside className="relative hidden flex-col bg-brand text-brand-ink lg:flex">
-        <div className="h-[3px] bg-brand-2" />
-        <div className="flex flex-1 flex-col justify-center px-16">
+      <aside className="relative hidden flex-col overflow-hidden bg-brand text-brand-ink lg:flex">
+        {gp.hero && (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={gp.hero} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${gp.brand.primary}40 0%, ${gp.brand.primary}e6 75%)` }} />
+          </>
+        )}
+        <div className="relative h-[3px] bg-brand-2" />
+        <div className="relative flex flex-1 flex-col justify-center px-16">
           <GpLogo gp={gp} height={tall ? 120 : 52} tone="dark" />
           <div className="mt-14 max-w-[420px] border-t border-white/20 pt-8">
             <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-2">Investor Portal</div>
@@ -32,7 +39,7 @@ export function BrandedLogin({ gp }: { gp: GpClient }) {
             </p>
           </div>
         </div>
-        <div className="px-16 pb-8">
+        <div className="relative px-16 pb-8">
           <AdministeredByAurum tone="dark" />
         </div>
       </aside>

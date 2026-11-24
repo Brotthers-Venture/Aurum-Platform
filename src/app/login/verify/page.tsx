@@ -66,12 +66,12 @@ export default function VerifyPage() {
       <Link href="/login" className="inline-flex items-center gap-1.5 text-[12px] font-medium text-stone-500 hover:text-ink-900">
         <ArrowLeft size={14} strokeWidth={1.8} /> Back
       </Link>
-      <h2 className="mt-6 text-[26px] font-semibold tracking-[-0.015em] text-ink-900">Verify it’s you</h2>
+      <h2 className="mt-4 text-[20px] font-semibold tracking-[-0.015em] text-ink-900">Verify it’s you</h2>
       <p className="mt-1.5 text-[14px] leading-relaxed text-stone-600">
         Enter the 6-digit code sent to <span className="font-medium text-ink-900">{maskEmail(email)}</span>.
       </p>
 
-      <form onSubmit={submit} className="mt-9">
+      <form onSubmit={submit} className="mt-6">
         <div className="flex justify-between gap-2">
           {code.map((d, i) => (
             <input
@@ -108,7 +108,7 @@ export default function VerifyPage() {
           </button>
         )}
       </div>
-      <p className="mt-10 text-[12px] leading-relaxed text-stone-500">
+      <p className="mt-6 text-[12px] leading-relaxed text-stone-500">
         Didn’t receive a code? Check your spam folder or contact Client Services at{" "}
         <a className="text-ink-900 underline underline-offset-4" href="mailto:clientservices@aurumasset.us">
           clientservices@aurumasset.us

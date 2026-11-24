@@ -72,7 +72,7 @@ export function Panel({
   flush?: boolean;
 }) {
   return (
-    <section className={cx("rounded-[4px] border border-stone-200 bg-white", className)}>
+    <section className={cx("rounded-[8px] border border-stone-200/70 bg-white shadow-card", className)}>
       {(title || actions) && (
         <header className="flex items-center justify-between gap-4 border-b border-stone-200 px-5 py-3.5">
           <h2 className="text-[13px] font-semibold tracking-[0.01em] text-ink-900">{title}</h2>
@@ -108,7 +108,7 @@ export function StatRow({ children, cols = 6 }: { children: ReactNode; cols?: 4 
   return (
     <div
       className={cx(
-        "grid grid-cols-2 divide-stone-200 rounded-[4px] border border-stone-200 bg-white md:divide-x [&>*]:border-stone-200 max-md:[&>*:nth-child(n+3)]:border-t",
+        "grid grid-cols-2 divide-stone-200 rounded-[8px] border border-stone-200/70 bg-white shadow-card md:divide-x [&>*]:border-stone-200 max-md:[&>*:nth-child(n+3)]:border-t",
         cols === 6 ? "md:grid-cols-3 xl:grid-cols-6 md:max-xl:[&>*:nth-child(n+4)]:border-t" : "md:grid-cols-4",
       )}
     >

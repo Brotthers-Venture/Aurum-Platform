@@ -39,7 +39,7 @@ export default function ReportsPage() {
       />
       <section>
         <h2 className="eyebrow mb-3">Quarterly investor reports</h2>
-        <div className="grid gap-px overflow-hidden rounded-[4px] border border-stone-200 bg-stone-200 md:grid-cols-3">
+        <div className="grid gap-px overflow-hidden rounded-[8px] border border-stone-200/70 bg-stone-200 shadow-card md:grid-cols-3">
           {funds.map((f) => (
             <Link key={f.id} href={`/report/${f.id}`} className="group flex items-center gap-3 bg-white px-5 py-4 hover:bg-stone-50">
               <FileText size={16} className="shrink-0 text-stone-400 group-hover:text-ink-900" />
@@ -55,7 +55,7 @@ export default function ReportsPage() {
       {reports.map(([group, items]) => (
         <section key={group}>
           <h2 className="eyebrow mb-3">{group}</h2>
-          <div className="grid gap-px overflow-hidden rounded-[4px] border border-stone-200 bg-stone-200 md:grid-cols-3">
+          <div className="grid gap-px overflow-hidden rounded-[8px] border border-stone-200/70 bg-stone-200 shadow-card md:grid-cols-3">
             {items.map(([t, d]) => (
               <button key={t} className="group bg-white p-5 text-left hover:bg-stone-50">
                 <div className="flex items-center justify-between text-[14px] font-semibold text-ink-900">
