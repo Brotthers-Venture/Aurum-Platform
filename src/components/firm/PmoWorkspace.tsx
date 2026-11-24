@@ -1,19 +1,36 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import { CalendarRange, ChevronDown, ChevronRight, Columns3, Filter, KanbanSquare, LayoutList, Maximize2, Plus, Search, SendHorizontal, Users, X } from "lucide-react";
+import {
+  CalendarRange,
+  ChevronDown,
+  FileSpreadsheet,
+  ChevronRight,
+  Columns3,
+  Filter,
+  KanbanSquare,
+  LayoutList,
+  Maximize2,
+  Plus,
+  Search,
+  SendHorizontal,
+  Users,
+  X,
+} from "lucide-react";
 import { cx } from "@/components/ui";
 import { FIRM } from "@/lib/firm-colors";
 import { solutions } from "@/lib/solutions";
 import { PMO_TODAY, WEEKS, capacity, projects, risks, tasks, type Project } from "@/lib/pmo";
 import { Initials, fmtShort, useTab } from "./kit";
+import { PlanSheet } from "./PlanSheet";
+import { plans, summary as planSummary } from "@/lib/plans";
 
 /* A board-based PMO: every list is a board of groups and items, every column has a type, status
    columns are coloured labels you click to change, and each board can be seen as a table,
    a kanban, a timeline or a workload view. */
 
 const C = FIRM.pmo;
-export type PmoTab = "portfolio" | "timeline" | "tasks" | "risks" | "capacity" | "new";
+export type PmoTab = "portfolio" | "timeline" | "tasks" | "risks" | "capacity" | "new" | "plan";
 
 type Opt = { label: string; color: string; ink?: string };
 type Col = { id: string; title: string; kind: "person" | "status" | "date" | "timeline" | "progress" | "text" | "tag"; width: number; options?: Opt[] };
@@ -48,13 +65,14 @@ const RISK_STATUS: Opt[] = [
   { label: "Closed", color: "#2E9B5F" },
 ];
 const GROUP_COLORS = ["#8A4A9E", "#1F8A84", "#C46A1E", "#3558C0", "#4F8A2B", "#9B2F3F", "#6F6A61"];
-const area = (id: string) => (id === "aurum" ? "Aurum (internal)" : solutions.find((s) => s.id === id)?.name ?? id);
+const area = (id: string) => (id === "aurum" ? "Aurum (internal)" : (solutions.find((s) => s.id === id)?.name ?? id));
 
 /* ───────────────────────── boards from PMO data ───────────────────────── */
 
 function seedBoards(): Board[] {
   const areas = [...new Set(projects.map((p) => p.solution))];
-  const projectStatus = (p: Project) => (p.progress >= 100 ? "Complete" : p.health === "Off track" ? "Blocked" : p.progress === 0 || p.start > PMO_TODAY ? "Not started" : "In progress");
+  const projectStatus = (p: Project) =>
+    p.progress >= 100 ? "Complete" : p.health === "Off track" ? "Blocked" : p.progress === 0 || p.start > PMO_TODAY ? "Not started" : "In progress";
   const portfolio: Board = {
     id: "portfolio",
     name: "Projects portfolio",
@@ -108,7 +126,13 @@ function seedBoards(): Board[] {
       id: t.id,
       name: t.title,
       group: bucket(t.due, t.status === "Done"),
-      v: { owner: t.assignee, status: t.status === "Done" ? "Complete" : t.status === "In progress" ? "In progress" : "Not started", priority: t.priority ?? "Medium", due: t.due, project: projects.find((p) => p.id === t.projectId)?.name.split(" — ")[0] },
+      v: {
+        owner: t.assignee,
+        status: t.status === "Done" ? "Complete" : t.status === "In progress" ? "In progress" : "Not started",
+        priority: t.priority ?? "Medium",
+        due: t.due,
+        project: projects.find((p) => p.id === t.projectId)?.name.split(" — ")[0],
+      },
       updates: [],
     })),
   };
@@ -133,7 +157,14 @@ function seedBoards(): Board[] {
       id: r.id,
       name: r.title,
       group: r.status,
-      v: { owner: r.owner, impact: r.impact, likelihood: r.likelihood, status: r.status, project: projects.find((p) => p.id === r.projectId)?.name.split(" — ")[0], mitigation: r.mitigation },
+      v: {
+        owner: r.owner,
+        impact: r.impact,
+        likelihood: r.likelihood,
+        status: r.status,
+        project: projects.find((p) => p.id === r.projectId)?.name.split(" — ")[0],
+        mitigation: r.mitigation,
+      },
       updates: [],
     })),
   };
@@ -158,10 +189,13 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
   const [groupBy, setGroupBy] = useState<string>("group");
   const [openItem, setOpenItem] = useState<string | null>(null);
   const [adding, setAdding] = useState(initial === "new");
+  const [planId, setPlanId] = useState<string | null>(initial === "plan" ? plans[0].id : null);
+  const plan = plans.find((p) => p.id === planId);
   const board = boards.find((b) => b.id === boardId)!;
 
   const update = (fn: (b: Board) => Board) => setBoards((all) => all.map((b) => (b.id === boardId ? fn(b) : b)));
-  const setValue = (itemId: string, col: string, value: string | number) => update((b) => ({ ...b, items: b.items.map((i) => (i.id === itemId ? { ...i, v: { ...i.v, [col]: value } } : i)) }));
+  const setValue = (itemId: string, col: string, value: string | number) =>
+    update((b) => ({ ...b, items: b.items.map((i) => (i.id === itemId ? { ...i, v: { ...i.v, [col]: value } } : i)) }));
   const rename = (itemId: string, name: string) => update((b) => ({ ...b, items: b.items.map((i) => (i.id === itemId ? { ...i, name } : i)) }));
   const addItem = (group: string, name: string) =>
     update((b) => ({
@@ -172,7 +206,22 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
           id: `it${Date.now()}`,
           name,
           group,
-          v: Object.fromEntries(b.cols.map((c) => [c.id, c.kind === "status" ? (c.options?.[c.options.length - 1]?.label ?? "") : c.kind === "person" ? "Managing Partner" : c.kind === "progress" ? 0 : c.kind === "timeline" ? `${PMO_TODAY}|2027-01-31` : c.kind === "date" ? "2026-12-15" : ""])),
+          v: Object.fromEntries(
+            b.cols.map((c) => [
+              c.id,
+              c.kind === "status"
+                ? (c.options?.[c.options.length - 1]?.label ?? "")
+                : c.kind === "person"
+                  ? "Managing Partner"
+                  : c.kind === "progress"
+                    ? 0
+                    : c.kind === "timeline"
+                      ? `${PMO_TODAY}|2027-01-31`
+                      : c.kind === "date"
+                        ? "2026-12-15"
+                        : "",
+            ]),
+          ),
           updates: [],
         },
       ],
@@ -212,95 +261,169 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
           <button
             key={b.id}
             onClick={() => {
+              setPlanId(null);
               setBoardId(b.id);
               setGroupBy("group");
               setTab(b.id === "portfolio" ? "portfolio" : (b.id as PmoTab));
               if (view === "timeline" && !b.cols.some((c) => c.kind === "timeline")) setView("table");
             }}
-            className={cx("flex w-full items-center gap-2 rounded-[8px] px-2 py-2 text-left text-[13px]", b.id === boardId ? "bg-champagne font-semibold text-ink-900" : "text-stone-600 hover:bg-white")}
+            className={cx(
+              "flex w-full items-center gap-2 rounded-[8px] px-2 py-2 text-left text-[13px]",
+              b.id === boardId && !plan ? "bg-champagne font-semibold text-ink-900" : "text-stone-600 hover:bg-white",
+            )}
           >
-            <LayoutList size={14} className="shrink-0" style={{ color: b.id === boardId ? C : undefined }} />
+            <LayoutList size={14} className="shrink-0" style={{ color: b.id === boardId && !plan ? C : undefined }} />
             <span className="flex-1 truncate">{b.name}</span>
             <span className="text-[11px] text-stone-400">{b.items.length}</span>
           </button>
         ))}
+        <div className="mb-1 mt-6 px-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">Project plans</div>
+        {plans.map((p) => {
+          const ps = planSummary(p.rows);
+          return (
+            <button
+              key={p.id}
+              onClick={() => {
+                setPlanId(p.id);
+                setTab("plan");
+              }}
+              className={cx(
+                "flex w-full items-start gap-2 rounded-[8px] px-2 py-2 text-left text-[13px]",
+                p.id === planId ? "bg-champagne font-semibold text-ink-900" : "text-stone-600 hover:bg-white",
+              )}
+            >
+              <FileSpreadsheet size={14} className="mt-0.5 shrink-0" style={{ color: p.id === planId ? C : undefined }} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate">{p.name}</span>
+                <span className="block text-[11px] font-normal text-stone-400">
+                  {Math.round(ps.pct * 100)}% complete{ps.overdue ? ` · ${ps.overdue} overdue` : ""}
+                </span>
+              </span>
+            </button>
+          );
+        })}
       </aside>
 
-      <div className="min-w-0 flex-1 px-7 py-5">
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-[24px] font-semibold tracking-[-0.015em] text-ink-900">{board.name}</h1>
-            <p className="text-[12.5px] text-stone-500">{board.about}</p>
-          </div>
-          <div className="flex items-center -space-x-1.5">
-            {people.slice(0, 6).map((p) => (
-              <span key={p} className="rounded-[9px] ring-2 ring-stone-50">
-                <Initials name={p} size={28} />
-              </span>
-            ))}
-          </div>
+      {plan ? (
+        <div className="min-w-0 flex-1 px-7 py-5">
+          <PlanSheet key={plan.id} plan={plan} />
         </div>
-
-        {/* views */}
-        <div className="mt-4 flex gap-5 border-b border-stone-200">
-          {(
-            [
-              ["table", "Table", LayoutList],
-              ["kanban", "Kanban", KanbanSquare],
-              ...(hasTimeline ? ([["timeline", "Timeline", CalendarRange]] as const) : []),
-              ["workload", "Workload", Users],
-            ] as const
-          ).map(([v, l, Icon]) => (
-            <button key={v} onClick={() => setView(v)} className={cx("-mb-px flex items-center gap-1.5 border-b-2 pb-2.5 text-[13px] font-semibold", view === v ? "text-ink-900" : "border-transparent text-stone-500 hover:text-ink-900")} style={view === v ? { borderColor: C } : undefined}>
-              <Icon size={14} /> {l}
-            </button>
-          ))}
-        </div>
-
-        {/* toolbar */}
-        {view !== "workload" && (
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button onClick={() => setAdding(true)} className="flex h-8 items-center gap-1.5 rounded-[8px] px-3 text-[12.5px] font-semibold text-white" style={{ background: C }}>
-              <Plus size={14} /> New {board.id === "portfolio" ? "project" : board.id === "tasks" ? "task" : "risk"}
-            </button>
-            <div className="relative">
-              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="h-8 w-[170px] rounded-[8px] border border-transparent bg-transparent pl-7 pr-2 text-[12.5px] hover:border-stone-200 focus:border-ink-900 focus:bg-white focus:outline-none" />
+      ) : (
+        <div className="min-w-0 flex-1 px-7 py-5">
+          <div className="flex items-start justify-between gap-6">
+            <div>
+              <h1 className="text-[24px] font-semibold tracking-[-0.015em] text-ink-900">{board.name}</h1>
+              <p className="text-[12.5px] text-stone-500">{board.about}</p>
             </div>
-            <Menu
-              icon={<Users size={13} />}
-              label={person ? person.split(" ")[0] : "Person"}
-              active={!!person}
-              items={[{ label: "Everyone", on: !person, pick: () => setPerson(null) }, ...people.map((p) => ({ label: p, on: person === p, pick: () => setPerson(p) }))]}
-            />
-            <Menu icon={<Filter size={13} />} label={`Group by: ${groupBy === "group" ? "Group" : board.cols.find((c) => c.id === groupBy)?.title}`} active={groupBy !== "group"} items={[{ label: "Group", on: groupBy === "group", pick: () => setGroupBy("group") }, ...board.cols.filter((c) => c.kind === "status" || c.kind === "person").map((c) => ({ label: c.title, on: groupBy === c.id, pick: () => setGroupBy(c.id) }))]} />
-            {(q || person) && (
-              <button
-                onClick={() => {
-                  setQ("");
-                  setPerson(null);
-                }}
-                className="text-[12px] font-semibold text-stone-500 hover:text-ink-900"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-        )}
-
-        <div className="mt-4">
-          {view === "table" && (
-            <div className="space-y-7">
-              {groups.map((g) => (
-                <GroupTable key={g.id} board={board} group={g} items={inGroup(g)} canAdd={groupBy === "group"} onValue={setValue} onRename={rename} onAdd={(name) => addItem(g.id, name)} onOpen={setOpenItem} />
+            <div className="flex items-center -space-x-1.5">
+              {people.slice(0, 6).map((p) => (
+                <span key={p} className="rounded-[9px] ring-2 ring-stone-50">
+                  <Initials name={p} size={28} />
+                </span>
               ))}
             </div>
+          </div>
+
+          {/* views */}
+          <div className="mt-4 flex gap-5 border-b border-stone-200">
+            {(
+              [
+                ["table", "Table", LayoutList],
+                ["kanban", "Kanban", KanbanSquare],
+                ...(hasTimeline ? ([["timeline", "Timeline", CalendarRange]] as const) : []),
+                ["workload", "Workload", Users],
+              ] as const
+            ).map(([v, l, Icon]) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={cx(
+                  "-mb-px flex items-center gap-1.5 border-b-2 pb-2.5 text-[13px] font-semibold",
+                  view === v ? "text-ink-900" : "border-transparent text-stone-500 hover:text-ink-900",
+                )}
+                style={view === v ? { borderColor: C } : undefined}
+              >
+                <Icon size={14} /> {l}
+              </button>
+            ))}
+          </div>
+
+          {/* toolbar */}
+          {view !== "workload" && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <button onClick={() => setAdding(true)} className="flex h-8 items-center gap-1.5 rounded-[8px] px-3 text-[12.5px] font-semibold text-white" style={{ background: C }}>
+                <Plus size={14} /> New {board.id === "portfolio" ? "project" : board.id === "tasks" ? "task" : "risk"}
+              </button>
+              <div className="relative">
+                <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" />
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="Search"
+                  className="h-8 w-[170px] rounded-[8px] border border-transparent bg-transparent pl-7 pr-2 text-[12.5px] hover:border-stone-200 focus:border-ink-900 focus:bg-white focus:outline-none"
+                />
+              </div>
+              <Menu
+                icon={<Users size={13} />}
+                label={person ? person.split(" ")[0] : "Person"}
+                active={!!person}
+                items={[{ label: "Everyone", on: !person, pick: () => setPerson(null) }, ...people.map((p) => ({ label: p, on: person === p, pick: () => setPerson(p) }))]}
+              />
+              <Menu
+                icon={<Filter size={13} />}
+                label={`Group by: ${groupBy === "group" ? "Group" : board.cols.find((c) => c.id === groupBy)?.title}`}
+                active={groupBy !== "group"}
+                items={[
+                  { label: "Group", on: groupBy === "group", pick: () => setGroupBy("group") },
+                  ...board.cols.filter((c) => c.kind === "status" || c.kind === "person").map((c) => ({ label: c.title, on: groupBy === c.id, pick: () => setGroupBy(c.id) })),
+                ]}
+              />
+              {(q || person) && (
+                <button
+                  onClick={() => {
+                    setQ("");
+                    setPerson(null);
+                  }}
+                  className="text-[12px] font-semibold text-stone-500 hover:text-ink-900"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           )}
-          {view === "kanban" && statusCol && <Kanban col={statusCol} items={items} onMove={(id, label) => setValue(id, statusCol.id, label)} onOpen={setOpenItem} groupColor={(i) => board.groups.find((g) => g.id === i.group)?.color ?? C} />}
-          {view === "timeline" && <Timeline board={board} items={items} onOpen={setOpenItem} />}
-          {view === "workload" && <Workload />}
+
+          <div className="mt-4">
+            {view === "table" && (
+              <div className="space-y-7">
+                {groups.map((g) => (
+                  <GroupTable
+                    key={g.id}
+                    board={board}
+                    group={g}
+                    items={inGroup(g)}
+                    canAdd={groupBy === "group"}
+                    onValue={setValue}
+                    onRename={rename}
+                    onAdd={(name) => addItem(g.id, name)}
+                    onOpen={setOpenItem}
+                  />
+                ))}
+              </div>
+            )}
+            {view === "kanban" && statusCol && (
+              <Kanban
+                col={statusCol}
+                items={items}
+                onMove={(id, label) => setValue(id, statusCol.id, label)}
+                onOpen={setOpenItem}
+                groupColor={(i) => board.groups.find((g) => g.id === i.group)?.color ?? C}
+              />
+            )}
+            {view === "timeline" && <Timeline board={board} items={items} onOpen={setOpenItem} />}
+            {view === "workload" && <Workload />}
+          </div>
         </div>
-      </div>
+      )}
 
       {item && <ItemPanel board={board} item={item} onClose={() => setOpenItem(null)} onValue={setValue} onUpdate={addUpdate} />}
       {adding && (
@@ -324,11 +447,17 @@ function Menu({ icon, label, items, active }: { icon: ReactNode; label: string; 
   const [open, setOpen] = useState(false);
   return (
     <div className="relative">
-      <button onClick={() => setOpen((o) => !o)} className={cx("flex h-8 items-center gap-1.5 rounded-[8px] px-2.5 text-[12.5px] font-medium", active ? "bg-champagne text-ink-900" : "text-stone-600 hover:bg-white")}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className={cx("flex h-8 items-center gap-1.5 rounded-[8px] px-2.5 text-[12.5px] font-medium", active ? "bg-champagne text-ink-900" : "text-stone-600 hover:bg-white")}
+      >
         {icon} {label}
       </button>
       {open && (
-        <div className="absolute left-0 top-9 z-30 max-h-[300px] w-[220px] overflow-y-auto rounded-[12px] border border-stone-200 bg-white p-1.5 shadow-lift" onMouseLeave={() => setOpen(false)}>
+        <div
+          className="absolute left-0 top-9 z-30 max-h-[300px] w-[220px] overflow-y-auto rounded-[12px] border border-stone-200 bg-white p-1.5 shadow-lift"
+          onMouseLeave={() => setOpen(false)}
+        >
           {items.map((i) => (
             <button
               key={i.label}
@@ -336,7 +465,10 @@ function Menu({ icon, label, items, active }: { icon: ReactNode; label: string; 
                 i.pick();
                 setOpen(false);
               }}
-              className={cx("block w-full rounded-[8px] px-2.5 py-1.5 text-left text-[12.5px]", i.on ? "bg-stone-100 font-semibold text-ink-900" : "text-stone-600 hover:bg-stone-50")}
+              className={cx(
+                "block w-full rounded-[8px] px-2.5 py-1.5 text-left text-[12.5px]",
+                i.on ? "bg-stone-100 font-semibold text-ink-900" : "text-stone-600 hover:bg-stone-50",
+              )}
             >
               {i.label}
             </button>
@@ -360,7 +492,10 @@ function StatusCell({ col, value, onPick }: { col: Col; value: unknown; onPick: 
         {o?.label ?? ""}
       </button>
       {open && (
-        <div className="absolute left-1/2 top-[calc(100%+4px)] z-30 w-[170px] -translate-x-1/2 space-y-1 rounded-[12px] border border-stone-200 bg-white p-2 shadow-lift" onMouseLeave={() => setOpen(false)}>
+        <div
+          className="absolute left-1/2 top-[calc(100%+4px)] z-30 w-[170px] -translate-x-1/2 space-y-1 rounded-[12px] border border-stone-200 bg-white p-2 shadow-lift"
+          onMouseLeave={() => setOpen(false)}
+        >
           {col.options!.map((x) => (
             <button
               key={x.label}
@@ -384,12 +519,18 @@ function Cell({ col, item, groupColor, onValue }: { col: Col; item: Item; groupC
   const v = item.v[col.id];
   switch (col.kind) {
     case "person":
-      return <div className="flex h-full items-center justify-center">{v ? <Initials name={String(v)} size={26} /> : <span className="h-6 w-6 rounded-full border border-dashed border-stone-300" />}</div>;
+      return (
+        <div className="flex h-full items-center justify-center">
+          {v ? <Initials name={String(v)} size={26} /> : <span className="h-6 w-6 rounded-full border border-dashed border-stone-300" />}
+        </div>
+      );
     case "status":
       return <StatusCell col={col} value={v} onPick={onValue} />;
     case "date": {
       const late = v && String(v) < PMO_TODAY && item.v.status !== "Complete";
-      return <div className={cx("flex h-full items-center justify-center text-[12px]", late ? "font-semibold text-[#C93C4B]" : "text-stone-700")}>{v ? fmtShort(String(v)) : ""}</div>;
+      return (
+        <div className={cx("flex h-full items-center justify-center text-[12px]", late ? "font-semibold text-[#C93C4B]" : "text-stone-700")}>{v ? fmtShort(String(v)) : ""}</div>
+      );
     }
     case "timeline": {
       const [s, e] = String(v ?? "|").split("|");
@@ -419,7 +560,11 @@ function Cell({ col, item, groupColor, onValue }: { col: Col; item: Item; groupC
       );
     }
     case "tag":
-      return <div className="flex h-full items-center px-3">{v ? <span className="truncate rounded-[6px] bg-stone-100 px-2 py-0.5 text-[12px] text-stone-700">{String(v)}</span> : null}</div>;
+      return (
+        <div className="flex h-full items-center px-3">
+          {v ? <span className="truncate rounded-[6px] bg-stone-100 px-2 py-0.5 text-[12px] text-stone-700">{String(v)}</span> : null}
+        </div>
+      );
     default:
       return <div className="flex h-full items-center truncate px-3 text-[12.5px] text-stone-700">{String(v ?? "")}</div>;
   }
@@ -444,7 +589,10 @@ function Summary({ col, items }: { col: Col; items: Item[] }) {
     return <div className="num flex h-full items-center justify-center text-[11.5px] font-semibold text-stone-600">{avg}% avg</div>;
   }
   if (col.kind === "timeline" || col.kind === "date") {
-    const dates = items.flatMap((i) => String(i.v[col.id] ?? "").split("|")).filter(Boolean).sort();
+    const dates = items
+      .flatMap((i) => String(i.v[col.id] ?? "").split("|"))
+      .filter(Boolean)
+      .sort();
     if (!dates.length) return null;
     return (
       <div className="flex h-full items-center justify-center text-[11.5px] text-stone-600">
@@ -522,11 +670,20 @@ function GroupTable({
                       className="h-7 w-full rounded-[6px] border border-ink-900 px-2 text-[13px] focus:outline-none"
                     />
                   ) : (
-                    <button onDoubleClick={() => setEditing(i.id)} onClick={() => onOpen(i.id)} className="min-w-0 flex-1 truncate text-left text-[13px] text-ink-900" title="Click to open · double-click to rename">
+                    <button
+                      onDoubleClick={() => setEditing(i.id)}
+                      onClick={() => onOpen(i.id)}
+                      className="min-w-0 flex-1 truncate text-left text-[13px] text-ink-900"
+                      title="Click to open · double-click to rename"
+                    >
                       {i.name}
                     </button>
                   )}
-                  <button onClick={() => onOpen(i.id)} className="hidden shrink-0 items-center gap-1 rounded-[6px] px-1.5 py-0.5 text-[11px] text-stone-500 hover:bg-stone-200 group-hover:flex" aria-label={`Open ${i.name}`}>
+                  <button
+                    onClick={() => onOpen(i.id)}
+                    className="hidden shrink-0 items-center gap-1 rounded-[6px] px-1.5 py-0.5 text-[11px] text-stone-500 hover:bg-stone-200 group-hover:flex"
+                    aria-label={`Open ${i.name}`}
+                  >
                     <Maximize2 size={11} /> Open
                   </button>
                   {i.updates.length > 0 && (
@@ -554,7 +711,12 @@ function GroupTable({
                     setDraft("");
                   }}
                 >
-                  <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="+ New row" className="h-7 w-full rounded-[6px] border border-transparent px-2 text-[13px] placeholder:text-stone-400 hover:border-stone-200 focus:border-ink-900 focus:outline-none" />
+                  <input
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    placeholder="+ New row"
+                    className="h-7 w-full rounded-[6px] border border-transparent px-2 text-[13px] placeholder:text-stone-400 hover:border-stone-200 focus:border-ink-900 focus:outline-none"
+                  />
                 </form>
               </div>
             )}
@@ -577,21 +739,45 @@ function GroupTable({
 
 /* ───────────────────────── other views ───────────────────────── */
 
-function Kanban({ col, items, onMove, onOpen, groupColor }: { col: Col; items: Item[]; onMove: (id: string, label: string) => void; onOpen: (id: string) => void; groupColor: (i: Item) => string }) {
+function Kanban({
+  col,
+  items,
+  onMove,
+  onOpen,
+  groupColor,
+}: {
+  col: Col;
+  items: Item[];
+  onMove: (id: string, label: string) => void;
+  onOpen: (id: string) => void;
+  groupColor: (i: Item) => string;
+}) {
   const [drag, setDrag] = useState<string | null>(null);
   return (
     <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${col.options!.length}, minmax(220px, 1fr))` }}>
       {col.options!.map((o) => {
         const list = items.filter((i) => i.v[col.id] === o.label);
         return (
-          <div key={o.label} onDragOver={(e) => e.preventDefault()} onDrop={() => drag && onMove(drag, o.label)} className="flex min-h-[400px] flex-col overflow-hidden rounded-[12px] bg-white shadow-card">
+          <div
+            key={o.label}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => drag && onMove(drag, o.label)}
+            className="flex min-h-[400px] flex-col overflow-hidden rounded-[12px] bg-white shadow-card"
+          >
             <div className="flex h-10 items-center justify-between px-3 text-[13px] font-semibold" style={{ background: o.color, color: o.ink ?? "#FFFFFF" }}>
               {o.label}
               <span className="text-[12px] opacity-80">{list.length}</span>
             </div>
             <div className="flex-1 space-y-2 bg-stone-50 p-2">
               {list.map((i) => (
-                <button key={i.id} draggable onDragStart={() => setDrag(i.id)} onDragEnd={() => setDrag(null)} onClick={() => onOpen(i.id)} className="block w-full rounded-[10px] border border-stone-200 bg-white p-3 text-left shadow-card hover:shadow-lift">
+                <button
+                  key={i.id}
+                  draggable
+                  onDragStart={() => setDrag(i.id)}
+                  onDragEnd={() => setDrag(null)}
+                  onClick={() => onOpen(i.id)}
+                  className="block w-full rounded-[10px] border border-stone-200 bg-white p-3 text-left shadow-card hover:shadow-lift"
+                >
                   <span className="mb-2 block h-1 w-8 rounded-full" style={{ background: groupColor(i) }} />
                   <span className="block text-[13px] font-medium leading-snug text-ink-900">{i.name}</span>
                   <span className="mt-2 flex items-center justify-between text-[11.5px] text-stone-500">
@@ -647,7 +833,11 @@ function Timeline({ board, items, onOpen }: { board: Board; items: Item[]; onOpe
                       ))}
                     </div>
                     {s && (
-                      <button onClick={() => onOpen(i.id)} className="absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded-full px-2.5 text-[11px] font-semibold text-white" style={{ left: `${pos(s)}%`, width: `${Math.max(2, pos(e) - pos(s))}%`, background: g.color }}>
+                      <button
+                        onClick={() => onOpen(i.id)}
+                        className="absolute top-1/2 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded-full px-2.5 text-[11px] font-semibold text-white"
+                        style={{ left: `${pos(s)}%`, width: `${Math.max(2, pos(e) - pos(s))}%`, background: g.color }}
+                      >
                         <span className="truncate">{i.name.split(" — ")[0]}</span>
                       </button>
                     )}
@@ -711,7 +901,19 @@ function Workload() {
 
 /* ───────────────────────── item panel & new item ───────────────────────── */
 
-function ItemPanel({ board, item, onClose, onValue, onUpdate }: { board: Board; item: Item; onClose: () => void; onValue: (id: string, col: string, v: string | number) => void; onUpdate: (id: string, text: string) => void }) {
+function ItemPanel({
+  board,
+  item,
+  onClose,
+  onValue,
+  onUpdate,
+}: {
+  board: Board;
+  item: Item;
+  onClose: () => void;
+  onValue: (id: string, col: string, v: string | number) => void;
+  onUpdate: (id: string, text: string) => void;
+}) {
   const [text, setText] = useState("");
   const [tab, setTab] = useState<"updates" | "details">("updates");
   const project = projects.find((p) => p.id === item.id);
@@ -734,7 +936,12 @@ function ItemPanel({ board, item, onClose, onValue, onUpdate }: { board: Board; 
           </div>
           <div className="mt-3 flex gap-5">
             {(["updates", "details"] as const).map((t) => (
-              <button key={t} onClick={() => setTab(t)} className={cx("-mb-px border-b-2 pb-2.5 text-[13px] font-semibold capitalize", tab === t ? "text-ink-900" : "border-transparent text-stone-500")} style={tab === t ? { borderColor: C } : undefined}>
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={cx("-mb-px border-b-2 pb-2.5 text-[13px] font-semibold capitalize", tab === t ? "text-ink-900" : "border-transparent text-stone-500")}
+                style={tab === t ? { borderColor: C } : undefined}
+              >
                 {t}
                 {t === "updates" && item.updates.length ? <span className="ml-1 text-stone-400">{item.updates.length}</span> : null}
               </button>
@@ -752,7 +959,13 @@ function ItemPanel({ board, item, onClose, onValue, onUpdate }: { board: Board; 
                 }}
                 className="rounded-[12px] border border-stone-300 focus-within:border-ink-900"
               >
-                <textarea value={text} onChange={(e) => setText(e.target.value)} rows={3} placeholder="Write an update…" className="block w-full resize-none rounded-[12px] px-3 py-2.5 text-[13.5px] focus:outline-none" />
+                <textarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  rows={3}
+                  placeholder="Write an update…"
+                  className="block w-full resize-none rounded-[12px] px-3 py-2.5 text-[13.5px] focus:outline-none"
+                />
                 <div className="flex justify-end px-2 pb-2">
                   <button disabled={!text.trim()} className="h-8 rounded-[8px] px-3 text-[12.5px] font-semibold text-white disabled:opacity-40" style={{ background: C }}>
                     Update
@@ -836,10 +1049,25 @@ function NewItem({ board, onClose, onSave }: { board: Board; onClose: () => void
             <X size={16} />
           </button>
         </div>
-        <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="h-10 w-full rounded-[10px] border border-stone-300 px-3 text-[14px] focus:border-ink-900 focus:outline-none" />
+        <input
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Name"
+          className="h-10 w-full rounded-[10px] border border-stone-300 px-3 text-[14px] focus:border-ink-900 focus:outline-none"
+        />
         <div className="flex flex-wrap gap-1.5">
           {board.groups.map((g) => (
-            <button key={g.id} type="button" onClick={() => setGroup(g.id)} className={cx("flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-semibold", group === g.id ? "border-transparent text-white" : "border-stone-200 text-stone-600")} style={group === g.id ? { background: g.color } : undefined}>
+            <button
+              key={g.id}
+              type="button"
+              onClick={() => setGroup(g.id)}
+              className={cx(
+                "flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-semibold",
+                group === g.id ? "border-transparent text-white" : "border-stone-200 text-stone-600",
+              )}
+              style={group === g.id ? { background: g.color } : undefined}
+            >
               {g.title}
             </button>
           ))}

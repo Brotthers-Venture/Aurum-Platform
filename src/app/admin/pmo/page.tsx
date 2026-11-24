@@ -5,7 +5,7 @@ import { PmoWorkspace, type PmoTab } from "@/components/firm/PmoWorkspace";
 
 export const metadata: Metadata = { title: "Project management office" };
 
-const tabs: PmoTab[] = ["portfolio", "timeline", "tasks", "risks", "capacity", "new"];
+const tabs: PmoTab[] = ["portfolio", "timeline", "tasks", "risks", "capacity", "new", "plan"];
 
 export default function Page({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   return (
