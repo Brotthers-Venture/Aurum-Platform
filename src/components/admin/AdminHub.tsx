@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronRight, ExternalLink, Plus } from "lucide-react";
-import { BrandCenter, DarkCenter, HexNav, ringOrder, type Cell } from "./HexNav";
+import { BrandCenter, DarkCenter, HexNav, MarkCenter, ringOrder, type Cell } from "./HexNav";
 import { GpLogo, GpMark } from "@/components/brand/GpLogo";
 import { solutions } from "@/lib/solutions";
 import { gps, gpById, type GpClient } from "@/lib/gps";
@@ -103,8 +103,8 @@ export function AdminHub() {
       outline: s.live,
       ...(s.id === "fund" ? { onSelect: () => setLvl({ kind: "fund" }) } : { href: s.href }),
     }));
-    center = (open: boolean) => <DarkCenter lines={["Client", "Portal"]} expanded={open} />;
-    centerLabel = "Client Portal — show solutions";
+    center = (open: boolean) => <MarkCenter expanded={open} />;
+    centerLabel = "Aurum — show solutions";
   } else if (level.kind === "fund") {
     const ring = orderedGps.slice(0, 5);
     cells = ring.map((g, i) => {

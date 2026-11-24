@@ -199,3 +199,20 @@ export function BrandCenter({ color, secondary, children }: { color: string; sec
     </>
   );
 }
+
+/** The Aurum hexagon mark as the centre: outer band, gap, inner band, open centre. */
+export function MarkCenter({ expanded = true }: { expanded?: boolean }) {
+  const k = R / 174; // mark geometry measured on a 174-unit outer radius
+  const d = [174, 142, 117, 86]
+    .map((r) => {
+      const p = hexPoints(r * k).split(" ");
+      return `M${p.join("L")}Z`;
+    })
+    .join(" ");
+  return (
+    <>
+      <polygon points={hexPoints(R)} fill="transparent" />
+      <path d={d} fill="#F8C618" fillRule="evenodd" className="hex-cell" style={{ transform: `scale(${expanded ? 1 : 1.12})` }} />
+    </>
+  );
+}
