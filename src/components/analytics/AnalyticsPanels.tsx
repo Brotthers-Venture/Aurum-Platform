@@ -51,6 +51,15 @@ export function useAnalyticsView(data: { periods: string[]; fx: PeriodFx[]; fund
       return { beginning, ...lines, fxTranslation, ending };
     };
     const flows = sel.flatMap((f) => f.flows).filter((x) => x.date <= asOf);
+    // Cash actually called / returned in each period, from dated flows (each at its own PTAX)
+    const bucket = periods.map((d, i) => {
+      const lo = i === 0 ? (from > 0 ? data.periods[from - 1] : "") : periods[i - 1];
+      const inP = flows.filter((x) => x.date > lo && x.date <= d);
+      return {
+        called: -inP.filter((x) => x.amount < 0).reduce((a, x) => a + x.amount, 0) * kAt(from + i),
+        returned: inP.filter((x) => x.amount > 0).reduce((a, x) => a + x.amount, 0) * kAt(from + i),
+      };
+    });
     const irr = xirr(flows, { date: asOf, amount: end.nav / k }); // IRR measured in USD
     const perFund = sel.map((f) => {
       const s = scale(f.series[asOfIdx]);
@@ -69,6 +78,7 @@ export function useAnalyticsView(data: { periods: string[]; fx: PeriodFx[]; fund
       irr,
       roll: { QTD: translatedRoll(asOfIdx - 1), YTD: translatedRoll(yAbs), ITD: translatedRoll(-1) },
       fx: data.fx[asOfIdx],
+      periodFlows: bucket,
       perFund,
     };
   }, [data, scope, asOfIdx, ccy]);
@@ -191,8 +201,8 @@ export function NavWidget({ v, bare, height = 260 }: { v: View; bare?: boolean; 
 /* ---------- Quarterly capital activity ---------- */
 export function FlowsWidget({ v, bare, height = 240 }: { v: View; bare?: boolean; height?: number }) {
   const f = fmtShort(v.ccy);
-  const contrib = v.series.map((s, i) => s.paidIn - (v.series[i - 1]?.paidIn ?? 0));
-  const dist = v.series.map((s, i) => s.distributed - (v.series[i - 1]?.distributed ?? 0));
+  const contrib = v.periodFlows.map((p) => p.called);
+  const dist = v.periodFlows.map((p) => p.returned);
   const series = [
     { name: "Contributions", color: MEANING.capitalIn, values: contrib },
     { name: "Distributions", color: MEANING.returned, values: dist },
