@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { BrandCenter, DarkCenter, MarkCenter, R, hexPoints, offset, ringOrder, type Slot } from "./HexNav";
+import { Band, BrandCenter, FRAME, DarkCenter, MarkCenter, R, hexPoints, offset, ringOrder, type Slot } from "./HexNav";
 import { GpLogo } from "@/components/brand/GpLogo";
 import { GoldField } from "@/components/admin/GoldField";
 import { solutions } from "@/lib/solutions";
@@ -30,6 +30,8 @@ type Node = {
   subTone?: "accent" | "muted";
   outline?: boolean;
   accent?: string;
+  /** frame colour when hovered (defaults to the level's) */
+  band?: string;
   art?: (active: boolean) => ReactNode;
   /** opens the next level on dwell or click */
   open?: () => void;
@@ -101,6 +103,7 @@ export function AdminHub() {
   let centerFrom: Slot | null = null;
   let accent = "#0B1519";
   let outlineColor = "#F8C618";
+  let bandOn = "#F8C618"; // frame colour on hover
   let ringShown = true;
 
   if (level.kind === "root") {
@@ -125,6 +128,7 @@ export function AdminHub() {
         label: [g.shortName],
         sub: t.funds ? `${t.funds} FUND${t.funds > 1 ? "S" : ""}` : "ONBOARDING",
         accent: g.brand.primary,
+        band: g.brand.secondary,
         art: (on: boolean) => <GpLogo gp={g} height={tallLogo(g) ? 50 : 20} tone={on ? "dark" : "light"} compact />,
         open: () => go({ kind: "gp", gpId: g.id, from: ringOrder[i] }),
       };
@@ -137,6 +141,7 @@ export function AdminHub() {
     centerFrom = level.from;
     accent = gp.brand.primary;
     outlineColor = gp.brand.secondary;
+    bandOn = gp.brand.secondary;
     const subs: Record<string, string> = {
       funds: `${t.funds} VEHICLE${t.funds === 1 ? "" : "S"}`,
       investors: `${t.investors} INVESTORS`,
@@ -252,14 +257,14 @@ export function AdminHub() {
                 onClick={() => activate(n)}
                 onKeyDown={(e) => e.key === "Enter" && activate(n)}
               >
-                <polygon
-                  points={hexPoints(R)}
-                  fill={on ? n.accent ?? accent : "#FFFFFF"}
-                  stroke={on ? n.accent ?? accent : "#CFCFC7"}
-                  strokeWidth={1}
-                  style={{ transition: "fill 200ms, stroke 200ms" }}
+                <polygon points={hexPoints(R)} fill={on ? n.accent ?? accent : "#FFFFFF"} style={{ transition: "fill 220ms" }} />
+                <Band w={FRAME.outer} color={on ? n.band ?? bandOn : n.outline ? outlineColor : "#E3E0D6"} style={{ transition: "fill 220ms" }} />
+                <Band
+                  r={R - FRAME.outer - FRAME.gap}
+                  w={FRAME.inner}
+                  color={n.band ?? bandOn}
+                  style={{ opacity: on ? 1 : 0, transform: `scale(${on ? 1 : 0.94})`, transition: "opacity 220ms, transform 260ms cubic-bezier(.2,.8,.2,1)" }}
                 />
-                {n.outline && <polygon points={hexPoints(R - 7)} fill="none" stroke={outlineColor} strokeWidth={1.5} />}
                 {n.art && (
                   <foreignObject x={-66} y={-46} width={132} height={70} style={{ pointerEvents: "none" }}>
                     <div className="flex h-full w-full items-center justify-center">{n.art(on)}</div>

@@ -16,8 +16,8 @@ export function GoldField({ className }: { className?: string }) {
     const ctx = canvas.getContext("2d")!;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const GAP = 26; // lattice spacing (px)
-    const R = 1.05; // dot radius
+    const GAP = 30; // lattice spacing (px)
+    const R = 1.7; // dot radius
     const REACH = 150; // cursor influence radius
     const PUSH = 7; // max displacement near cursor
 
@@ -79,7 +79,7 @@ export function GoldField({ className }: { className?: string }) {
 
         ctx.globalAlpha = Math.max(0.03, Math.min(0.75, d.a));
         ctx.beginPath();
-        ctx.arc(d.x + d.dx, d.y + d.dy, R + (d.a > 0.3 ? 0.35 : 0), 0, Math.PI * 2);
+        ctx.arc(d.x + d.dx, d.y + d.dy, R + 0.9 * Math.max(0, d.a - 0.2), 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.globalAlpha = 1;

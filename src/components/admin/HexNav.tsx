@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
 export const R = 96;
@@ -16,6 +15,22 @@ export function hexPoints(r: number) {
     const a = (Math.PI / 180) * (60 * i - 90);
     return `${(r * Math.cos(a)).toFixed(2)},${(r * Math.sin(a)).toFixed(2)}`;
   }).join(" ");
+}
+
+/**
+ * Frame geometry taken from the Aurum mark: a heavy outer band, a gap, a lighter inner band.
+ * (Mark ratios: outer band 32, gap 25, inner band 31 on a 174 radius — scaled down for cells.)
+ */
+export const FRAME = { outer: 7, gap: 6, inner: 3.5 } as const;
+
+/** A solid hexagonal band between radius r and r − w (even-odd fill, sharp mitred corners). */
+export function bandPath(r: number, w: number) {
+  const ring = (rr: number) => `M${hexPoints(rr).split(" ").join("L")}Z`;
+  return `${ring(r)} ${ring(r - w)}`;
+}
+
+export function Band({ r = R, w, color, className, style }: { r?: number; w: number; color: string; className?: string; style?: CSSProperties }) {
+  return <path d={bandPath(r, w)} fill={color} fillRule="evenodd" className={className} style={style} />;
 }
 
 export function offset(slot: Slot) {
@@ -92,7 +107,7 @@ export function HexNav({
               transitionDelay: shown ? `${i * 45}ms` : "0ms",
               pointerEvents: shown ? ("auto" as const) : ("none" as const),
             }
-          : ({ "--tx": `${x}px`, "--ty": `${y}px`, animationDelay: `${i * 45}ms`, transform: `translate(${x}px, ${y}px)` } as React.CSSProperties);
+          : ({ "--tx": `${x}px`, "--ty": `${y}px`, animationDelay: `${i * 45}ms`, transform: `translate(${x}px, ${y}px)` } as CSSProperties);
         return (
           <g
             key={c.id}
@@ -164,17 +179,10 @@ export function HexNav({
 /** Dark centre cell with a gold inner ring and a two-line serif label. */
 export function DarkCenter({ lines, expanded = true }: { lines: [string, string]; expanded?: boolean }) {
   return (
-    <>
-      <polygon points={hexPoints(R)} fill="#0B1519" className="hex-cell" style={{ transform: `scale(${expanded ? 1 : 1.16})` }} />
-      <polygon
-        points={hexPoints(R - 9)}
-        fill="none"
-        stroke="#F8C618"
-        strokeWidth={1.5}
-        vectorEffect="non-scaling-stroke"
-        className="hex-cell"
-        style={{ transform: `scale(${expanded ? 1 : 1.2})` }}
-      />
+    <g className="hex-cell" style={{ transform: `scale(${expanded ? 1 : 1.16})` }}>
+      <polygon points={hexPoints(R)} fill="#0B1519" />
+      <Band w={FRAME.outer} color="#F8C618" />
+      <Band r={R - FRAME.outer - FRAME.gap} w={FRAME.inner} color="#F8C618" />
       <text textAnchor="middle" fill="#FFFFFF">
         <tspan x={0} y={-6} fontSize={22} className="font-serif">
           {lines[0]}
@@ -183,7 +191,7 @@ export function DarkCenter({ lines, expanded = true }: { lines: [string, string]
           {lines[1]}
         </tspan>
       </text>
-    </>
+    </g>
   );
 }
 
@@ -191,8 +199,9 @@ export function DarkCenter({ lines, expanded = true }: { lines: [string, string]
 export function BrandCenter({ color, secondary, children }: { color: string; secondary: string; children: ReactNode }) {
   return (
     <>
-      <polygon points={hexPoints(R)} fill="#FFFFFF" stroke={color} strokeWidth={2} />
-      <polygon points={hexPoints(R - 9)} fill="none" stroke={secondary} strokeWidth={1.5} />
+      <polygon points={hexPoints(R)} fill="#FFFFFF" />
+      <Band w={FRAME.outer} color={color} />
+      <Band r={R - FRAME.outer - FRAME.gap} w={FRAME.inner} color={secondary} />
       <foreignObject x={-74} y={-44} width={148} height={88}>
         <div className="flex h-full w-full items-center justify-center">{children}</div>
       </foreignObject>
