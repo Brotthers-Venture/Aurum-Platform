@@ -8,7 +8,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
   return (
     <LoginStage
       background={<Image src="/brand/login-bg.jpg" alt="" fill priority sizes="100vw" className="object-cover" />}
-      logo={<AurumLogo variant="white" height={44} priority />}
+      logo={<AurumLogo variant="dark" height={44} priority />}
       statement={
         <>
           <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">Aurum Asset Management</div>
