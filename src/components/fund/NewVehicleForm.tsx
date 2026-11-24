@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowLeft, CircleAlert, CircleCheck, ExternalLink, FileUp, Link2, Loader2, Search, X } from "lucide-react";
+import { ArrowLeft, Check, CircleAlert, CircleCheck, Copy, ExternalLink, FileUp, Link2, Loader2, Search, X } from "lucide-react";
 import { Button, ButtonLink, cx } from "@/components/ui";
 import { formatAddress, type GleifDetail, type GleifEntity } from "@/lib/gleif";
 import { funds } from "@/lib/data";
@@ -99,6 +99,31 @@ function Row({ label, children, mono }: { label: string; children: ReactNode; mo
 }
 
 const leiUrl = (lei: string) => `https://search.gleif.org/#/record/${lei}`;
+/** Aurum's RapidLEI applicant account. API issuance replaces this once Aurum is a RapidLEI partner. */
+const RAPIDLEI_URL = "https://lei.rapidlei.com/Applicant/Dashboard";
+
+function CopyRow({ label, value }: { label: string; value: string }) {
+  const [done, setDone] = useState(false);
+  return (
+    <div className="grid grid-cols-[180px_1fr_auto] items-center gap-4 border-b border-stone-100 py-2 text-[13px] last:border-0">
+      <dt className="text-stone-500">{label}</dt>
+      <dd className={cx(value ? "text-ink-900" : "text-stone-400")}>{value || "Not provided"}</dd>
+      <button
+        type="button"
+        disabled={!value}
+        aria-label={`Copy ${label}`}
+        className="inline-flex h-7 items-center gap-1 rounded-[3px] px-2 text-[11px] text-stone-500 hover:bg-stone-100 hover:text-ink-900 disabled:opacity-30"
+        onClick={() => {
+          navigator.clipboard?.writeText(value).catch(() => {});
+          setDone(true);
+          setTimeout(() => setDone(false), 1400);
+        }}
+      >
+        {done ? <Check size={12} /> : <Copy size={12} />} {done ? "Copied" : "Copy"}
+      </button>
+    </div>
+  );
+}
 
 function ResultRow({ r, onPick }: { r: GleifEntity; onPick: () => void }) {
   return (
@@ -121,7 +146,8 @@ function ResultRow({ r, onPick }: { r: GleifEntity; onPick: () => void }) {
   );
 }
 
-type Manual = { legalName: string; domicile: string; legalForm: string; formationDate: string; lei: string };
+type Manual = { legalName: string; domicile: string; legalForm: string; formationDate: string; registeredAs: string; address: string; lei: string; viaRapidLei: boolean };
+const blankManual = (viaRapidLei: boolean): Manual => ({ legalName: "", domicile: "", legalForm: "", formationDate: "", registeredAs: "", address: "", lei: "", viaRapidLei });
 
 export function NewVehicleForm() {
   const [q, setQ] = useState("");
@@ -142,6 +168,7 @@ export function NewVehicleForm() {
   const [vintage, setVintage] = useState("");
   const [lpa, setLpa] = useState<{ name: string; kb: number } | null>(null);
   const [created, setCreated] = useState(false);
+  const [leiCheck, setLeiCheck] = useState<{ state: "idle" | "checking" | "pending" | "invalid" }>({ state: "idle" });
   const seq = useRef(0);
 
   // Debounced GLEIF search
@@ -203,6 +230,21 @@ export function NewVehicleForm() {
     setVintage("");
     setLpa(null);
     setCreated(false);
+    setLeiCheck({ state: "idle" });
+  };
+
+  /** After RapidLEI issues the LEI: look it up in GLEIF; once published, the record replaces the manual entry. */
+  const verifyIssuedLei = async () => {
+    const lei = manual!.lei.trim().toUpperCase();
+    if (!/^[A-Z0-9]{18}[0-9]{2}$/.test(lei)) return setLeiCheck({ state: "invalid" });
+    setLeiCheck({ state: "checking" });
+    const res = await fetch(`/api/gleif/record?lei=${lei}`);
+    if (res.ok) {
+      const keepGp = gpId;
+      await pick(lei);
+      if (keepGp) setGpId(keepGp);
+      setLeiCheck({ state: "idle" });
+    } else setLeiCheck({ state: res.status === 404 ? "pending" : "invalid" });
   };
 
   const isManager = detail && detail.category !== "FUND";
@@ -215,7 +257,8 @@ export function NewVehicleForm() {
     return n ? funds.find((f) => norm(f.name) === n) : undefined;
   }, [legalName]);
 
-  const ready = (vehicle || (manual && manual.legalName && manual.domicile)) && gpId && shortName && !duplicate;
+  const manualOk = manual && manual.legalName && manual.domicile && (!manual.viaRapidLei || (manual.formationDate && manual.registeredAs && manual.address));
+  const ready = (vehicle || manualOk) && gpId && shortName && !duplicate;
   const gp = gps.find((g) => g.id === gpId);
   const formationYear = vehicle?.creationDate?.slice(0, 4) ?? manual?.formationDate.slice(0, 4);
 
@@ -230,7 +273,7 @@ export function NewVehicleForm() {
             LPA review is approved by two people.
           </p>
           <dl className="mt-6 border-t border-stone-200 pt-2">
-            {vehicle && <Row label="LEI" mono>{vehicle.lei}</Row>}
+            <Row label="LEI" mono={Boolean(vehicle)}>{vehicle ? vehicle.lei : manual?.viaRapidLei ? "Requested via RapidLEI · attaches when GLEIF publishes it" : "None"}</Row>
             <Row label="Domicile">{vehicle?.jurisdictionLabel ?? manual?.domicile}</Row>
             <Row label="Currency">{currency}</Row>
             <Row label="LPA">{lpa ? `${lpa.name} · queued for review` : "Not uploaded yet"}</Row>
@@ -323,13 +366,19 @@ export function NewVehicleForm() {
               </div>
             )}
 
-            <p className="text-[12px] text-stone-500">
-              Not registered with GLEIF yet?{" "}
-              <button type="button" className="font-semibold text-ink-900 underline underline-offset-2" onClick={() => setManual({ legalName: "", domicile: "", legalForm: "", formationDate: "", lei: "" })}>
-                Enter it manually
-              </button>
-              . Most new vehicles need an LEI before they trade or file Form PF / CVM reports, so add it once it&apos;s issued.
-            </p>
+            <div className="flex items-center justify-between gap-4 rounded-[3px] bg-stone-50 px-4 py-3">
+              <p className="text-[12px] text-stone-600">
+                No LEI yet? Most vehicles need one before they trade or file Form PF or CVM reports.
+              </p>
+              <div className="flex shrink-0 gap-2">
+                <Button variant="ghost" size="sm" onClick={() => setManual(blankManual(false))}>
+                  Enter manually
+                </Button>
+                <Button variant="secondary" size="sm" onClick={() => setManual({ ...blankManual(true), legalName: results?.length === 0 ? titleCase(q.trim()) : "" })}>
+                  Create an LEI with RapidLEI
+                </Button>
+              </div>
+            </div>
           </>
         ) : isManager ? (
           <>
@@ -360,7 +409,7 @@ export function NewVehicleForm() {
                   {vehicle.lei} <ExternalLink size={11} />
                 </a>
               ) : (
-                <div className="mt-0.5 text-[12px] text-stone-500">Not sourced from GLEIF</div>
+                <div className="mt-0.5 text-[12px] text-stone-500">{manual?.viaRapidLei ? "LEI to be issued by RapidLEI" : "Not sourced from GLEIF"}</div>
               )}
             </div>
             {vehicle && <Pill tone="gold">From GLEIF</Pill>}
@@ -402,7 +451,12 @@ export function NewVehicleForm() {
                 </Row>
               </dl>
               {vehicle.registrationStatus !== "ISSUED" && (
-                <Notice tone="warn">This LEI is {vehicle.registrationStatus?.toLowerCase()}. The vehicle can be onboarded, but the LEI must be renewed before regulatory filings.</Notice>
+                <Notice tone="warn">
+                  This LEI is {vehicle.registrationStatus?.toLowerCase()}. The vehicle can be onboarded, but the LEI must be renewed before regulatory filings.{" "}
+                  <a href={RAPIDLEI_URL} target="_blank" rel="noreferrer" className="font-semibold underline">
+                    Renew it in RapidLEI
+                  </a>
+                </Notice>
               )}
               {vehicle.entityStatus !== "ACTIVE" && <Notice tone="warn">GLEIF reports this entity as {vehicle.entityStatus?.toLowerCase()}.</Notice>}
             </>
@@ -417,8 +471,14 @@ export function NewVehicleForm() {
               <Field label="Legal form">
                 <input className={input} placeholder="e.g. Limited Partnership" value={manual!.legalForm} onChange={(e) => setManual({ ...manual!, legalForm: e.target.value })} />
               </Field>
-              <Field label="Formation date">
+              <Field label="Formation date" required={manual!.viaRapidLei}>
                 <input type="date" className={input} value={manual!.formationDate} onChange={(e) => setManual({ ...manual!, formationDate: e.target.value })} />
+              </Field>
+              <Field label="Registry number" required={manual!.viaRapidLei} hint="e.g. the Delaware file number on the certificate of formation.">
+                <input className={input} value={manual!.registeredAs} onChange={(e) => setManual({ ...manual!, registeredAs: e.target.value })} />
+              </Field>
+              <Field label="Registered office" required={manual!.viaRapidLei}>
+                <input className={input} placeholder="Registered agent address" value={manual!.address} onChange={(e) => setManual({ ...manual!, address: e.target.value })} />
               </Field>
             </div>
           )}
@@ -487,9 +547,44 @@ export function NewVehicleForm() {
         </Section>
       )}
 
-      {/* 4 — Economics */}
+      {/* RapidLEI application (no LEI yet) */}
+      {manual?.viaRapidLei && !duplicate && (
+        <Section n={4} title="Apply for the LEI" desc="RapidLEI issues the LEI; Aurum applies on the GP's behalf." aside={<Pill tone="gold">RapidLEI</Pill>}>
+          <p className="text-[13px] text-stone-600">Copy these into a new fund application in RapidLEI. They match what GLEIF will publish, so keep them exactly as on the certificate of formation.</p>
+          <dl className="rounded-[3px] border border-stone-200 px-4">
+            <CopyRow label="Legal name" value={manual.legalName} />
+            <CopyRow label="Entity type" value="Fund" />
+            <CopyRow label="Jurisdiction" value={manual.domicile} />
+            <CopyRow label="Legal form" value={manual.legalForm} />
+            <CopyRow label="Registry number" value={manual.registeredAs} />
+            <CopyRow label="Formation date" value={manual.formationDate} />
+            <CopyRow label="Registered office" value={manual.address} />
+            <CopyRow label="Fund manager" value={gp?.name ?? ""} />
+            <CopyRow label="Fund manager LEI" value={gp?.lei ?? ""} />
+          </dl>
+          {gp && !gp.lei && <Notice tone="warn">{gp.name} has no LEI on file. RapidLEI asks for the fund manager&apos;s LEI, so get or add the GP&apos;s LEI first.</Notice>}
+          <p className="text-[12px] text-stone-500">
+            Have ready: the certificate of formation, and the GP&apos;s signed authorization for Aurum to apply and renew on its behalf.
+          </p>
+          <div className="flex flex-wrap items-end gap-3 border-t border-stone-100 pt-5">
+            <a href={RAPIDLEI_URL} target="_blank" rel="noreferrer" className="mb-[22px] inline-flex h-10 items-center gap-2 rounded-[3px] bg-ink-900 px-4 text-[13px] font-semibold text-white hover:bg-ink-800">
+              Open RapidLEI <ExternalLink size={13} />
+            </a>
+            <div className="ml-auto flex items-end gap-2">
+              <Field label="Issued LEI" hint={leiCheck.state === "pending" ? "Not in GLEIF yet. New LEIs can take up to a day to publish." : leiCheck.state === "invalid" ? "An LEI is 20 characters, ending in two digits." : "Paste it once RapidLEI issues it."}>
+                <input aria-label="Issued LEI" className={cx(input, "w-[260px] font-mono uppercase")} maxLength={20} value={manual.lei} onChange={(e) => setManual({ ...manual, lei: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") })} />
+              </Field>
+              <Button variant="secondary" className="mb-[22px] h-10" disabled={!manual.lei || leiCheck.state === "checking"} onClick={verifyIssuedLei}>
+                {leiCheck.state === "checking" ? <Loader2 size={13} className="animate-spin" /> : null} Verify in GLEIF
+              </Button>
+            </div>
+          </div>
+        </Section>
+      )}
+
+      {/* Economics */}
       {(vehicle || manual) && !duplicate && (
-        <Section n={4} title="Economics" desc="Read from the LPA, not typed in.">
+        <Section n={manual?.viaRapidLei ? 5 : 4} title="Economics" desc="Read from the LPA, not typed in.">
           <Notice tone="info">
             Management fee, carry, hurdle, share classes and waterfall are extracted from the LPA by the review agent, with the clause cited for every term, and only take effect
             after two people approve them. Until then the vehicle shows <em>economics pending LPA review</em>.
