@@ -220,9 +220,6 @@ export function BillingWorkspace({ tab: initialTab, filter: initialFilter, brlPe
         <div className="flex items-center gap-3">
           <AurumMark size={30} color={BILLING} />
           <div>
-            <div className="text-[10.5px] font-bold uppercase tracking-[0.16em]" style={{ color: BILLING }}>
-              Aurum
-            </div>
             <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.015em] text-ink-900">Billing</h1>
           </div>
         </div>

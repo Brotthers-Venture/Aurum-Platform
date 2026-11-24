@@ -22,9 +22,6 @@ export function ModuleHeader({ color, title, action }: { color: string; title: s
       <div className="flex items-center gap-3">
         <AurumMark size={30} color={color} />
         <div>
-          <div className="text-[10.5px] font-bold uppercase tracking-[0.16em]" style={{ color }}>
-            Aurum
-          </div>
           <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.015em] text-ink-900">{title}</h1>
         </div>
       </div>
