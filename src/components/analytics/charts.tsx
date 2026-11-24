@@ -7,6 +7,13 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
  * every chart has a legend, direct end labels and a table view.
  */
 export const SERIES = ["#0F2340", "#B08D4E", "#A39B8A", "#5B6B82"] as const;
+
+/**
+ * Fixed meanings across every chart and report:
+ * capital in = navy, cash returned to investors = deep turquoise, unrealized value = brass.
+ * (Validated: turquoise is distinct from navy and brass for all colour-vision types.)
+ */
+export const MEANING = { capitalIn: "#0F2340", returned: "#1F8A84", value: "#B08D4E" } as const;
 const GRID = "#ECE6DA";
 const AXIS = "#D1C8B5";
 const TICK = "#6F6A61";

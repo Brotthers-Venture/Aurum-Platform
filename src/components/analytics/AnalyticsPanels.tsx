@@ -4,7 +4,7 @@ import { Fragment, useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { cx } from "@/components/ui";
 import { multiples, periodLabel, rollForward, sumSnapshots, xirr, type FundAnalytics, type Snapshot } from "@/lib/analytics";
-import { Columns, HBars, Legend, Lines, SERIES } from "./charts";
+import { Columns, HBars, Legend, Lines, MEANING, SERIES } from "./charts";
 import { MiniTable, Widget } from "./Widget";
 
 export type Ccy = "USD" | "BRL";
@@ -149,9 +149,9 @@ export function SummaryWidget({ v, bare }: { v: View; bare?: boolean }) {
 export function NavWidget({ v, bare, height = 260 }: { v: View; bare?: boolean; height?: number }) {
   const f = fmtShort(v.ccy);
   const series = [
-    { name: "NAV", color: SERIES[0], values: v.series.map((s) => s.nav) },
-    { name: "Paid-in capital", color: SERIES[1], values: v.series.map((s) => s.paidIn) },
-    { name: "Cumulative distributions", color: SERIES[2], values: v.series.map((s) => s.distributed) },
+    { name: "NAV", color: MEANING.value, values: v.series.map((s) => s.nav) },
+    { name: "Paid-in capital", color: MEANING.capitalIn, values: v.series.map((s) => s.paidIn) },
+    { name: "Cumulative distributions", color: MEANING.returned, values: v.series.map((s) => s.distributed) },
   ];
   return (
     <Widget
@@ -173,8 +173,8 @@ export function FlowsWidget({ v, bare, height = 240 }: { v: View; bare?: boolean
   const contrib = v.series.map((s, i) => s.paidIn - (v.series[i - 1]?.paidIn ?? 0));
   const dist = v.series.map((s, i) => s.distributed - (v.series[i - 1]?.distributed ?? 0));
   const series = [
-    { name: "Contributions", color: SERIES[0], values: contrib },
-    { name: "Distributions", color: SERIES[1], values: dist },
+    { name: "Contributions", color: MEANING.capitalIn, values: contrib },
+    { name: "Distributions", color: MEANING.returned, values: dist },
   ];
   return (
     <Widget
@@ -198,12 +198,12 @@ export function PerformanceWidget({ v, bare }: { v: View; bare?: boolean }) {
       title="Performance by vehicle"
       unit="multiple of paid-in"
       bare={bare}
-      legend={<Legend items={[{ name: "DPI · realized", color: SERIES[0] }, { name: "RVPI · unrealized", color: SERIES[1] }]} />}
+      legend={<Legend items={[{ name: "DPI · distributed", color: MEANING.returned }, { name: "RVPI · unrealized", color: MEANING.value }]} />}
       csv={{ headers: ["Vehicle", "DPI", "RVPI", "TVPI", "Net IRR"], rows: rows.map((p) => [p.f.name, p.m.dpi, p.m.rvpi, p.m.tvpi, p.irr ?? ""]) }}
       table={<MiniTable headers={["Vehicle", "DPI", "RVPI", "TVPI", "Net IRR"]} rows={rows.map((p) => [p.f.shortName, x2(p.m.dpi), x2(p.m.rvpi), x2(p.m.tvpi), pctFmt(p.irr)])} />}
     >
       {rows.length ? (
-        <HBars rows={rows.map((p) => ({ label: p.f.shortName, values: [p.m.dpi, p.m.rvpi] }))} parts={[{ name: "DPI", color: SERIES[0] }, { name: "RVPI", color: SERIES[1] }]} fmt={x2} />
+        <HBars rows={rows.map((p) => ({ label: p.f.shortName, values: [p.m.dpi, p.m.rvpi] }))} parts={[{ name: "DPI", color: MEANING.returned }, { name: "RVPI", color: MEANING.value }]} fmt={x2} />
       ) : (
         <p className="py-6 text-center text-[12px] text-stone-400">No paid-in capital yet</p>
       )}
