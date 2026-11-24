@@ -67,3 +67,4 @@ Screens: General ledger (trial balance, financial statements, partners' capital,
 1. Create the Supabase project, run the migration, load the sample data, and switch `src/lib/data.ts` to live queries.
 2. Replace the preview login with Supabase Auth (password + MFA).
 3. Integrations: Plaid (US accounts), statement import for non-US banks, KYC/AML screening, e-signature.
+4. **LPA review agent.** For each fund, upload the LPA; an AI agent extracts the economics (share classes, management fee basis and rates, hurdle, catch-up, carry, waterfall type, equalization interest, clawback, fee offsets, recycling, terms) and configures the fund. Rule: nothing implied. Every value cites the clause and page it came from, terms the LPA does not state are flagged as not found rather than defaulted, and a person approves each term before it is applied.
