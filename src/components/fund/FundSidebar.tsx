@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  LineChart,
   ArrowDownToLine,
   ArrowLeft,
   ArrowLeftRight,
@@ -27,7 +28,10 @@ const openFiles = onboarding.filter((o) => o.status === "Submitted" || o.status 
 const groups = [
   {
     label: null,
-    items: [{ href: "/admin/fund", label: "Overview", icon: LayoutGrid, exact: true }],
+    items: [
+      { href: "/admin/fund", label: "Overview", icon: LayoutGrid, exact: true },
+      { href: "/admin/fund/analytics", label: "Analytics", icon: LineChart },
+    ],
   },
   {
     label: "Administration",

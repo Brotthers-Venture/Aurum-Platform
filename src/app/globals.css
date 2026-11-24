@@ -178,3 +178,25 @@ body {
 .hex-enter-late {
   animation: hex-enter 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
+
+/* ---------- printable reports (A4 landscape, one .report-page per sheet) ---------- */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+  html,
+  body {
+    background: #fff;
+  }
+  .report-page {
+    width: 297mm;
+    height: 210mm;
+    break-after: page;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .report-page:last-child {
+    break-after: auto;
+  }
+}
