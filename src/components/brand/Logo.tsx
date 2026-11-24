@@ -54,7 +54,7 @@ export function AurumLogo({
   priority?: boolean;
 }) {
   const src = variant === "dark" ? "/brand/aurum-logo-dark.png" : "/brand/aurum-logo-white.png";
-  const ratio = variant === "dark" ? 1252 / 404 : 1404 / 408;
+  const ratio = variant === "dark" ? 1276 / 405 : 1404 / 408;
   return (
     <Image
       src={src}

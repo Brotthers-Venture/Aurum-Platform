@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Bell, Search, ShieldCheck } from "lucide-react";
-import { AurumWordmark } from "@/components/brand/Logo";
+import { AurumLogo } from "@/components/brand/Logo";
 import { RoleSwitcher } from "./PreviewRole";
 
 /**
@@ -15,7 +15,7 @@ export function AdminTopBar({ context, logo = true }: { context?: string; logo?:
           {logo && (
             <>
               <Link href="/admin" aria-label="Aurum home">
-                <AurumWordmark tone="dark" />
+                <AurumLogo variant="dark" height={34} priority />
               </Link>
               <span className="h-5 w-px bg-stone-300" />
             </>

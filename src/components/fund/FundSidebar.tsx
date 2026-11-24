@@ -21,7 +21,7 @@ import {
   Users,
 } from "lucide-react";
 import { cx } from "@/components/ui";
-import { AurumWordmark } from "@/components/brand/Logo";
+import { AurumLogo } from "@/components/brand/Logo";
 import { onboarding } from "@/lib/data";
 
 const openFiles = onboarding.filter((o) => o.status === "Submitted" || o.status === "Changes requested").length;
@@ -73,8 +73,8 @@ export function FundSidebar() {
   return (
     <div className="shrink-0 p-3 pr-0">
       <nav className="flex h-full w-[236px] flex-col rounded-[18px] border border-stone-200 bg-cream text-ink-900 shadow-card">
-        <Link href="/admin" aria-label="Aurum home" className="px-5 pb-4 pt-5">
-          <AurumWordmark tone="dark" />
+        <Link href="/admin" aria-label="Aurum home" className="block px-5 pb-4 pt-5">
+          <AurumLogo variant="dark" height={40} priority />
         </Link>
         <div className="px-3">
           <button className="flex w-full items-center justify-between rounded-[10px] border border-stone-200 bg-white px-3 py-2 text-left hover:border-stone-300">

@@ -209,3 +209,12 @@ body {
     break-after: auto;
   }
 }
+
+/* keep autofilled fields on the white field surface (no browser tint) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-ink-900);
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  transition: background-color 9999s ease-out 0s;
+}
