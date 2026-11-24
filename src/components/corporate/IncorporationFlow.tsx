@@ -2,8 +2,11 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Building2, Check, CircleAlert, CircleCheck, FileUp, Lock, Mail, Pencil, Plus, Printer, Trash2, User } from "lucide-react";
-import { cx } from "@/components/ui";
+import { Button, cx } from "@/components/ui";
+import Image from "next/image";
 import { AurumLogo } from "@/components/brand/Logo";
+import { LoginStage } from "@/components/auth/LoginStage";
+import { Field, inputClass } from "@/components/auth/AuthShell";
 import {
   STAGES,
   STEPS,
@@ -243,27 +246,8 @@ function Tick({ on, onClick, children, required }: { on: boolean; onClick: () =>
 
 /* ───────────────────────── landing ───────────────────────── */
 
-function HexField() {
-  // Large hairline hexagons — an echo of the Aurum mark, drawn at architectural scale.
-  const hex = (cx: number, cy: number, r: number) =>
-    Array.from({ length: 6 }, (_, i) => {
-      const a = (Math.PI / 3) * i - Math.PI / 2;
-      return `${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`;
-    }).join(" ");
-  return (
-    <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden>
-      {[
-        [620, 180, 260],
-        [620, 180, 200],
-        [700, 760, 330],
-        [90, 980, 240],
-      ].map(([x, y, r], i) => (
-        <polygon key={i} points={hex(x, y, r)} fill="none" stroke="#B8975A" strokeOpacity={i === 1 ? 0.1 : 0.16} strokeWidth={1} />
-      ))}
-    </svg>
-  );
-}
-
+/* Same entrance as the Aurum sign-in: the out-of-focus gold photograph, the statement bottom-left
+   and the application card floating on the right. */
 function Landing({
   d,
   set,
@@ -279,125 +263,109 @@ function Landing({
   onBegin: () => void;
   ready: boolean;
 }) {
+  const codes = jurisdictions.map((j) => ({ code: j.code.replace("US-", ""), name: j.name, from: Math.min(...j.types.map((t) => t.govFee)) + j.serviceFee }));
   return (
-    <div className="grid min-h-screen lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)]">
-      {/* left: the firm */}
-      <section className="relative flex flex-col overflow-hidden bg-[#0F2340] px-10 py-10 text-white lg:px-16 lg:py-12">
-        <HexField />
-        <div className="relative">
-          <AurumLogo variant="white" height={30} />
-        </div>
-        <div className="relative mt-16 max-w-[560px] lg:mt-auto">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.24em]" style={{ color: GOLD }}>
-            Corporate Services
-          </div>
-          <h1 className="mt-5 font-serif text-[44px] leading-[1.06] tracking-[-0.015em] lg:text-[54px]">Companies formed with institutional care.</h1>
-          <p className="mt-6 max-w-[480px] text-[15px] leading-[1.7] text-white/70">
-            One application covers the filing, the identity checks and the paperwork that follows. A named Aurum officer reviews every submission before anything reaches a
-            registry.
+    <LoginStage
+      background={<Image src="/brand/login-bg.jpg" alt="" fill priority sizes="100vw" className="object-cover" />}
+      logo={<AurumLogo variant="dark" height={44} priority />}
+      statement={
+        <>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">Aurum Corporate Services</div>
+          <h1 className="mt-4 font-serif text-[64px] font-normal leading-[1.02] tracking-[-0.015em] drop-shadow-[0_2px_20px_rgba(0,0,0,0.25)]">Formed properly.</h1>
+          <p className="mt-5 max-w-[460px] text-[15px] leading-relaxed text-white/80">
+            Companies, partnerships and fund vehicles in the United States, the Caribbean and Brazil. One application covers the filing, the identity checks and the records that
+            follow.
           </p>
-        </div>
-        <div className="relative mt-12 max-w-[560px]">
-          <div className="mb-3 text-[10.5px] font-semibold uppercase tracking-[0.22em] text-white/45">Where we form</div>
-          <ul className="divide-y divide-white/10 border-y border-white/10">
-            {jurisdictions.map((j) => (
-              <li key={j.id} className="grid grid-cols-[52px_minmax(0,1fr)_auto] items-baseline gap-3 py-2.5 text-[13.5px]">
-                <span className="font-serif text-[15px]" style={{ color: GOLD }}>
-                  {j.code.replace("US-", "")}
-                </span>
-                <span>
-                  {j.name} <span className="text-white/45">· {j.types.map((t) => t.short).join(", ")}</span>
-                </span>
-                <span className="num text-[12.5px] text-white/60">from {usd(Math.min(...j.types.map((t) => t.govFee)) + j.serviceFee)}</span>
+          <ul className="mt-8 grid max-w-[520px] grid-cols-3 gap-x-6 gap-y-3 border-t border-white/20 pt-5">
+            {codes.map((c) => (
+              <li key={c.code} className="text-[12.5px] leading-tight">
+                <span className="font-serif text-[17px] text-white">{c.code}</span>
+                <span className="ml-2 text-white/80">{c.name}</span>
+                <span className="num mt-0.5 block text-[11.5px] text-white/55">from {usd(c.from)}</span>
               </li>
             ))}
           </ul>
+        </>
+      }
+      footer={
+        <>
+          <span>© 2026 Aurum Asset Management · Orlando, Florida</span>
+          <span className="flex gap-6">
+            <a href="#" className="hover:text-white">
+              Privacy
+            </a>
+            <a href="#" className="hover:text-white">
+              Engagement terms
+            </a>
+            <a href="#" className="hover:text-white">
+              Regulatory notices
+            </a>
+            <a href="mailto:formation@aurumasset.us" className="hover:text-white">
+              Formation desk
+            </a>
+          </span>
+        </>
+      }
+    >
+      {resume && (
+        <div className="-mx-1 mb-6 rounded-[8px] bg-[#FBF6EA] px-4 py-3 text-[12.5px] text-ink-900 ring-1 ring-[#EAD9B4]">
+          Your application{resume.name ? ` for ${resume.name}` : ""} is saved.
+          <button onClick={onResume} className="ml-1 font-semibold underline decoration-[#B8975A] underline-offset-4">
+            Continue it
+          </button>
         </div>
-        <div className="relative mt-10 flex flex-wrap gap-x-6 gap-y-1 text-[11.5px] text-white/45">
-          <span>Aurum Asset Management · Orlando, Florida</span>
-          <a href="mailto:formation@aurumasset.us" className="hover:text-white">
-            formation@aurumasset.us
-          </a>
+      )}
+      <h2 className="font-serif text-[24px] leading-tight text-ink-900">Form a company with Aurum</h2>
+      <p className="mt-1.5 text-[13px] text-stone-500">Start your application. About fifteen minutes.</p>
+      <form
+        className="mt-6 space-y-5"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (ready) onBegin();
+        }}
+      >
+        <Field label="Email address" hint={<span className="text-[11.5px] font-normal text-stone-400">for your reference and documents</span>}>
+          <input id="em" type="email" value={d.email} onChange={(e) => set({ email: e.target.value })} placeholder="name@company.com" className={inputClass} autoComplete="email" />
+        </Field>
+        <div className="space-y-2.5">
+          <label className="flex items-start gap-2.5 text-[13px] text-stone-600">
+            <input
+              type="checkbox"
+              checked={d.consent}
+              onChange={() => set({ consent: !d.consent })}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded-[2px] border-stone-300 accent-ink-900"
+            />
+            <span>I accept the engagement terms and have read the privacy notice.</span>
+          </label>
+          <label className="flex items-center gap-2.5 text-[13px] text-stone-600">
+            <input type="checkbox" checked={d.updates} onChange={() => set({ updates: !d.updates })} className="h-4 w-4 rounded-[2px] border-stone-300 accent-ink-900" />
+            Keep me informed about Aurum services
+          </label>
         </div>
-      </section>
-
-      {/* right: begin */}
-      <section className="flex items-center bg-[#F6F2EA] px-8 py-16 lg:px-16">
-        <div className="mx-auto w-full max-w-[440px]">
-          {resume && (
-            <div className="mb-10 border-l-2 bg-white px-5 py-4" style={{ borderColor: GOLD }}>
-              <div className="text-[13px] text-ink-900">Welcome back. Your application{resume.name ? ` for ${resume.name}` : ""} is saved.</div>
-              <button
-                onClick={onResume}
-                className="mt-1.5 flex items-center gap-1.5 text-[13px] font-semibold text-ink-900 underline decoration-[#B8975A] decoration-2 underline-offset-[5px]"
-              >
-                Continue where you left off <ArrowRight size={13} />
-              </button>
-            </div>
-          )}
-          <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">Begin an application</div>
-          <h2 className="mt-3 font-serif text-[34px] leading-[1.12] text-ink-900">Start with your email.</h2>
-          <p className="mt-3 text-[14px] leading-[1.65] text-stone-600">
-            We use it for your reference number, status updates and the finished company documents. Most clients finish in about fifteen minutes.
-          </p>
-          <form
-            className="mt-8 space-y-5"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (ready) onBegin();
-            }}
-          >
-            <div>
-              <label className={label} htmlFor="em">
-                Email address
-              </label>
-              <input
-                id="em"
-                type="email"
-                value={d.email}
-                onChange={(e) => set({ email: e.target.value })}
-                placeholder="name@company.com"
-                className={cx(input, "h-12")}
-                autoComplete="email"
-              />
-            </div>
-            <div className="space-y-3">
-              <Tick on={d.consent} onClick={() => set({ consent: !d.consent })} required>
-                I accept Aurum’s engagement terms and have read the privacy notice.
-              </Tick>
-              <Tick on={d.updates} onClick={() => set({ updates: !d.updates })}>
-                Keep me informed about Aurum services.
-              </Tick>
-            </div>
-            <button
-              disabled={!ready}
-              className="flex h-12 w-full items-center justify-center gap-2.5 rounded-[6px] bg-ink-900 text-[14px] font-semibold text-white transition-colors hover:bg-[#1B3358] disabled:bg-[#C9C3B6]"
-            >
-              Begin application <ArrowRight size={15} />
-            </button>
-          </form>
-          <div className="mt-10 border-t border-[#E0D9CB] pt-6">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-500">Have these to hand</div>
-            <ul className="mt-3 space-y-2 text-[13px] text-stone-700">
-              {[
-                "A passport or national ID for each owner and director",
-                "Proof of address dated within three months",
-                "How ownership is split between the owners",
-                "Two or three name ideas, in order of preference",
-              ].map((x) => (
-                <li key={x} className="flex gap-3">
-                  <span className="mt-[9px] h-px w-3 shrink-0" style={{ background: GOLD }} />
-                  {x}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <p className="mt-10 text-[11px] leading-relaxed text-stone-400">
-            Aurum prepares and files formation documents and keeps statutory records. We do not provide legal or tax advice; we are glad to work alongside your advisers.
-          </p>
-        </div>
-      </section>
-    </div>
+        <Button type="submit" variant="aurum" size="lg" className="w-full" disabled={!ready}>
+          Begin application
+        </Button>
+      </form>
+      <div className="my-5 flex items-center gap-4 text-[11px] uppercase tracking-[0.14em] text-stone-400">
+        <span className="h-px flex-1 bg-stone-200" />
+        or
+        <span className="h-px flex-1 bg-stone-200" />
+      </div>
+      <a href="mailto:formation@aurumasset.us?subject=Company%20formation" className="block">
+        <Button variant="secondary" size="lg" className="w-full" type="button">
+          Speak to a formation officer
+        </Button>
+      </a>
+      <p className="mt-6 flex items-start gap-2 text-[12px] text-stone-500">
+        <Lock size={13} strokeWidth={1.8} className="mt-[2px] shrink-0" />
+        Identity documents are encrypted and seen only by Aurum compliance. Nothing is filed until an officer has reviewed your application.
+      </p>
+      <div className="mt-5 rounded-[6px] bg-stone-50 px-3.5 py-3 text-[11.5px] leading-relaxed text-stone-500">
+        <span className="font-semibold text-stone-600">Have to hand:</span> a passport or national ID for each owner and director, proof of address from the last three months, the
+        ownership split and two or three name ideas.
+      </div>
+    </LoginStage>
   );
 }
 
