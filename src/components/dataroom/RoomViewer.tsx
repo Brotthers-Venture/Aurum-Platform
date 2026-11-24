@@ -72,9 +72,32 @@ function Watermark({ text, id }: { text: string; id: string }) {
   );
 }
 
-export function RoomViewer({ room, link, docs, brand, ip, preview, settings }: { room: Room; link: ShareLink; docs: RoomDoc[]; brand: RoomBrand; ip: string; preview: boolean; settings: RoomSettings }) {
+export function RoomViewer({
+  room,
+  link,
+  docs,
+  brand,
+  ip,
+  preview,
+  settings,
+}: {
+  room: Room;
+  link: ShareLink;
+  docs: RoomDoc[];
+  brand: RoomBrand;
+  ip: string;
+  preview: boolean;
+  settings: RoomSettings;
+}) {
   const steps: Step[] = useMemo(
-    () => ["email", ...(link.verifyEmail ? ["verify" as const] : []), ...(link.password ? ["password" as const] : []), ...(link.questions.length ? ["questions" as const] : []), ...(link.nda !== "off" ? ["nda" as const] : []), "room"],
+    () => [
+      "email",
+      ...(link.verifyEmail ? ["verify" as const] : []),
+      ...(link.password ? ["password" as const] : []),
+      ...(link.questions.length ? ["questions" as const] : []),
+      ...(link.nda !== "off" ? ["nda" as const] : []),
+      "room",
+    ],
     [link],
   );
   const [step, setStep] = useState<Step>("email");
@@ -98,7 +121,17 @@ export function RoomViewer({ room, link, docs, brand, ip, preview, settings }: {
   if (step === "room") return <RoomInside room={room} link={link} docs={docs} brand={brand} email={email} ip={ip} settings={settings} />;
 
   return (
-    <Shell brand={brand} room={room} settings={settings} demo={step === "verify" ? `Email isn’t connected yet — the code for ${email} is ${codeFor(email)}` : preview ? "Preview — this is exactly what your viewers see" : undefined}>
+    <Shell
+      brand={brand}
+      room={room}
+      settings={settings}
+      inside={Object.entries(
+        docs.filter((d) => (link.folders[d.folder] ?? "view") !== "none").reduce<Record<string, number>>((m, d) => ((m[d.folder] = (m[d.folder] ?? 0) + 1), m), {}),
+      ).map(([folder, n]) => ({ folder, n }))}
+      notes={["Every visit is logged", ...(link.watermark ? ["Pages carry your name"] : []), link.download ? "Downloads allowed" : "View only"]}
+      demo={step === "verify" ? `Email isn’t connected yet — the code for ${email} is ${codeFor(email)}` : preview ? "Preview — this is exactly what your viewers see" : undefined}
+    >
+      <StepDots steps={steps.slice(0, -1)} current={step} />
       {step === "email" && (
         <EmailGate
           link={link}
@@ -116,44 +149,100 @@ export function RoomViewer({ room, link, docs, brand, ip, preview, settings }: {
           }}
         />
       )}
-      {step === "verify" && <CodeGate email={email} err={err} onBack={() => setStep("email")} onSubmit={(c) => (c === codeFor(email) ? next() : setErr("That code doesn’t match. Check the latest email."))} />}
+      {step === "verify" && (
+        <CodeGate
+          email={email}
+          err={err}
+          onBack={() => setStep("email")}
+          onSubmit={(c) => (c === codeFor(email) ? next() : setErr("That code doesn’t match. Check the latest email."))}
+        />
+      )}
       {step === "password" && <PasswordGate err={err} onSubmit={(p) => (p === link.password ? next() : setErr("Incorrect password."))} />}
       {step === "questions" && <QuestionsGate questions={link.questions} onSubmit={next} />}
       {step === "nda" && <NdaGate mode={link.nda} brand={brand} room={room} email={email} onSubmit={next} />}
-      <StepDots steps={steps.slice(0, -1)} current={step} />
     </Shell>
   );
 }
 
 /* ───────────────────────── entry ───────────────────────── */
 
-function Shell({ brand, room, settings, demo, children }: { brand: RoomBrand; room: Room; settings: RoomSettings; demo?: string; children: ReactNode }) {
+function Shell({
+  brand,
+  room,
+  settings,
+  demo,
+  inside,
+  notes,
+  children,
+}: {
+  brand: RoomBrand;
+  room: Room;
+  settings: RoomSettings;
+  demo?: string;
+  inside?: { folder: string; n: number }[];
+  notes?: string[];
+  children: ReactNode;
+}) {
   return (
-    <div className="relative flex min-h-screen flex-col bg-stone-50">
+    <div className="flex min-h-screen flex-col bg-white">
       {demo && <div className="bg-ink-900 px-4 py-2 text-center text-[12px] font-medium text-white">{demo}</div>}
-      <div className="relative h-[270px] overflow-hidden">
-        {settings.showCover ? <FundCover id={room.id} primary={brand.primary} secondary={brand.secondary} className="absolute inset-0 h-full w-full" /> : <div className="absolute inset-0" style={{ background: brand.primary }} />}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black/35" />
-        <div className="relative mx-auto flex h-full max-w-[1100px] flex-col justify-between px-8 pb-16 pt-7">
-          {settings.showLogo ? <BrandMark brand={brand} light /> : <span />}
-          <div>
-            <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/75">{room.purpose}</div>
-            <h1 className="mt-1 text-[30px] font-semibold tracking-[-0.015em] text-white">{room.name}</h1>
+      <div className="grid flex-1 lg:grid-cols-[minmax(380px,44%)_1fr]">
+        {/* sponsor panel */}
+        <aside className="relative overflow-hidden text-white" style={{ background: brand.primary }}>
+          {settings.showCover && <FundCover id={room.id} primary={brand.primary} secondary={brand.secondary} className="absolute inset-0 h-full w-full opacity-45" />}
+          <div className="relative flex h-full flex-col px-10 py-9 lg:px-14">
+            {settings.showLogo ? <BrandMark brand={brand} light /> : <span />}
+            <div className="mt-16 lg:mt-auto">
+              <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/70">{room.purpose}</div>
+              <h1 className="mt-2 max-w-[440px] text-[32px] font-semibold leading-[1.15] tracking-[-0.015em]">{room.name}</h1>
+              {inside && inside.length > 0 && (
+                <div className="mt-8 max-w-[420px] border-t border-white/20 pt-5">
+                  <div className="text-[10.5px] font-bold uppercase tracking-[0.18em] text-white/60">What’s inside</div>
+                  <ul className="mt-3 space-y-2 text-[13.5px]">
+                    {inside.map((f, i) => (
+                      <li key={f.folder} className="flex items-baseline gap-3">
+                        <span className="num w-5 text-white/50">{i + 1}</span>
+                        <span className="flex-1">{f.folder.replace(/^\d+ /, "")}</span>
+                        <span className="num text-[12px] text-white/60">
+                          {f.n} {f.n === 1 ? "file" : "files"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            <div className="mt-10 lg:mt-12">
+              {notes && (
+                <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-[11.5px] text-white/70">
+                  {notes.map((n) => (
+                    <li key={n} className="flex items-center gap-1.5">
+                      <ShieldCheck size={12} /> {n}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
-        </div>
+        </aside>
+        {/* steps */}
+        <main className="flex flex-col">
+          <div className="flex flex-1 items-center justify-center px-6 py-12">
+            <div className="w-full max-w-[420px]">{children}</div>
+          </div>
+          <footer className="flex items-center justify-center gap-2 pb-6 text-[11px] text-stone-400">
+            <Lock size={11} /> Secured by <AurumMark size={11} /> Aurum
+          </footer>
+        </main>
       </div>
-      <div className="relative z-10 mx-auto -mt-10 w-full max-w-[460px] flex-1 px-5 pb-16">{children}</div>
-      <footer className="flex items-center justify-center gap-2 pb-6 text-[11px] text-stone-400">
-        <Lock size={11} /> Secured by <AurumMark size={11} /> Aurum
-      </footer>
     </div>
   );
 }
 
 function GateCard({ title, sub, children }: { title: string; sub?: string; children: ReactNode }) {
   return (
-    <div className="rounded-[18px] border border-stone-200/80 bg-white p-7 shadow-lift">
-      <h2 className="text-[19px] font-semibold tracking-[-0.01em] text-ink-900">{title}</h2>
+    <div>
+      <h2 className="text-[24px] font-semibold tracking-[-0.015em] text-ink-900">{title}</h2>
       {sub && <p className="mt-1 text-[13px] leading-relaxed text-stone-600">{sub}</p>}
       <div className="mt-5">{children}</div>
     </div>
@@ -180,7 +269,8 @@ function EmailGate({ link, room, err, onSubmit }: { link: ShareLink; room: Room;
         <button className={cx(primary, "mt-4")}>Continue</button>
       </form>
       <p className="mt-4 flex items-start gap-2 text-[11.5px] leading-relaxed text-stone-500">
-        <ShieldCheck size={14} className="mt-px shrink-0" /> Access is logged. Documents stay in this secure viewer{link.download ? "" : " and can’t be downloaded"}. Open until {new Date(`${room.expires}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}.
+        <ShieldCheck size={14} className="mt-px shrink-0" /> Access is logged. Documents stay in this secure viewer{link.download ? "" : " and can’t be downloaded"}. Open until{" "}
+        {new Date(`${room.expires}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })}.
       </p>
     </GateCard>
   );
@@ -288,8 +378,8 @@ function NdaGate({ mode, brand, room, email, onSubmit }: { mode: "acknowledge" |
       >
         <p className="font-semibold text-ink-900">Non-disclosure agreement — {room.name}</p>
         <p>
-          You are receiving confidential information about {room.name} from {brand.wordmark} and its administrator, Aurum Asset Management (“Disclosing Parties”), for the sole purpose of
-          evaluating a potential transaction.
+          You are receiving confidential information about {room.name} from {brand.wordmark} and its administrator, Aurum Asset Management (“Disclosing Parties”), for the sole
+          purpose of evaluating a potential transaction.
         </p>
         <p>1. You will keep the information confidential and use it only for that purpose. You may share it with your advisers who need it and are bound by equivalent duties.</p>
         <p>2. You will not copy, photograph, record or redistribute the information, and will not attempt to remove or obscure watermarks.</p>
@@ -300,13 +390,18 @@ function NdaGate({ mode, brand, room, email, onSubmit }: { mode: "acknowledge" |
       </div>
       {!read && <p className="mt-2 text-[11.5px] text-stone-500">Scroll to the end to continue.</p>}
       <label className={cx("mt-3 flex items-start gap-2 text-[13px]", read ? "text-ink-900" : "text-stone-400")}>
-        <input type="checkbox" disabled={!read} checked={agree} onChange={() => setAgree((x) => !x)} className="mt-0.5 h-4 w-4" />I have read and agree to these terms on behalf of myself and my organisation.
+        <input type="checkbox" disabled={!read} checked={agree} onChange={() => setAgree((x) => !x)} className="mt-0.5 h-4 w-4" />I have read and agree to these terms on behalf of
+        myself and my organisation.
       </label>
       {mode === "esign" && (
         <div className="mt-3">
           <label className="mb-1.5 block text-[12px] font-semibold text-stone-600">Type your full name to sign</label>
           <input value={name} onChange={(e) => setName(e.target.value)} disabled={!read} placeholder="Full name" className={cx(input, "font-serif text-[18px]")} />
-          {name.trim() && <p className="mt-1.5 text-[11px] text-stone-500">Signed electronically by {name.trim()} ({email}) · {stamp()}</p>}
+          {name.trim() && (
+            <p className="mt-1.5 text-[11px] text-stone-500">
+              Signed electronically by {name.trim()} ({email}) · {stamp()}
+            </p>
+          )}
         </div>
       )}
       <button disabled={!ok} onClick={onSubmit} className={cx(primary, "mt-4")}>
@@ -316,21 +411,49 @@ function NdaGate({ mode, brand, room, email, onSubmit }: { mode: "acknowledge" |
   );
 }
 
+const STEP_LABEL: Record<string, string> = { email: "Email", verify: "Code", password: "Password", questions: "About you", nda: "Agreement" };
 function StepDots({ steps, current }: { steps: Step[]; current: Step }) {
   if (steps.length < 2) return null;
   const i = steps.indexOf(current);
   return (
-    <div className="mt-5 flex justify-center gap-1.5">
+    <ol className="mb-8 flex flex-wrap items-center gap-2 whitespace-nowrap text-[11.5px]">
       {steps.map((s, j) => (
-        <span key={s} className={cx("h-1.5 rounded-full transition-all", j === i ? "w-6 bg-ink-900" : j < i ? "w-1.5 bg-ink-700" : "w-1.5 bg-stone-300")} />
+        <li key={s} className="flex items-center gap-2">
+          <span
+            className={cx(
+              "flex h-5 w-5 items-center justify-center rounded-full text-[10.5px] font-bold",
+              j < i ? "bg-ink-900 text-white" : j === i ? "border-2 border-ink-900 text-ink-900" : "border border-stone-300 text-stone-400",
+            )}
+          >
+            {j < i ? "✓" : j + 1}
+          </span>
+          <span className={cx(j === i ? "font-semibold text-ink-900" : "text-stone-500")}>{STEP_LABEL[s] ?? s}</span>
+          {j < steps.length - 1 && <span className="h-px w-5 bg-stone-300" />}
+        </li>
       ))}
-    </div>
+    </ol>
   );
 }
 
 /* ───────────────────────── inside the room ───────────────────────── */
 
-function RoomInside({ room, link, docs, brand, email, ip, settings }: { room: Room; link: ShareLink; docs: RoomDoc[]; brand: RoomBrand; email: string; ip: string; settings: RoomSettings }) {
+function RoomInside({
+  room,
+  link,
+  docs,
+  brand,
+  email,
+  ip,
+  settings,
+}: {
+  room: Room;
+  link: ShareLink;
+  docs: RoomDoc[];
+  brand: RoomBrand;
+  email: string;
+  ip: string;
+  settings: RoomSettings;
+}) {
   const access = (d: RoomDoc): FolderAccess => {
     const a = link.folders[d.folder] ?? "view";
     if (a === "none") return "none";
@@ -417,7 +540,11 @@ function RoomInside({ room, link, docs, brand, email, ip, settings }: { room: Ro
   const firstOf = folders.map((f) => visible.find((d) => d.folder === f)!);
 
   return (
-    <div className={cx("flex h-screen flex-col bg-stone-100", !link.print && "vdr-noprint", link.screenshot && "select-none")} onContextMenu={(e) => link.screenshot && e.preventDefault()} onDragStart={(e) => e.preventDefault()}>
+    <div
+      className={cx("flex h-screen flex-col bg-stone-100", !link.print && "vdr-noprint", link.screenshot && "select-none")}
+      onContextMenu={(e) => link.screenshot && e.preventDefault()}
+      onDragStart={(e) => e.preventDefault()}
+    >
       <div className="vdr-print-msg hidden p-10 text-center text-[16px]">Printing is turned off for this data room.</div>
       <header className="relative z-20 flex h-14 shrink-0 items-center gap-4 border-b border-stone-200 bg-white px-5">
         <span className="absolute inset-x-0 top-0 h-[3px]" style={{ background: brand.secondary }} />
@@ -430,7 +557,11 @@ function RoomInside({ room, link, docs, brand, email, ip, settings }: { room: Ro
         <span className="truncate text-[14px] font-semibold text-ink-900">{room.name}</span>
         <div className="ml-auto flex items-center gap-3">
           {settings.visitorQa && (
-            <button onClick={() => setAsking(true)} className="flex h-9 items-center gap-1.5 rounded-[10px] px-3.5 text-[13px] font-semibold text-white" style={{ background: brand.primary }}>
+            <button
+              onClick={() => setAsking(true)}
+              className="flex h-9 items-center gap-1.5 rounded-[10px] px-3.5 text-[13px] font-semibold text-white"
+              style={{ background: brand.primary }}
+            >
               <MessageSquareText size={15} /> Ask a question
             </button>
           )}
@@ -440,7 +571,11 @@ function RoomInside({ room, link, docs, brand, email, ip, settings }: { room: Ro
             </span>
             {email}
           </span>
-          <button onClick={() => window.location.reload()} className="flex h-9 w-9 items-center justify-center rounded-[10px] text-stone-400 hover:bg-stone-100 hover:text-ink-900" aria-label="Leave room">
+          <button
+            onClick={() => window.location.reload()}
+            className="flex h-9 w-9 items-center justify-center rounded-[10px] text-stone-400 hover:bg-stone-100 hover:text-ink-900"
+            aria-label="Leave room"
+          >
             <LogOut size={16} />
           </button>
         </div>
@@ -451,17 +586,31 @@ function RoomInside({ room, link, docs, brand, email, ip, settings }: { room: Ro
           <div className="p-3">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search documents" className="h-9 w-full rounded-[9px] border border-stone-200 bg-stone-50 pl-8 pr-3 text-[13px] focus:border-ink-900 focus:bg-white focus:outline-none" />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search documents"
+                className="h-9 w-full rounded-[9px] border border-stone-200 bg-stone-50 pl-8 pr-3 text-[13px] focus:border-ink-900 focus:bg-white focus:outline-none"
+              />
             </div>
           </div>
-          <button onClick={() => setDocId(null)} className={cx("mx-2 flex items-center gap-2 rounded-[8px] px-2.5 py-2 text-left text-[13px]", !doc ? "bg-stone-100 font-semibold text-ink-900" : "text-stone-600 hover:bg-stone-50")}>
+          <button
+            onClick={() => setDocId(null)}
+            className={cx(
+              "mx-2 flex items-center gap-2 rounded-[8px] px-2.5 py-2 text-left text-[13px]",
+              !doc ? "bg-stone-100 font-semibold text-ink-900" : "text-stone-600 hover:bg-stone-50",
+            )}
+          >
             <ShieldCheck size={14} style={{ color: brand.primary }} /> Welcome
           </button>
           <nav className="flex-1 px-2 pb-6 pt-1">
             {(results ? [["Results", results] as const] : folders.map((f) => [f, visible.filter((d) => d.folder === f)] as const)).map(([f, list]) => (
               <div key={f} className="mt-2">
                 {!results && (
-                  <button onClick={() => setOpen((o) => ({ ...o, [f]: !o[f] }))} className="flex w-full items-center gap-1.5 rounded-[8px] px-2 py-1.5 text-left text-[12.5px] font-semibold text-ink-900 hover:bg-stone-50">
+                  <button
+                    onClick={() => setOpen((o) => ({ ...o, [f]: !o[f] }))}
+                    className="flex w-full items-center gap-1.5 rounded-[8px] px-2 py-1.5 text-left text-[12.5px] font-semibold text-ink-900 hover:bg-stone-50"
+                  >
                     {open[f] ? <ChevronDown size={13} className="text-stone-400" /> : <ChevronRight size={13} className="text-stone-400" />}
                     <Folder size={14} className="text-stone-500" />
                     <span className="truncate">{settings.indexNumbers ? f.replace(/^(\d+) /, "$1  ") : f.replace(/^\d+ /, "")}</span>
@@ -476,7 +625,10 @@ function RoomInside({ room, link, docs, brand, email, ip, settings }: { room: Ro
                         setPage(1);
                         scroller.current?.scrollTo({ top: 0 });
                       }}
-                      className={cx("flex w-full items-center gap-2 rounded-[8px] py-1.5 pl-7 pr-2 text-left text-[12.5px]", docId === d.id ? "bg-stone-100 font-semibold text-ink-900" : "text-stone-600 hover:bg-stone-50")}
+                      className={cx(
+                        "flex w-full items-center gap-2 rounded-[8px] py-1.5 pl-7 pr-2 text-left text-[12.5px]",
+                        docId === d.id ? "bg-stone-100 font-semibold text-ink-900" : "text-stone-600 hover:bg-stone-50",
+                      )}
                     >
                       {settings.indexNumbers && <span className="num w-7 shrink-0 text-[11px] text-stone-400">{d.index}</span>}
                       <span className="min-w-0 flex-1 truncate">{d.name.replace(/\.[a-z]+$/i, "")}</span>
@@ -506,7 +658,11 @@ function RoomInside({ room, link, docs, brand, email, ip, settings }: { room: Ro
                 <h2 className="mb-3 mt-9 text-[11px] font-bold uppercase tracking-[0.16em] text-stone-500">Start here</h2>
                 <div className="grid grid-cols-2 gap-3">
                   {firstOf.map((d) => (
-                    <button key={d.id} onClick={() => setDocId(d.id)} className="flex items-center gap-3 rounded-[14px] border border-stone-200 bg-white p-4 text-left shadow-card transition-shadow hover:shadow-lift">
+                    <button
+                      key={d.id}
+                      onClick={() => setDocId(d.id)}
+                      className="flex items-center gap-3 rounded-[14px] border border-stone-200 bg-white p-4 text-left shadow-card transition-shadow hover:shadow-lift"
+                    >
                       {isSheet(d.name) ? <FileSpreadsheet size={20} className="text-[#1F6F6A]" /> : <FileText size={20} className="text-[#B5542A]" />}
                       <span className="min-w-0">
                         <span className="block truncate text-[13.5px] font-semibold text-ink-900">{d.name.replace(/\.[a-z]+$/i, "")}</span>
@@ -522,7 +678,11 @@ function RoomInside({ room, link, docs, brand, email, ip, settings }: { room: Ro
           ) : (
             <>
               <div className="flex h-12 shrink-0 items-center gap-3 border-b border-stone-200 bg-white px-4">
-                <button onClick={() => setDocId(null)} className="flex h-8 w-8 items-center justify-center rounded-[8px] text-stone-500 hover:bg-stone-100" aria-label="Back to welcome">
+                <button
+                  onClick={() => setDocId(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-[8px] text-stone-500 hover:bg-stone-100"
+                  aria-label="Back to welcome"
+                >
                   <ArrowLeft size={16} />
                 </button>
                 {settings.indexNumbers && <span className="num text-[11px] text-stone-400">{doc.index}</span>}
@@ -531,16 +691,27 @@ function RoomInside({ room, link, docs, brand, email, ip, settings }: { room: Ro
                   Page {page} of {pages}
                 </span>
                 <div className="flex items-center rounded-[8px] border border-stone-200">
-                  <button onClick={() => setZoom((z) => Math.max(0.7, z - 0.15))} className="flex h-7 w-7 items-center justify-center text-stone-500 hover:text-ink-900" aria-label="Zoom out">
+                  <button
+                    onClick={() => setZoom((z) => Math.max(0.7, z - 0.15))}
+                    className="flex h-7 w-7 items-center justify-center text-stone-500 hover:text-ink-900"
+                    aria-label="Zoom out"
+                  >
                     <Minus size={13} />
                   </button>
                   <span className="num w-10 text-center text-[11px] text-stone-600">{Math.round(zoom * 100)}%</span>
-                  <button onClick={() => setZoom((z) => Math.min(1.6, z + 0.15))} className="flex h-7 w-7 items-center justify-center text-stone-500 hover:text-ink-900" aria-label="Zoom in">
+                  <button
+                    onClick={() => setZoom((z) => Math.min(1.6, z + 0.15))}
+                    className="flex h-7 w-7 items-center justify-center text-stone-500 hover:text-ink-900"
+                    aria-label="Zoom in"
+                  >
                     <Plus size={13} />
                   </button>
                 </div>
                 {access(doc) === "download" ? (
-                  <button onClick={() => flash(`Downloading a watermarked copy of ${doc.name}`)} className="flex h-8 items-center gap-1.5 rounded-[8px] border border-stone-200 px-2.5 text-[12px] font-semibold text-ink-900 hover:border-stone-400">
+                  <button
+                    onClick={() => flash(`Downloading a watermarked copy of ${doc.name}`)}
+                    className="flex h-8 items-center gap-1.5 rounded-[8px] border border-stone-200 px-2.5 text-[12px] font-semibold text-ink-900 hover:border-stone-400"
+                  >
                     <Download size={13} /> Download
                   </button>
                 ) : (
@@ -571,7 +742,10 @@ function RoomInside({ room, link, docs, brand, email, ip, settings }: { room: Ro
                 <div className="scroll-quiet hidden w-[120px] shrink-0 overflow-y-auto border-l border-stone-200 bg-white p-3 lg:block">
                   {Array.from({ length: pages }, (_, i) => (
                     <button key={i} onClick={() => goPage(i + 1)} className="mb-3 block w-full text-center">
-                      <span className={cx("block bg-white shadow-card ring-2", page === i + 1 ? "" : "ring-transparent")} style={{ aspectRatio: isSheet(doc.name) ? "1.414/1" : "1/1.294", ...(page === i + 1 ? { ["--tw-ring-color" as string]: brand.primary } : {}) }}>
+                      <span
+                        className={cx("block bg-white shadow-card ring-2", page === i + 1 ? "" : "ring-transparent")}
+                        style={{ aspectRatio: isSheet(doc.name) ? "1.414/1" : "1/1.294", ...(page === i + 1 ? { ["--tw-ring-color" as string]: brand.primary } : {}) }}
+                      >
                         <span className="block space-y-1 p-2">
                           <span className="block h-1 w-2/3 rounded bg-stone-300" />
                           <span className="block h-0.5 w-full rounded bg-stone-200" />
@@ -610,7 +784,17 @@ function RoomInside({ room, link, docs, brand, email, ip, settings }: { room: Ro
           mine={mine}
           onClose={() => setAsking(false)}
           onAsk={(text, ref) => {
-            const qn: Question = { id: `lq${Date.now()}`, roomId: room.id, from: email, firm: email.split("@")[1] ?? "", at: new Date().toISOString(), text, docIndex: ref ? doc?.index : undefined, page: ref ? page : undefined, status: "Open" };
+            const qn: Question = {
+              id: `lq${Date.now()}`,
+              roomId: room.id,
+              from: email,
+              firm: email.split("@")[1] ?? "",
+              at: new Date().toISOString(),
+              text,
+              docIndex: ref ? doc?.index : undefined,
+              page: ref ? page : undefined,
+              status: "Open",
+            };
             setMine((m) => [qn, ...m]);
             addLocalQuestion(qn);
           }}
@@ -700,7 +884,21 @@ function PageBody({ doc, page, pages, brand, zoom }: { doc: RoomDoc; page: numbe
   );
 }
 
-function AskPanel({ brand, doc, page, mine, onClose, onAsk }: { brand: RoomBrand; doc?: RoomDoc; page: number; mine: Question[]; onClose: () => void; onAsk: (text: string, ref: boolean) => void }) {
+function AskPanel({
+  brand,
+  doc,
+  page,
+  mine,
+  onClose,
+  onAsk,
+}: {
+  brand: RoomBrand;
+  doc?: RoomDoc;
+  page: number;
+  mine: Question[];
+  onClose: () => void;
+  onAsk: (text: string, ref: boolean) => void;
+}) {
   const [text, setText] = useState("");
   const [ref, setRef] = useState(!!doc);
   return (
@@ -721,7 +919,13 @@ function AskPanel({ brand, doc, page, mine, onClose, onAsk }: { brand: RoomBrand
           }}
           className="space-y-3 border-b border-stone-100 p-5"
         >
-          <textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} placeholder="Ask the sponsor about anything in this room" className="w-full resize-none rounded-[10px] border border-stone-300 px-3 py-2 text-[13.5px] focus:border-ink-900 focus:outline-none" />
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            rows={4}
+            placeholder="Ask the sponsor about anything in this room"
+            className="w-full resize-none rounded-[10px] border border-stone-300 px-3 py-2 text-[13.5px] focus:border-ink-900 focus:outline-none"
+          />
           {doc && (
             <label className="flex items-center gap-2 text-[12.5px] text-stone-600">
               <input type="checkbox" checked={ref} onChange={() => setRef((r) => !r)} /> About {doc.index} {doc.name.replace(/\.[a-z]+$/i, "")}, page {page}

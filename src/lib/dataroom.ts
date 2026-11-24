@@ -144,7 +144,7 @@ export type FolderAccess = "none" | "view" | "download" | "upload";
 export type NdaMode = "off" | "acknowledge" | "esign";
 
 /**
- * A share link = one audience (Peony-style "group"). Every security layer is independent and stackable:
+ * A share link = one audience. Every security control is independent and can be combined:
  * email verification, password, NDA, access questions, dynamic watermark, screenshot protection,
  * download / print, expiry, domain allow & block lists, and per-folder access.
  */
