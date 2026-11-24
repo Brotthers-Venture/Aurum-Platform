@@ -286,3 +286,16 @@ main svg g[tabindex]:focus-visible {
     scrollbar-color: rgba(111, 106, 97, 0.3) transparent;
   }
 }
+
+/* Data room viewer: printing can be turned off per link */
+.vdr-print-msg {
+  display: none;
+}
+@media print {
+  .vdr-noprint > *:not(.vdr-print-msg) {
+    display: none !important;
+  }
+  .vdr-noprint .vdr-print-msg {
+    display: block !important;
+  }
+}
