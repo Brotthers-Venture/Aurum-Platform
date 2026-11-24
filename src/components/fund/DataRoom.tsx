@@ -41,7 +41,7 @@ async function ingest(
     }
     const sha256 = await sha256Hex(file);
     if ([...files, ...added].some((f) => f.sha256 === sha256 && !f.archived)) {
-      skipped.push(`${file.name} (already in the room)`);
+      skipped.push(`${file.name} (already uploaded)`);
       continue;
     }
     const prev = opts.replace;
@@ -224,7 +224,7 @@ function Row({ f, history, onEdit, onReplace, onRemove }: { f: RoomFile; history
 }
 
 /**
- * The vehicle's data room. Drop files anywhere on it; the type is guessed from the file name
+ * The vehicle's corporate documents. Drop files anywhere on it; the type is guessed from the file name
  * and can be changed, as can the name, access and effective date. Replacing adds a version.
  */
 export function DataRoom({ files, onChange, gleif, uploader = "Luiza Andrade" }: { files: RoomFile[]; onChange: (f: RoomFile[]) => void; gleif?: GleifCapture | null; uploader?: string }) {
@@ -334,7 +334,7 @@ export function DataRoom({ files, onChange, gleif, uploader = "Luiza Andrade" }:
 
       {drop.over && (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-[4px] border-2 border-dashed border-gold-500 bg-gold-50/90 text-[13px] font-semibold text-ink-900">
-          Drop to add to the data room
+          Drop to add to corporate documents
         </div>
       )}
     </div>

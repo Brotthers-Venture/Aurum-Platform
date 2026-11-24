@@ -117,16 +117,9 @@ export function StatRow({ children, cols = 6 }: { children: ReactNode; cols?: 4 
   );
 }
 
-const tone: Record<string, string> = {
-  positive: "bg-positive-bg text-positive",
-  caution: "bg-caution-bg text-caution",
-  negative: "bg-negative-bg text-negative",
-  info: "bg-info-bg text-info",
-  neutral: "bg-stone-100 text-stone-600",
-  ink: "bg-ink-900 text-white",
-};
+type Tone = "positive" | "caution" | "negative" | "info" | "neutral" | "ink";
 
-const statusTone: Record<string, keyof typeof tone> = {
+const statusTone: Record<string, Tone> = {
   Funded: "positive",
   Paid: "positive",
   Clear: "positive",
@@ -165,16 +158,24 @@ const statusTone: Record<string, keyof typeof tone> = {
   "Not connected": "neutral",
 };
 
+/**
+ * Status as a quiet dot + label, in the brand palette only:
+ * filled ink = done, gold = needs attention, ink ring = open, stone ring = not started, red = problem.
+ */
+const statusDot: Record<string, string> = {
+  positive: "bg-ink-900",
+  ink: "bg-ink-900",
+  caution: "bg-gold-500",
+  info: "border-[1.5px] border-ink-900 bg-transparent",
+  neutral: "border-[1.5px] border-stone-400 bg-transparent",
+  negative: "bg-negative",
+};
+
 export function Status({ value, className }: { value: string; className?: string }) {
-  const t = tone[statusTone[value] ?? "neutral"];
+  const k = statusTone[value] ?? "neutral";
   return (
-    <span
-      className={cx(
-        "inline-flex items-center whitespace-nowrap rounded-[2px] px-1.5 py-[3px] text-[11px] font-semibold leading-none tracking-[0.02em]",
-        t,
-        className,
-      )}
-    >
+    <span className={cx("inline-flex items-center gap-1.5 whitespace-nowrap text-[12px] font-medium leading-none", k === "negative" ? "text-negative" : k === "neutral" ? "text-stone-500" : "text-ink-800", className)}>
+      <span className={cx("h-[7px] w-[7px] shrink-0 rounded-full", statusDot[k])} />
       {value}
     </span>
   );

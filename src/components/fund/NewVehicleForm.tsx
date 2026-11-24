@@ -73,7 +73,7 @@ function Pill({ tone, children }: { tone: "ok" | "warn" | "muted" | "gold"; chil
     <span
       className={cx(
         "inline-flex h-5 items-center rounded-[2px] px-1.5 text-[10px] font-semibold uppercase tracking-[0.08em]",
-        tone === "ok" && "bg-positive/10 text-positive",
+        tone === "ok" && "bg-stone-100 text-ink-800",
         tone === "warn" && "bg-caution-bg text-caution",
         tone === "muted" && "bg-stone-100 text-stone-600",
         tone === "gold" && "bg-gold-100 text-gold-700",
@@ -290,16 +290,16 @@ export function NewVehicleForm() {
 
   if (created) {
     return (
-      <div className="max-w-3xl space-y-6">
+      <div className="mx-auto max-w-3xl space-y-6">
         <div className="rounded-[4px] border border-stone-200 bg-white p-8">
-          <CircleCheck className="text-positive" size={28} />
+          <CircleCheck className="text-gold-500" size={28} />
           <h1 className="mt-4 text-[22px] font-semibold">{legalName} is set up</h1>
           <p className="mt-1 text-[13px] text-stone-600">{gp?.name} · economics pending LPA review</p>
           <dl className="mt-6 border-t border-stone-200 pt-2">
             <Row label="LEI" mono={Boolean(vehicle)}>{vehicle ? vehicle.lei : manual?.viaRapidLei ? "Requested via RapidLEI" : "—"}</Row>
             <Row label="Domicile">{vehicle?.jurisdictionLabel ?? manual?.domicile}</Row>
             <Row label="Currency">{currency}</Row>
-            <Row label="Data room">{roomFiles.length} file{roomFiles.length === 1 ? "" : "s"}</Row>
+            <Row label="Corporate documents">{roomFiles.length} file{roomFiles.length === 1 ? "" : "s"}</Row>
             <Row label="LPA review">{lpaFile ? `${lpaFile.title} · queued` : "Awaiting LPA"}</Row>
           </dl>
           <div className="mt-6 flex gap-2">
@@ -314,7 +314,7 @@ export function NewVehicleForm() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="mx-auto max-w-[1040px] space-y-5">
       <div>
         <Link href="/admin/fund/funds" className="inline-flex items-center gap-1.5 text-[12px] text-stone-500 hover:text-ink-900">
           <ArrowLeft size={13} /> Funds
@@ -496,7 +496,7 @@ export function NewVehicleForm() {
             <Notice tone="warn">
               Already administered: <strong>{duplicate.name}</strong>.{" "}
               <Link className="font-semibold underline" href={`/admin/fund/funds/${duplicate.id}?tab=records`}>
-                Open data room
+                Open corporate documents
               </Link>
             </Notice>
           )}
@@ -506,14 +506,14 @@ export function NewVehicleForm() {
       {/* 3 — Administration */}
       {(vehicle || manual) && !duplicate && (
         <Section n={3} title="Administration">
-          <div className="grid grid-cols-2 gap-5 xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-5 lg:grid-cols-3">
             <Field
               label="GP client"
               required
               hint={
                 gpId ? (
                   gpMatchedByLei ? (
-                    <span className="inline-flex items-center gap-1 text-positive">
+                    <span className="inline-flex items-center gap-1 text-ink-800">
                       <Link2 size={12} /> Matched via GLEIF
                     </span>
                   ) : gpMatchedByOffice ? (
@@ -596,9 +596,9 @@ export function NewVehicleForm() {
         </Section>
       )}
 
-      {/* Data room */}
+      {/* Corporate documents */}
       {(vehicle || manual) && !duplicate && (
-        <Section n={manual?.viaRapidLei ? 6 : 5} title="Data room">
+        <Section n={manual?.viaRapidLei ? 6 : 5} title="Corporate documents">
           <DataRoom files={docs} onChange={setDocs} gleif={vehicle && capturedAt ? { lei: vehicle.lei, capturedAt } : null} />
         </Section>
       )}

@@ -227,7 +227,7 @@ export function ExposureWidget({ v, by, bare }: { v: View; by: "strategy" | "gp"
       csv={{ headers: [by === "gp" ? "GP" : "Strategy", "NAV", "Share"], rows: rows.map(([l, n]) => [l, n, n / total]) }}
       table={<MiniTable headers={[by === "gp" ? "GP" : "Strategy", "NAV", "Share"]} rows={rows.map(([l, n]) => [l, fmtFull(n), `${((n / total) * 100).toFixed(1)}%`])} />}
     >
-      <HBars rows={rows.map(([l, n]) => ({ label: l, values: [n] }))} parts={[{ name: "NAV", color: SERIES[by === "gp" ? 2 : 0] }]} fmt={f} totalFmt={(n) => `${((n / total) * 100).toFixed(0)}%`} />
+      <HBars rows={rows.map(([l, n]) => ({ label: l, values: [n] }))} parts={[{ name: "NAV", color: SERIES[0] }]} fmt={f} totalFmt={(n) => `${((n / total) * 100).toFixed(0)}%`} />
     </Widget>
   );
 }

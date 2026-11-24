@@ -9,7 +9,7 @@ export default function FundLayout({ children }: { children: ReactNode }) {
       <div className="flex min-h-0 flex-1">
         <FundSidebar />
         <div className="min-w-0 flex-1 overflow-y-auto">
-          <div className="w-full px-8 py-8 2xl:px-10">{children}</div>
+          <div className="mx-auto w-full max-w-[1640px] px-8 py-8 2xl:px-10">{children}</div>
         </div>
       </div>
     </div>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { quarterlyFlows } from "@/lib/data";
 
-const C_CONTRIB = "#2C64A8";
+const C_CONTRIB = "#16232B";
 const C_DIST = "#C99A06";
 
 export function FlowsChart() {

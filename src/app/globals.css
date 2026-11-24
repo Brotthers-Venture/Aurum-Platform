@@ -33,14 +33,15 @@
   --color-gold-500: #e0b000;
   --color-gold-700: #8a6a00;
 
-  --color-positive: #1d6b47;
-  --color-positive-bg: #e8f2ec;
-  --color-caution: #8a5a00;
-  --color-caution-bg: #f8efdc;
+  /* Status colours stay inside the brand: ink for done, gold for attention, red only for problems */
+  --color-positive: #16232b;
+  --color-positive-bg: #efeee8;
+  --color-caution: #7a5c00;
+  --color-caution-bg: #fbf3d9;
   --color-negative: #9b3424;
   --color-negative-bg: #f6e7e3;
-  --color-info: #2a4a78;
-  --color-info-bg: #e7edf5;
+  --color-info: #3f4b52;
+  --color-info-bg: #f1f0eb;
 
   --text-2xs: 0.6875rem;
 }

@@ -2,8 +2,11 @@
 
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
-/** Validated categorical palette (dataviz validator: all checks pass; gold needs labels/table relief). */
-export const SERIES = ["#2C64A8", "#C99A06", "#1E9A8A", "#B5542A"] as const;
+/**
+ * Brand palette only: ink, gold, then neutrals. Identity never rests on colour alone —
+ * every chart has a legend, direct end labels and a table view.
+ */
+export const SERIES = ["#16232B", "#C99A06", "#A3A39B", "#5F6B72"] as const;
 const GRID = "#ECECE6";
 const AXIS = "#CFCFC7";
 const TICK = "#77776F";

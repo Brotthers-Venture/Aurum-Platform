@@ -271,7 +271,7 @@ export default async function FundDetail({ params }: { params: Promise<{ id: str
           { id: "docs", label: "Documents", count: docs.length, content: docsTab },
           {
             id: "records",
-            label: "Data room",
+            label: "Corporate documents",
             count: (corporateRecords[f.id] ?? []).length + (f.lei ? 1 : 0),
             content: <FundCorporateRecords lei={f.lei} initial={corporateRecords[f.id] ?? []} />,
           },
