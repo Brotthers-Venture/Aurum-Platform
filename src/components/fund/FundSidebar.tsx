@@ -22,9 +22,12 @@ import {
 } from "lucide-react";
 import { cx } from "@/components/ui";
 import { AurumLogo, AurumMark } from "@/components/brand/Logo";
-import { firmModules } from "@/lib/firm";
+import { totalUnread } from "@/lib/comms";
+import { FIRM } from "@/lib/firm-colors";
 import { onboarding } from "@/lib/data";
 
+const COMM = FIRM.communication;
+const unread = totalUnread();
 const openFiles = onboarding.filter((o) => o.status === "Submitted" || o.status === "Changes requested").length;
 
 const groups = [
@@ -117,27 +120,21 @@ export function FundSidebar() {
           ))}
         </div>
         <div className="border-t border-stone-200 p-3">
-          <div className="mb-1.5 flex items-center justify-between rounded-[12px] border border-stone-200 bg-white/70 px-2 py-1.5">
-            {firmModules.map((m) => {
-              const on = path.startsWith(m.href);
-              return (
-                <Link
-                  key={m.id}
-                  href={m.href}
-                  title={`${m.name}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`}
-                  aria-label={m.name}
-                  className={cx("relative flex h-8 w-8 items-center justify-center rounded-[8px] transition-colors", on ? "bg-white shadow-card" : "hover:bg-white")}
-                >
-                  <AurumMark size={16} color={m.color} className="shrink-0" />
-                  {m.badge > 0 && (
-                    <span className="absolute -right-0.5 -top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full px-0.5 text-[8.5px] font-bold text-white ring-2 ring-cream" style={{ background: m.color }}>
-                      {m.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
+          <Link
+            href="/admin/communication"
+            className={cx(
+              "mb-1 flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[13px] font-semibold transition-colors",
+              path.startsWith("/admin/communication") ? "bg-white text-ink-900 shadow-card" : "text-ink-900 hover:bg-white",
+            )}
+          >
+            <AurumMark size={16} color={COMM} className="shrink-0" />
+            <span className="flex-1">Communication</span>
+            {unread > 0 && (
+              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white" style={{ background: COMM }}>
+                {unread}
+              </span>
+            )}
+          </Link>
           <Link href="/admin" className="flex items-center gap-2 rounded-[10px] px-2.5 py-2 text-[12px] font-medium text-stone-500 hover:bg-stone-100 hover:text-ink-900">
             <ArrowLeft size={14} strokeWidth={1.8} /> Aurum Platform
           </Link>

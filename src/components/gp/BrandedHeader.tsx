@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { GpLogo } from "@/components/brand/GpLogo";
+import { AurumMark } from "@/components/brand/Logo";
 import { Avatar, cx } from "@/components/ui";
 import type { GpClient } from "@/lib/gps";
 import type { ReactNode } from "react";
@@ -17,7 +18,7 @@ export function BrandedHeader({
   right,
 }: {
   gp: GpClient;
-  nav: { href: string; label: string; exact?: boolean }[];
+  nav: { href: string; label: string; exact?: boolean; mark?: string }[];
   userName: string;
   userTitle: string;
   right?: ReactNode;
@@ -43,6 +44,7 @@ export function BrandedHeader({
                   active ? "border-brand font-semibold text-ink-900" : "border-transparent text-stone-500 hover:text-ink-900",
                 )}
               >
+                {n.mark && <AurumMark size={13} color={n.mark} className="mr-1.5 shrink-0" />}
                 {n.label}
               </Link>
             );

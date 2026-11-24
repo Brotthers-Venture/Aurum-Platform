@@ -5,6 +5,7 @@ import { BrandedFooter } from "@/components/gp/BrandedFooter";
 import { brandStyle, gpById, gps } from "@/lib/gps";
 import { users } from "@/lib/access";
 import { fundsForGp } from "@/lib/gpData";
+import { FIRM } from "@/lib/firm-colors";
 
 export function generateStaticParams() {
   return gps.map((g) => ({ gpId: g.id }));
@@ -33,7 +34,7 @@ async function BrandedShell({ children, params }: { children: ReactNode; params:
           { href: `${base}/investors`, label: "Investors" },
           { href: `${base}/activity`, label: "Capital activity" },
           { href: `${base}/reports`, label: "Reports" },
-          { href: `${base}/messages`, label: "Messages" },
+          { href: `${base}/messages`, label: "Communication", mark: FIRM.communication },
         ]}
         userName={principal?.name ?? gp.shortName}
         userTitle={`${gp.shortName} · GP principal`}
