@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Lock } from "lucide-react";
 import { GpLogo, AdministeredByAurum } from "@/components/brand/GpLogo";
 import { Button } from "@/components/ui";
+import { LoginStage } from "@/components/auth/LoginStage";
+import { FundCover } from "@/components/fund/FundCard";
 import { brandStyle, type GpClient } from "@/lib/gps";
 
 const input =
@@ -20,42 +22,38 @@ export function BrandedLogin({ gp }: { gp: GpClient }) {
   const tall = gp.logo && gp.logo.width / gp.logo.height < 3;
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]" style={brandStyle(gp.brand)}>
-      <aside className="relative hidden flex-col overflow-hidden bg-brand text-brand-ink lg:flex">
-        {gp.hero && (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={gp.hero} alt="" className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${gp.brand.primary}40 0%, ${gp.brand.primary}e6 75%)` }} />
-          </>
-        )}
-        <div className="relative h-[3px] bg-brand-2" />
-        <div className="relative flex flex-1 flex-col justify-center px-16">
-          <GpLogo gp={gp} height={tall ? 120 : 52} tone="dark" />
-          <div className="mt-14 max-w-[420px] border-t border-white/20 pt-8">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-2">Investor Portal</div>
-            <p className="mt-3 text-[15px] leading-relaxed opacity-70">
-              Capital account statements, notices, reports and tax documents for your investments with {gp.shortName}.
-            </p>
-          </div>
-        </div>
-        <div className="relative px-16 pb-8">
+    <LoginStage
+      style={brandStyle(gp.brand)}
+      background={
+        gp.hero ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={gp.hero} alt="" className="h-full w-full object-cover" />
+        ) : (
+          <FundCover id={`${gp.id}-portal`} primary={gp.brand.primary} secondary={gp.brand.secondary} className="h-full w-full" />
+        )
+      }
+      logo={<GpLogo gp={gp} height={tall ? 64 : 30} tone="dark" />}
+      statement={
+        <>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">Investor portal</div>
+          <h1 className="mt-4 font-serif text-[52px] font-normal leading-[1.05] tracking-[-0.015em] drop-shadow-[0_2px_20px_rgba(0,0,0,0.25)]">{gp.shortName}</h1>
+          <p className="mt-4 max-w-[420px] text-[15px] leading-relaxed text-white/80">Statements, notices, reports and tax documents for your investments.</p>
+        </>
+      }
+      footer={
+        <>
+          <span>© 2026 {gp.name}</span>
           <AdministeredByAurum tone="dark" />
-        </div>
-      </aside>
-
-      <main className="flex flex-col bg-white">
-        <div className="px-8 pt-8 lg:hidden">
-          <GpLogo gp={gp} height={tall ? 56 : 28} />
-        </div>
-        <div className="flex flex-1 items-center justify-center px-8 py-14">
-          <div className="w-full max-w-[380px]">
+        </>
+      }
+    >
             {step === "credentials" ? (
               <>
-                <h1 className="text-[26px] font-semibold tracking-[-0.015em]">Sign in</h1>
+                <div className="mb-5"><GpLogo gp={gp} height={tall ? 44 : 22} /></div>
+                <h1 className="text-[20px] font-semibold tracking-[-0.015em]">Sign in</h1>
                 <p className="mt-1.5 text-[14px] text-stone-600">Access your {gp.shortName} investor account.</p>
                 <form
-                  className="mt-9 space-y-5"
+                  className="mt-6 space-y-5"
                   onSubmit={(e) => {
                     e.preventDefault();
                     setStep("code");
@@ -78,7 +76,7 @@ export function BrandedLogin({ gp }: { gp: GpClient }) {
                     Continue
                   </Button>
                 </form>
-                <p className="mt-8 flex items-start gap-2 text-[12px] text-stone-500">
+                <p className="mt-6 flex items-start gap-2 text-[12px] text-stone-500">
                   <Lock size={13} strokeWidth={1.8} className="mt-[2px] shrink-0" />
                   Multi-factor authentication is required for every session.
                 </p>
@@ -88,10 +86,10 @@ export function BrandedLogin({ gp }: { gp: GpClient }) {
                 <button onClick={() => setStep("credentials")} className="inline-flex items-center gap-1.5 text-[12px] font-medium text-stone-500 hover:text-ink-900">
                   <ArrowLeft size={14} strokeWidth={1.8} /> Back
                 </button>
-                <h1 className="mt-6 text-[26px] font-semibold tracking-[-0.015em]">Verify it’s you</h1>
+                <h1 className="mt-5 text-[20px] font-semibold tracking-[-0.015em]">Verify it’s you</h1>
                 <p className="mt-1.5 text-[14px] text-stone-600">Enter the 6-digit code sent to {email.replace(/^(.).*@/, "$1•••@")}.</p>
                 <form
-                  className="mt-9"
+                  className="mt-6"
                   onSubmit={(e) => {
                     e.preventDefault();
                     router.push(`/investor/${gp.id}`);
@@ -127,17 +125,10 @@ export function BrandedLogin({ gp }: { gp: GpClient }) {
                 </form>
               </>
             )}
-            <div className="mt-8 border border-dashed border-stone-300 px-3.5 py-3 text-[12px] leading-relaxed text-stone-500">
+            <div className="mt-6 rounded-[8px] bg-stone-50 px-3.5 py-3 text-[12px] leading-relaxed text-stone-500">
               <span className="font-semibold text-stone-600">Preview.</span> Live at{" "}
               <span className="font-mono text-[11px] text-ink-900">{gp.customDomain ?? gp.portalDomain}</span>. Any password and code work.
             </div>
-          </div>
-        </div>
-        <footer className="flex items-center justify-between border-t border-stone-100 px-8 py-5 text-[12px] text-stone-500">
-          <span>© 2026 {gp.name}</span>
-          <AdministeredByAurum />
-        </footer>
-      </main>
-    </div>
+    </LoginStage>
   );
 }

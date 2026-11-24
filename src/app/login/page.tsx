@@ -29,7 +29,8 @@ export default function LoginPage() {
 
   return (
     <AuthShell>
-      <h2 className="text-[20px] font-semibold tracking-[-0.015em] text-ink-900">Sign in</h2>
+      <h2 className="font-serif text-[24px] leading-tight text-ink-900">Welcome to Aurum Asset Management</h2>
+      <p className="mt-1.5 text-[13px] text-stone-500">Sign in to your account.</p>
 
       <form onSubmit={submit} className="mt-6 space-y-5" noValidate>
         <Field label="Email address">
