@@ -25,15 +25,12 @@ import {
   ListChecks,
   Mail,
   MessagesSquare,
-  Palette,
   PanelTop,
   Pencil,
-  Plus,
   Search,
   Settings2,
   Shield,
   ShieldOff,
-  Sparkles,
   Timer,
   Upload,
   UserCheck,
@@ -115,9 +112,9 @@ export function RoomConsole({
   const nav: [Section, string, typeof Folder][] = [
     ["documents", "Documents", FileText],
     ["analytics", "Analytics", BarChart3],
-    ["audit", "Audit trail", History],
-    ["qa", "Q&A", MessagesSquare],
-    ["permissions", "Permissions", Shield],
+    ["audit", "Activity log", History],
+    ["qa", "Questions", MessagesSquare],
+    ["permissions", "Access", Shield],
     ["settings", "Settings", Settings2],
   ];
   return (
@@ -142,7 +139,7 @@ export function RoomConsole({
           </div>
         )}
         <button onClick={() => setSection("permissions")} className="ml-auto flex h-8 items-center gap-1.5 rounded-[8px] px-3.5 text-[12.5px] font-semibold text-white" style={{ background: C }}>
-          <Shield size={13} /> Share securely
+          <Shield size={13} /> Share room
         </button>
       </div>
       <div className="flex min-h-0 flex-1">
@@ -203,12 +200,7 @@ function Documents({ room, docs, settings, layout, onUpload, onRename, flash }: 
         </div>
       )}
       <div className="px-8 pb-10">
-        {settings.showLogo && settings.showCover && (
-          <div className="relative z-10 -mt-8 mb-3 flex h-16 w-16 items-center justify-center rounded-full border-4 border-stone-50 text-[22px] font-serif text-white shadow-card" style={{ background: b?.primary ?? C }}>
-            {(b?.wordmark ?? room.client)[0]}
-          </div>
-        )}
-        <div className={cx("flex flex-wrap items-center gap-3", !settings.showCover && "pt-6")}>
+        <div className="flex flex-wrap items-center gap-3 pt-6">
           {folder ? (
             <div className="flex items-center gap-1.5 text-[20px] font-semibold text-ink-900">
               <button onClick={() => setFolder(null)} className="text-stone-500 hover:text-ink-900">
@@ -236,7 +228,7 @@ function Documents({ room, docs, settings, layout, onUpload, onRename, flash }: 
             </h2>
           )}
           <button onClick={() => flash("Index exported")} className="flex items-center gap-1.5 text-[12.5px] font-medium text-stone-600 hover:text-ink-900">
-            <Download size={14} /> Export index
+            <Download size={14} /> Download index
           </button>
           <div className="ml-auto flex items-center gap-2">
             <div className="relative">
@@ -245,7 +237,7 @@ function Documents({ room, docs, settings, layout, onUpload, onRename, flash }: 
             </div>
             <input ref={input} type="file" multiple hidden onChange={(e) => (e.target.files?.length && onUpload(folder ?? folders[0], Array.from(e.target.files)), (e.target.value = ""))} />
             <ActionButton color={C} onClick={() => input.current?.click()}>
-              <Plus size={14} /> Add content
+              <Upload size={14} /> Upload
             </ActionButton>
           </div>
         </div>
@@ -437,9 +429,9 @@ function Analytics({ room, docs }: { room: Room; docs: RoomDoc[] }) {
               {(
                 [
                   [Eye, "Views", String(views)],
-                  [Timer, "Avg. session", dur(totalSec / sessions)],
-                  [Folder, "Folder downloads", "0"],
-                  [Download, "File downloads", String(fileDl)],
+                  [Timer, "Average visit", dur(totalSec / sessions)],
+                  [Folder, "Folders saved", "0"],
+                  [Download, "Files saved", String(fileDl)],
                 ] as const
               ).map(([Icon, l, v]) => (
                 <div key={l} className="rounded-[14px] border border-stone-200 bg-white px-5 py-4 shadow-card">
@@ -451,12 +443,12 @@ function Analytics({ room, docs }: { room: Room; docs: RoomDoc[] }) {
               ))}
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Bars title="Most active viewers by visit" sub="Who is opening the room most often" rows={[...people].sort((a, b) => b.visits - a.visits).map((p) => ({ label: p.who, value: p.visits }))} unit={(n) => `${n} visit${n === 1 ? "" : "s"}`} />
-              <Bars title="Most active viewers by duration" sub="Who is spending the most time in the room" rows={[...people].sort((a, b) => b.seconds - a.seconds).map((p) => ({ label: p.who, value: p.seconds }))} unit={dur} />
-              <Bars title="Top files viewed" sub="Which documents are drawing the most attention" rows={[...docs].sort((a, b) => timeBy(b.id) - timeBy(a.id) || b.views - a.views).filter((d) => d.views || timeBy(d.id)).map((d) => ({ label: d.name, value: d.views }))} unit={(n) => `${n} views`} />
+              <Bars title="Most frequent visitors" sub="Ranked by number of visits" rows={[...people].sort((a, b) => b.visits - a.visits).map((p) => ({ label: p.who, value: p.visits }))} unit={(n) => `${n} visit${n === 1 ? "" : "s"}`} />
+              <Bars title="Longest time in the room" sub="Ranked by total reading time" rows={[...people].sort((a, b) => b.seconds - a.seconds).map((p) => ({ label: p.who, value: p.seconds }))} unit={dur} />
+              <Bars title="Most-read documents" sub="Ranked by views" rows={[...docs].sort((a, b) => timeBy(b.id) - timeBy(a.id) || b.views - a.views).filter((d) => d.views || timeBy(d.id)).map((d) => ({ label: d.name, value: d.views }))} unit={(n) => `${n} views`} />
               <Bars
-                title="Top files downloaded"
-                sub="Which documents viewers are taking with them"
+                title="Most-saved documents"
+                sub="Ranked by downloads"
                 rows={Object.entries(ev.filter((e) => e.action === "Downloaded").reduce<Record<string, number>>((m, e) => ((m[e.doc] = (m[e.doc] ?? 0) + 1), m), {})).map(([label, value]) => ({ label, value }))}
                 unit={(n) => `${n}`}
               />
@@ -464,8 +456,8 @@ function Analytics({ room, docs }: { room: Room; docs: RoomDoc[] }) {
           </>
         ) : (
           <div className="rounded-[14px] border border-stone-200 bg-white p-5 shadow-card">
-            <div className="text-[13.5px] font-semibold text-ink-900">Page by page</div>
-            <div className="text-[11.5px] text-stone-500">Time spent on each page and how many readers reached it — find where attention drops off.</div>
+            <div className="text-[13.5px] font-semibold text-ink-900">Reading by page</div>
+            <div className="text-[11.5px] text-stone-500">Minutes on each page and how many readers got that far.</div>
             <ul className="mt-4 space-y-2">
               {perPage.map((p) => (
                 <li key={p.page} className="grid grid-cols-[60px_1fr_110px] items-center gap-3 text-[12px]">
@@ -498,7 +490,7 @@ function VisitorList({ people, onOpen }: { people: ReturnType<typeof useActivity
           <div className="text-[14px] font-semibold text-ink-900">
             {people.length} visitor{people.length === 1 ? "" : "s"}
           </div>
-          <div className="text-[11.5px] text-stone-500">Review recent activity and open any visitor for more detail.</div>
+          <div className="text-[11.5px] text-stone-500">Latest first. Select someone to see everything they did.</div>
         </div>
       </div>
       <ul>
@@ -513,7 +505,7 @@ function VisitorList({ people, onOpen }: { people: ReturnType<typeof useActivity
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-medium text-ink-900">{p.who}</span>
                   <span className="block text-[11.5px] text-stone-500">
-                    {p.firm ? `${p.firm} · ` : ""}Viewed for {dur(p.seconds)}
+                    {p.firm ? `${p.firm} · ` : ""}{dur(p.seconds)} reading
                     {p.downloads ? ` · ${p.downloads} download${p.downloads === 1 ? "" : "s"}` : ""}
                   </span>
                 </span>
@@ -552,7 +544,7 @@ function Audit({ room, docs }: { room: Room; docs: RoomDoc[] }) {
     <div className="space-y-4 p-6">
       <div className="flex items-center gap-1.5 text-[13px] text-stone-500">
         <button onClick={() => setWho(null)} className={cx(who && "hover:text-ink-900")}>
-          Audit trail
+          Activity log
         </button>
         <ChevronRight size={13} /> <span className="font-semibold text-ink-900">{who ?? room.name}</span>
       </div>
@@ -572,7 +564,7 @@ function Audit({ room, docs }: { room: Room; docs: RoomDoc[] }) {
           </ul>
         </div>
       )}
-      <p className="text-[11.5px] text-stone-500">Every view, page, download and print is recorded with time and IP, and can’t be edited.</p>
+      <p className="text-[11.5px] text-stone-500">Each view, page turn, download and print is logged with time and IP. Entries can’t be changed.</p>
     </div>
   );
 }
@@ -581,12 +573,12 @@ function Audit({ room, docs }: { room: Room; docs: RoomDoc[] }) {
 
 function Step({ icon, title, body, tag, onClick }: { icon: ReactNode; title: string; body: string; tag: string; onClick?: () => void }) {
   return (
-    <button type="button" onClick={onClick} className={cx("block w-[280px] rounded-[12px] border bg-white p-3.5 text-left shadow-card", tag === "Inactive" ? "border-dashed border-stone-300" : "border-stone-200", onClick && "hover:border-stone-400")}>
+    <button type="button" onClick={onClick} className={cx("block w-[280px] rounded-[12px] border bg-white p-3.5 text-left shadow-card", tag === "Off" ? "border-dashed border-stone-300" : "border-stone-200", onClick && "hover:border-stone-400")}>
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-2 text-[13px] font-semibold text-ink-900">
           {icon} {title}
         </span>
-        <span className={cx("rounded-full px-2 py-0.5 text-[10.5px] font-semibold", tag === "Inactive" ? "bg-stone-100 text-stone-500" : "bg-[#E7F2EB] text-[#245F3C]")}>{tag}</span>
+        <span className={cx("rounded-full px-2 py-0.5 text-[10.5px] font-semibold", tag === "Off" ? "bg-stone-100 text-stone-500" : "bg-[#E7F2EB] text-[#245F3C]")}>{tag}</span>
       </div>
       <p className="mt-1.5 text-[12px] text-stone-600">{body}</p>
     </button>
@@ -597,25 +589,25 @@ function Qa({ settings, onSettings, questions, onDraft, onRelease, flash }: { se
   const set = (p: Partial<RoomSettings>) => onSettings({ ...settings, ...p });
   return (
     <div className="space-y-6 p-6">
-      {!settings.visitorQa && <div className="rounded-[10px] bg-[#FBF1E4] px-4 py-2.5 text-[12.5px] text-[#8A5A1E]">Visitor Q&A is off for this room — turn it on in Settings so visitors can ask questions.</div>}
+      {!settings.visitorQa && <div className="rounded-[10px] bg-[#FBF1E4] px-4 py-2.5 text-[12.5px] text-[#8A5A1E]">Visitors can’t ask questions in this room right now. Turn it on in Settings.</div>}
       <div className="rounded-[14px] border border-stone-200 bg-white p-5 shadow-card">
         <div className="flex items-center justify-between">
-          <div className="text-[14px] font-semibold text-ink-900">Workflow</div>
+          <div className="text-[14px] font-semibold text-ink-900">How questions are answered</div>
           <div className="flex rounded-[9px] bg-stone-100 p-0.5">
             {(["basic", "advanced"] as const).map((f) => (
-              <button key={f} onClick={() => set({ qaFlow: f })} className={cx("h-7 rounded-[7px] px-3 text-[12px] font-semibold capitalize", settings.qaFlow === f ? "bg-white text-ink-900 shadow-card" : "text-stone-500")}>
-                {f} Q&A flow
+              <button key={f} onClick={() => set({ qaFlow: f })} className={cx("h-7 rounded-[7px] px-3 text-[12px] font-semibold", settings.qaFlow === f ? "bg-white text-ink-900 shadow-card" : "text-stone-500")}>
+                {f === "basic" ? "Direct answers" : "Reviewed answers"}
               </button>
             ))}
           </div>
         </div>
         <div className="mt-6 flex items-center justify-center gap-10">
-          <Step icon={<MessagesSquare size={14} />} title="Question submitter" body="Step 1: The visitor submits a question about a document or page." tag="Step 1" />
+          <Step icon={<MessagesSquare size={14} />} title="Visitor asks" body="A visitor sends a question, optionally tied to a document and page." tag="1" />
           <ChevronRight size={22} style={{ color: C }} />
           <div className="space-y-3">
-            {settings.qaFlow === "advanced" && <Step icon={<UserCog size={14} />} title="Expert" body={`Drafts an answer for the coordinator to review. Click to turn ${settings.qaExpert ? "off" : "on"}.`} tag={settings.qaExpert ? "Active" : "Inactive"} onClick={() => set({ qaExpert: !settings.qaExpert })} />}
-            <Step icon={<UserCheck size={14} />} title="Answer coordinator" body={settings.qaFlow === "advanced" ? "Step 2: Reviews the question and prepares the final answer." : "Step 2: Answers all incoming questions."} tag="Step 2" />
-            {settings.qaFlow === "advanced" && <Step icon={<Shield size={14} />} title="Answer approver" body={`Approves the final answer before the visitor sees it. Click to turn ${settings.qaApprover ? "off" : "on"}.`} tag={settings.qaApprover ? "Active" : "Inactive"} onClick={() => set({ qaApprover: !settings.qaApprover })} />}
+            {settings.qaFlow === "advanced" && <Step icon={<UserCog size={14} />} title="Specialist drafts" body={`A subject expert prepares the first draft. ${settings.qaExpert ? "On — click to remove" : "Off — click to add"}.`} tag={settings.qaExpert ? "On" : "Off"} onClick={() => set({ qaExpert: !settings.qaExpert })} />}
+            <Step icon={<UserCheck size={14} />} title="Deal team answers" body={settings.qaFlow === "advanced" ? "Owns the reply and finalises the wording." : "Replies to the visitor directly."} tag="2" />
+            {settings.qaFlow === "advanced" && <Step icon={<Shield size={14} />} title="Partner approves" body={`Signs off before anything reaches the visitor. ${settings.qaApprover ? "On — click to remove" : "Off — click to add"}.`} tag={settings.qaApprover ? "On" : "Off"} onClick={() => set({ qaApprover: !settings.qaApprover })} />}
           </div>
         </div>
       </div>
@@ -680,14 +672,14 @@ export function QuestionCard({ q, room, needsApproval = true, onDraft, onRelease
 /* ───────────────────────── permissions ───────────────────────── */
 
 const LEVELS: FolderAccess[] = ["none", "view", "download", "upload"];
-const LEVEL_LABEL: Record<FolderAccess, string> = { none: "No access", view: "View", download: "Download", upload: "Upload" };
+const LEVEL_LABEL: Record<FolderAccess, string> = { none: "Hidden", view: "View", download: "Download", upload: "Upload" };
 
 function Permissions({ room, docs, users, links, settings, onSave, flash }: { room: Room; docs: RoomDoc[]; users: RoomUser[]; links: ShareLink[]; settings: RoomSettings; onSave: (l: ShareLink) => void; flash: (t: string) => void }) {
   const folders = [...new Set(docs.map((d) => d.folder))];
   const blank = (): ShareLink => ({
     id: `${room.id.replace("rm-", "")}-${Date.now().toString(36)}`,
     roomId: room.id,
-    name: "New group",
+    name: "New audience",
     mode: "link",
     invited: [],
     verifyEmail: true,
@@ -708,7 +700,7 @@ function Permissions({ room, docs, users, links, settings, onSave, flash }: { ro
   const [selId, setSelId] = useState<string | null>(links[0]?.id ?? null);
   const sel = list.find((l) => l.id === selId);
   const [draft, setDraft] = useState<ShareLink | null>(sel ?? null);
-  const [tab, setTab] = useState<"security" | "visitors">("security");
+  const [tab, setTab] = useState<"protection" | "audience">("protection");
   const [tile, setTile] = useState<string | null>(null);
   const pick = (l: ShareLink) => {
     setSelId(l.id);
@@ -725,23 +717,21 @@ function Permissions({ room, docs, users, links, settings, onSave, flash }: { ro
 
   const tiles = draft
     ? ([
-        ["email", Mail, "Email-gated access", draft.verifyEmail ? "On" : "Off"],
-        ["password", KeyRound, "Password protection", draft.password ? "On" : "Off"],
-        ["expiry", Timer, "Expiry", draft.expires ? fmtDate(draft.expires) : "Never"],
-        ["watermark", Fingerprint, "Dynamic watermark", draft.watermark ? "On" : "Off"],
-        ["nda", FileSignature, "One-click NDA", draft.nda === "off" ? "Off" : draft.nda === "esign" ? "E-signature" : "Accept"],
-        ["screenshot", ShieldOff, "Screenshot protection", draft.screenshot ? "On" : "Off"],
-        ["questions", ListChecks, "Access questions", draft.questions.length ? `${draft.questions.length}` : "Off"],
-        ["domains", Globe, "Allowed & blocked domains", draft.allowDomains.length || draft.blockDomains.length ? "On" : "Off"],
-        ["appearance", Palette, "Appearance", "Theme only"],
-        ["ai", Sparkles, "AI document Q&A", "Soon"],
+        ["email", Mail, "Email verification", draft.verifyEmail ? "On" : "Off"],
+        ["password", KeyRound, "Password", draft.password ? "On" : "Off"],
+        ["expiry", Timer, "Access ends", draft.expires ? fmtDate(draft.expires) : "No end date"],
+        ["watermark", Fingerprint, "Watermark", draft.watermark ? "On" : "Off"],
+        ["nda", FileSignature, "NDA", draft.nda === "off" ? "Off" : draft.nda === "esign" ? "E-signature" : "Accept"],
+        ["screenshot", ShieldOff, "Capture shield", draft.screenshot ? "On" : "Off"],
+        ["questions", ListChecks, "Entry questions", draft.questions.length ? `${draft.questions.length}` : "Off"],
+        ["domains", Globe, "Email domains", draft.allowDomains.length || draft.blockDomains.length ? "On" : "Off"],
       ] as const)
     : [];
 
   return (
     <div className="flex min-h-full">
       <aside className="flex w-[260px] shrink-0 flex-col border-r border-stone-200 bg-white">
-        <div className="px-4 pb-2 pt-4 text-[12px] font-semibold text-stone-500">Groups</div>
+        <div className="px-4 pb-2 pt-4 text-[12px] font-semibold text-stone-500">Audiences</div>
         <div className="flex-1 space-y-1 px-2">
           {list.map((l) => (
             <button key={l.id} onClick={() => pick(l)} className={cx("w-full rounded-[10px] px-3 py-2.5 text-left", selId === l.id ? "bg-stone-100" : "hover:bg-stone-50")}>
@@ -757,11 +747,11 @@ function Permissions({ room, docs, users, links, settings, onSave, flash }: { ro
                 onClick={(e) => {
                   e.stopPropagation();
                   navigator.clipboard?.writeText(linkUrl(l.id)).catch(() => {});
-                  flash("Access link copied");
+                  flash("Link copied");
                 }}
                 className="mt-1 flex items-center gap-1 text-[11.5px] text-stone-500 hover:text-ink-900"
               >
-                <Copy size={11} /> Copy access link
+                <Copy size={11} /> Copy link
               </span>
             </button>
           ))}
@@ -772,19 +762,19 @@ function Permissions({ room, docs, users, links, settings, onSave, flash }: { ro
               const n = blank();
               setList((x) => [...x, n]);
               pick(n);
-              setTab("visitors");
+              setTab("audience");
             }}
             className="h-9 w-full rounded-[10px] text-[12.5px] font-semibold text-white"
             style={{ background: C }}
           >
-            Create new group
+            New audience
           </button>
         </div>
       </aside>
       {draft ? (
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex gap-5 border-b border-stone-200 bg-white px-6">
-            {(["security", "visitors"] as const).map((t) => (
+            {(["protection", "audience"] as const).map((t) => (
               <button key={t} onClick={() => setTab(t)} className={cx("-mb-px border-b-2 py-3 text-[13px] font-semibold capitalize", tab === t ? "text-ink-900" : "border-transparent text-stone-500")} style={tab === t ? { borderColor: C } : undefined}>
                 {t}
               </button>
@@ -794,23 +784,22 @@ function Permissions({ room, docs, users, links, settings, onSave, flash }: { ro
             </a>
           </div>
           <div className="flex-1 space-y-6 overflow-y-auto p-6">
-            {tab === "security" ? (
+            {tab === "protection" ? (
               <>
                 <div>
-                  <div className="text-[14px] font-semibold text-ink-900">Security control</div>
-                  <div className="text-[12px] text-stone-500">Stack any combination for this group. Click a control to change it.</div>
-                  <div className="mt-3 grid grid-cols-5 gap-2.5">
+                  <div className="text-[14px] font-semibold text-ink-900">Protection</div>
+                  <div className="text-[12px] text-stone-500">Each layer is independent. Select one to adjust it.</div>
+                  <div className="mt-3 grid grid-cols-4 gap-2.5">
                     {tiles.map(([id, Icon, label, value]) => (
                       <button
                         key={id}
-                        disabled={id === "ai" || id === "appearance"}
                         onClick={() => setTile((t) => (t === id ? null : id))}
-                        className={cx("rounded-[12px] border bg-white p-3 text-left shadow-card disabled:opacity-60", tile === id ? "border-transparent ring-2" : "border-stone-200 hover:border-stone-400")}
+                        className={cx("rounded-[12px] border bg-white p-3 text-left shadow-card", tile === id ? "border-transparent ring-2" : "border-stone-200 hover:border-stone-400")}
                         style={tile === id ? { ["--tw-ring-color" as string]: C } : undefined}
                       >
                         <Icon size={15} className="text-stone-500" />
                         <div className="mt-2 text-[12.5px] font-semibold text-ink-900">{label}</div>
-                        <div className={cx("text-[11.5px]", value === "Off" || value === "Never" || value === "Soon" || value === "Theme only" ? "text-stone-500" : "font-semibold")} style={value !== "Off" && value !== "Never" && value !== "Soon" && value !== "Theme only" ? { color: C } : undefined}>
+                        <div className={cx("text-[11.5px]", value === "Off" || value === "No end date" ? "text-stone-500" : "font-semibold")} style={value !== "Off" && value !== "No end date" ? { color: C } : undefined}>
                           {value}
                         </div>
                       </button>
@@ -878,58 +867,47 @@ function Permissions({ room, docs, users, links, settings, onSave, flash }: { ro
                   )}
                 </div>
                 <div>
-                  <div className="text-[14px] font-semibold text-ink-900">Permissions</div>
-                  <div className="text-[12px] text-stone-500">Choose which folders this group can access, download, or upload into.</div>
+                  <div className="text-[14px] font-semibold text-ink-900">Folders</div>
+                  <div className="text-[12px] text-stone-500">What this audience can do in each folder.</div>
                   <div className="mt-3 overflow-hidden rounded-[12px] border border-stone-200 bg-white shadow-card">
-                    <div className="grid grid-cols-[1fr_360px] border-b border-stone-200 px-4 py-2.5 text-[11.5px] text-stone-500">
-                      <span>Documents</span>
-                      <span className="grid grid-cols-4 text-center">
-                        {LEVELS.map((l) => (
-                          <span key={l} className="flex items-center justify-center gap-1">
-                            {l === "none" ? <EyeOff size={12} /> : l === "view" ? <Eye size={12} /> : l === "download" ? <Download size={12} /> : <Upload size={12} />} {LEVEL_LABEL[l]}
-                          </span>
-                        ))}
-                      </span>
-                    </div>
-                    {folders.map((f) => {
-                      const lv = LEVELS.indexOf(draft.folders[f] ?? "view");
-                      return (
-                        <div key={f} className="grid grid-cols-[1fr_360px] items-center border-b border-stone-100 px-4 py-2.5 last:border-0">
-                          <span className="flex items-center gap-2 text-[13px] text-ink-900">
-                            <Folder size={15} style={{ color: C }} /> {f.replace(/^\d+ /, "")}
-                          </span>
-                          <span className="relative grid grid-cols-4 items-center">
-                            <span className="absolute inset-x-[12.5%] top-1/2 h-1.5 -translate-y-1/2 rounded-full bg-stone-200" />
-                            <span className="absolute left-[12.5%] top-1/2 h-1.5 -translate-y-1/2 rounded-full" style={{ width: `${(lv / 3) * 75}%`, background: C }} />
-                            {LEVELS.map((l, i) => (
+                    {folders.map((f) => (
+                      <div key={f} className="flex items-center justify-between border-b border-stone-100 px-4 py-2.5 last:border-0">
+                        <span className="flex items-center gap-2 text-[13px] text-ink-900">
+                          <Folder size={15} style={{ color: C }} /> {f.replace(/^\d+ /, "")}
+                        </span>
+                        <div className="flex rounded-[8px] border border-stone-200 p-0.5">
+                          {LEVELS.map((l) => {
+                            const on = (draft.folders[f] ?? "view") === l;
+                            return (
                               <button
                                 key={l}
                                 onClick={() => set("folders", { ...draft.folders, [f]: l })}
-                                className={cx("relative mx-auto h-4 w-4 rounded-full border-2", i <= lv ? "border-transparent" : "border-stone-300 bg-white")}
-                                style={i <= lv ? { background: C } : undefined}
-                                aria-label={`${f}: ${LEVEL_LABEL[l]}`}
-                              />
-                            ))}
-                          </span>
+                                className={cx("flex h-7 items-center gap-1 rounded-[6px] px-2.5 text-[11.5px] font-semibold", on ? "text-white" : "text-stone-500 hover:text-ink-900")}
+                                style={on ? { background: l === "none" ? "#9A4422" : C } : undefined}
+                              >
+                                {l === "none" ? <EyeOff size={12} /> : l === "view" ? <Eye size={12} /> : l === "download" ? <Download size={12} /> : <Upload size={12} />} {LEVEL_LABEL[l]}
+                              </button>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 </div>
               </>
             ) : (
               <div className="max-w-[720px] space-y-5">
                 <label className="grid grid-cols-[140px_1fr] items-center gap-3">
-                  <span className="text-[13px] text-stone-600">Group name</span>
+                  <span className="text-[13px] text-stone-600">Audience</span>
                   <input value={draft.name} onChange={(e) => set("name", e.target.value)} className={field} />
                 </label>
                 <div className="grid grid-cols-[140px_1fr] gap-3">
-                  <span className="pt-2 text-[13px] text-stone-600">Access mode</span>
+                  <span className="pt-2 text-[13px] text-stone-600">How they get in</span>
                   <div className="space-y-2">
                     {(
                       [
-                        ["invite", "Email access", "Manage group users by email — the classic data room model."],
-                        ["link", "Link access", "One share link for this group — easy to use and fast to distribute."],
+                        ["invite", "Named people", "Each person is invited by email and signs in as themselves."],
+                        ["link", "Shareable link", "One link for the whole audience, behind the protections you choose."],
                       ] as const
                     ).map(([v, t, h]) => (
                       <label key={v} className={cx("flex cursor-pointer items-start gap-3 rounded-[10px] border p-3", draft.mode === v ? "border-transparent bg-white ring-2" : "border-stone-200 bg-white")} style={draft.mode === v ? { ["--tw-ring-color" as string]: C } : undefined}>
@@ -978,7 +956,7 @@ function Permissions({ room, docs, users, links, settings, onSave, flash }: { ro
               }}
               className="text-[12.5px] font-semibold text-stone-500 hover:text-[#9A4422]"
             >
-              {draft.revoked ? "Turn group on" : "Turn group off"}
+              {draft.revoked ? "Reopen access" : "Pause access"}
             </button>
             <div className="flex gap-2">
               <GhostButton onClick={() => setDraft(sel ?? null)}>Cancel</GhostButton>
@@ -996,7 +974,7 @@ function Permissions({ room, docs, users, links, settings, onSave, flash }: { ro
           </div>
         </div>
       ) : (
-        <div className="flex flex-1 items-center justify-center text-[13px] text-stone-400">Create a group to share this room.</div>
+        <div className="flex flex-1 items-center justify-center text-[13px] text-stone-400">Add an audience to share this room.</div>
       )}
     </div>
   );
@@ -1018,18 +996,18 @@ function Switch({ on, onChange, label }: { on: boolean; onChange: () => void; la
 function SettingsPanel({ settings, onChange }: { settings: RoomSettings; onChange: (s: RoomSettings) => void }) {
   const set = (p: Partial<RoomSettings>) => onChange({ ...settings, ...p });
   const cards: [keyof RoomSettings, typeof Hash, string, string][] = [
-    ["indexNumbers", Hash, "Index documents", "Show numbered prefixes across documents so long rooms stay easy to scan and discuss."],
-    ["visitorQa", MessagesSquare, "Visitor Q&A", "Let visitors ask questions inside the room so review keeps moving without email threads."],
-    ["showCover", ImageIcon, "Show cover image", "Display the room cover at the top of Documents and on the entry page."],
-    ["showLogo", PanelTop, "Show logo", "Keep the sponsor’s branding visible in the room header."],
-    ["newFileDigest", Bell, "New file notifications", "Email visitors a daily summary when new files are added."],
-    ["hideNewContent", EyeOff, "Hide new content by default", "New files and folders stay hidden from every group until you grant access in Permissions."],
+    ["indexNumbers", Hash, "Number documents", "Adds 1.1, 1.2… so everyone can refer to the same file on a call."],
+    ["visitorQa", MessagesSquare, "Questions from visitors", "Shows the “Ask a question” button inside the room."],
+    ["showCover", ImageIcon, "Cover image", "Banner on the entry page and above the documents."],
+    ["showLogo", PanelTop, "Sponsor logo", "Shown on the entry page and in the room’s top bar."],
+    ["newFileDigest", Bell, "Daily update email", "Tells visitors once a day when documents were added."],
+    ["hideNewContent", EyeOff, "New uploads start hidden", "Nothing new is visible to any audience until you open it up under Access."],
   ];
   return (
     <div className="max-w-[1000px] p-8">
-      <div className="text-[12px] text-stone-500">Data room settings</div>
-      <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-ink-900">Room defaults</h2>
-      <p className="mt-1 max-w-[520px] text-[13px] text-stone-600">How the room looks, how it’s organised, and how visitors interact with it.</p>
+      <div className="text-[12px] text-stone-500">Settings</div>
+      <h2 className="text-[24px] font-semibold tracking-[-0.01em] text-ink-900">Room settings</h2>
+      <p className="mt-1 max-w-[520px] text-[13px] text-stone-600">Applies to every audience of this room.</p>
       <div className="mt-6 grid grid-cols-2 gap-3">
         {cards.map(([k, Icon, title, body]) => (
           <div key={k} className="rounded-[14px] border border-stone-200 bg-white p-5 shadow-card">
@@ -1053,8 +1031,8 @@ function SettingsPanel({ settings, onChange }: { settings: RoomSettings; onChang
               <option value="dataroom.aurumasset.us">dataroom.aurumasset.us (needs DNS)</option>
             </select>
           </div>
-          <div className="mt-3 text-[13.5px] font-semibold text-ink-900">Domain</div>
-          <p className="mt-1 text-[12.5px] text-stone-600">Used for links to this data room.</p>
+          <div className="mt-3 text-[13.5px] font-semibold text-ink-900">Link address</div>
+          <p className="mt-1 text-[12.5px] text-stone-600">The web address visitors see in their links.</p>
         </div>
       </div>
     </div>

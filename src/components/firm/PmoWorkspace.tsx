@@ -22,9 +22,9 @@ type Group = { id: string; title: string; color: string };
 type Board = { id: string; name: string; about: string; cols: Col[]; groups: Group[]; items: Item[] };
 
 const STATUS: Opt[] = [
-  { label: "Working on it", color: "#E39B2E" },
-  { label: "Stuck", color: "#C93C4B" },
-  { label: "Done", color: "#2E9B5F" },
+  { label: "In progress", color: "#E39B2E" },
+  { label: "Blocked", color: "#C93C4B" },
+  { label: "Complete", color: "#2E9B5F" },
   { label: "Not started", color: "#B9B2A4" },
 ];
 const HEALTH: Opt[] = [
@@ -54,7 +54,7 @@ const area = (id: string) => (id === "aurum" ? "Aurum (internal)" : solutions.fi
 
 function seedBoards(): Board[] {
   const areas = [...new Set(projects.map((p) => p.solution))];
-  const projectStatus = (p: Project) => (p.progress >= 100 ? "Done" : p.health === "Off track" ? "Stuck" : p.progress === 0 || p.start > PMO_TODAY ? "Not started" : "Working on it");
+  const projectStatus = (p: Project) => (p.progress >= 100 ? "Complete" : p.health === "Off track" ? "Blocked" : p.progress === 0 || p.start > PMO_TODAY ? "Not started" : "In progress");
   const portfolio: Board = {
     id: "portfolio",
     name: "Projects portfolio",
@@ -108,7 +108,7 @@ function seedBoards(): Board[] {
       id: t.id,
       name: t.title,
       group: bucket(t.due, t.status === "Done"),
-      v: { owner: t.assignee, status: t.status === "Done" ? "Done" : t.status === "In progress" ? "Working on it" : "Not started", priority: t.priority ?? "Medium", due: t.due, project: projects.find((p) => p.id === t.projectId)?.name.split(" — ")[0] },
+      v: { owner: t.assignee, status: t.status === "Done" ? "Complete" : t.status === "In progress" ? "In progress" : "Not started", priority: t.priority ?? "Medium", due: t.due, project: projects.find((p) => p.id === t.projectId)?.name.split(" — ")[0] },
       updates: [],
     })),
   };
@@ -245,7 +245,7 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
         <div className="mt-4 flex gap-5 border-b border-stone-200">
           {(
             [
-              ["table", "Main table", LayoutList],
+              ["table", "Table", LayoutList],
               ["kanban", "Kanban", KanbanSquare],
               ...(hasTimeline ? ([["timeline", "Timeline", CalendarRange]] as const) : []),
               ["workload", "Workload", Users],
@@ -388,7 +388,7 @@ function Cell({ col, item, groupColor, onValue }: { col: Col; item: Item; groupC
     case "status":
       return <StatusCell col={col} value={v} onPick={onValue} />;
     case "date": {
-      const late = v && String(v) < PMO_TODAY && item.v.status !== "Done";
+      const late = v && String(v) < PMO_TODAY && item.v.status !== "Complete";
       return <div className={cx("flex h-full items-center justify-center text-[12px]", late ? "font-semibold text-[#C93C4B]" : "text-stone-700")}>{v ? fmtShort(String(v)) : ""}</div>;
     }
     case "timeline": {
@@ -554,7 +554,7 @@ function GroupTable({
                     setDraft("");
                   }}
                 >
-                  <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="+ Add item" className="h-7 w-full rounded-[6px] border border-transparent px-2 text-[13px] placeholder:text-stone-400 hover:border-stone-200 focus:border-ink-900 focus:outline-none" />
+                  <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="+ New row" className="h-7 w-full rounded-[6px] border border-transparent px-2 text-[13px] placeholder:text-stone-400 hover:border-stone-200 focus:border-ink-900 focus:outline-none" />
                 </form>
               </div>
             )}
