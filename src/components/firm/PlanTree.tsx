@@ -217,7 +217,7 @@ export function PlanTree({
               className="group relative flex h-8 cursor-pointer items-center gap-2 rounded-[8px] px-2 text-[13px] hover:bg-white"
               onClick={() => setOpen((o) => ({ ...o, [key]: !o[key] }))}
             >
-              <AurumMark size={15} color={sol.live ? "#F8C618" : "#D1C8B5"} />
+              <AurumMark size={15} color={sol.live ? "var(--tenant-accent)" : "#D1C8B5"} />
               <span className={cx("min-w-0 flex-1 truncate", n ? "font-semibold text-ink-900" : "text-stone-500")}>{sol.name.replace(" Solution", "")}</span>
               {n > 0 && <span className="num text-[11px] text-stone-400 group-hover:hidden">{n}</span>}
               {actions(key, "solution")}

@@ -98,7 +98,7 @@ export function GoldField({ className }: { className?: string }) {
     };
 
     const start = () => {
-      ctx.fillStyle = "#B08D4E";
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--tenant-metal").trim() || "#B08D4E";
       if (reduce) return paintStatic();
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(draw);

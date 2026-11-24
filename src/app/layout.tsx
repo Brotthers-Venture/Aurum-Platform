@@ -3,6 +3,8 @@ import "@fontsource-variable/hanken-grotesk";
 import "@fontsource-variable/source-serif-4";
 import "@fontsource/ibm-plex-mono/400.css";
 import "./globals.css";
+import { BrandProvider } from "@/components/brand/BrandProvider";
+import { BRAND_BOOT } from "@/lib/brand";
 
 export const metadata: Metadata = {
   title: {
@@ -19,8 +21,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="min-h-screen antialiased">{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: BRAND_BOOT }} />
+      </head>
+      <body className="min-h-screen antialiased">
+        <BrandProvider>{children}</BrandProvider>
+      </body>
     </html>
   );
 }

@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Lock } from "lucide-react";
 import { AuthShell, Field, inputClass } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui";
+import { useBrand } from "@/components/brand/BrandProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { brand } = useBrand();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -16,7 +18,7 @@ export default function LoginPage() {
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!/^\S+@\S+\.\S+$/.test(email)) return setError("Enter the email address registered with Aurum.");
+    if (!/^\S+@\S+\.\S+$/.test(email)) return setError(`Enter the email address registered with ${brand.name}.`);
     if (password.length < 1) return setError("Enter your password.");
     setError(null);
     setBusy(true);
@@ -29,19 +31,12 @@ export default function LoginPage() {
 
   return (
     <AuthShell>
-      <h2 className="font-serif text-[24px] leading-tight text-ink-900">Welcome to Aurum Asset Management</h2>
+      <h2 className="font-serif text-[24px] leading-tight text-ink-900">Welcome to {brand.legalName}</h2>
       <p className="mt-1.5 text-[13px] text-stone-500">Sign in to your account.</p>
 
       <form onSubmit={submit} className="mt-6 space-y-5" noValidate>
         <Field label="Email address">
-          <input
-            type="email"
-            autoComplete="username"
-            className={inputClass}
-            placeholder="name@company.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <input type="email" autoComplete="username" className={inputClass} placeholder="name@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
         </Field>
         <Field
           label="Password"
@@ -102,10 +97,9 @@ export default function LoginPage() {
       </p>
 
       <div className="mt-5 rounded-[6px] bg-stone-50 px-3.5 py-3 text-[11.5px] leading-relaxed text-stone-500">
-        <span className="font-semibold text-stone-600">Preview environment.</span> Any password works. Emails ending
-        in <span className="font-mono text-[11px] text-ink-900">@aurumasset.us</span> open the administrator view;
-        a GP’s domain (e.g. <span className="font-mono text-[11px] text-ink-900">@strlex.com</span>) opens that GP’s portal; all others
-        open the investor portals.
+        <span className="font-semibold text-stone-600">Preview environment.</span> Any password works. Emails ending in{" "}
+        <span className="font-mono text-[11px] text-ink-900">@aurumasset.us</span> open the administrator view; a GP’s domain (e.g.{" "}
+        <span className="font-mono text-[11px] text-ink-900">@strlex.com</span>) opens that GP’s portal; all others open the investor portals.
       </div>
     </AuthShell>
   );

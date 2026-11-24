@@ -8,7 +8,7 @@ import { STAGES, formations as seed, jurisdictions, localFormations, services, u
 
 /* Aurum's side of company formation: every application from the client form, moved stage by stage. */
 
-const C = "#B8975A";
+const C = "var(--tenant-metal)";
 const jName = (id: string) => jurisdictions.find((j) => j.id === id)?.name ?? id;
 const tName = (j: string, t: string) => jurisdictions.find((x) => x.id === j)?.types.find((y) => y.id === t)?.short ?? t;
 
@@ -46,7 +46,7 @@ export function CorporateWorkspace() {
               target="_blank"
               rel="noreferrer"
               className="flex h-9 items-center gap-1.5 rounded-[10px] px-3.5 text-[12.5px] font-semibold text-ink-900"
-              style={{ background: "#F8C618" }}
+              style={{ background: "var(--tenant-accent)" }}
             >
               <ExternalLink size={13} /> Open client form
             </a>
@@ -236,7 +236,7 @@ function FormationDrawer({ f, onClose, onUpdate, flash }: { f: Formation; onClos
           <div className="ml-auto">
             {next ? (
               <ActionButton
-                color="#0F2340"
+                color="var(--tenant-ink)"
                 disabled={!!blocked}
                 onClick={() => {
                   onUpdate({ stage: next });

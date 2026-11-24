@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantName } from "@/components/brand/TenantName";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { CalendarRange, ChevronDown, ChevronRight, Columns3, Filter, KanbanSquare, LayoutList, Maximize2, Plus, Search, SendHorizontal, Users, X } from "lucide-react";
 import { cx } from "@/components/ui";
@@ -252,7 +253,7 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
           </span>
           <div>
             <div className="text-[13px] font-semibold text-ink-900">PMO workspace</div>
-            <div className="text-[11px] text-stone-500">Aurum</div>
+            <div className="text-[11px] text-stone-500"><TenantName /></div>
           </div>
         </div>
         <div className="mb-1 mt-6 px-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">Boards</div>
@@ -694,7 +695,7 @@ function GroupTable({
             ))}
             {canAdd && (
               <div className={cx(row, "h-10")} style={{ gridTemplateColumns: grid }}>
-                <span style={{ background: `${group.color}66` }} />
+                <span style={{ background: `color-mix(in srgb, ${group.color} 40%, transparent)` }} />
                 <span className="border-r border-stone-200" />
                 <form
                   className="flex items-center px-3"

@@ -1,6 +1,8 @@
 "use client";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { useBrand } from "@/components/brand/BrandProvider";
+import { markPath } from "@/components/brand/Logo";
 
 export const R = 96;
 const GAP = 10;
@@ -58,8 +60,8 @@ export function HexNav({
   center,
   centerLabel,
   revealOnHover = false,
-  accent = "#0F2340",
-  outlineColor = "#F8C618",
+  accent = "var(--tenant-ink)",
+  outlineColor = "var(--tenant-accent)",
   onHover,
   onCenterClick,
 }: {
@@ -123,8 +125,8 @@ export function HexNav({
           >
             <polygon
               points={hexPoints(R)}
-              fill={isActive ? c.accent ?? accent : "#FFFFFF"}
-              stroke={isActive ? c.accent ?? accent : "#D1C8B5"}
+              fill={isActive ? (c.accent ?? accent) : "#FFFFFF"}
+              stroke={isActive ? (c.accent ?? accent) : "#D1C8B5"}
               strokeWidth={1}
               style={{ transition: "fill 200ms, stroke 200ms" }}
             />
@@ -134,7 +136,7 @@ export function HexNav({
                 <div className="flex h-full w-full items-center justify-center">{c.art(isActive)}</div>
               </foreignObject>
             )}
-            <text textAnchor="middle" fill={isActive ? "#FFFFFF" : "#0F2340"} style={{ transition: "fill 200ms" }}>
+            <text textAnchor="middle" fill={isActive ? "#FFFFFF" : "var(--tenant-ink)"} style={{ transition: "fill 200ms" }}>
               {!c.art && (
                 <tspan x={0} y={c.lines[1] ? -4 : 6} fontSize={16} fontWeight={600} letterSpacing="-0.01em">
                   {c.lines[0]}
@@ -181,9 +183,9 @@ export function DarkCenter({ lines, expanded = true }: { lines: [string, string]
   return (
     <g className="hex-cell" style={{ transform: `scale(${expanded ? 1 : 1.16})` }}>
       <polygon points={hexPoints(R)} fill="#FBF3DC" />
-      <Band w={FRAME.outer} color="#F8C618" />
-      <Band r={R - FRAME.outer - FRAME.gap} w={FRAME.inner} color="#F8C618" />
-      <text textAnchor="middle" fill="#0F2340">
+      <Band w={FRAME.outer} color="var(--tenant-accent)" />
+      <Band r={R - FRAME.outer - FRAME.gap} w={FRAME.inner} color="var(--tenant-accent)" />
+      <text textAnchor="middle" fill="var(--tenant-ink)">
         <tspan x={0} y={-6} fontSize={22} className="font-serif">
           {lines[0]}
         </tspan>
@@ -210,18 +212,15 @@ export function BrandCenter({ color, secondary, children }: { color: string; sec
 }
 
 /** The Aurum hexagon mark as the centre: outer band, gap, inner band, open centre. */
-export function MarkCenter({ expanded = true, color = "#F8C618" }: { expanded?: boolean; color?: string }) {
+export function MarkCenter({ expanded = true, color = "var(--tenant-accent)" }: { expanded?: boolean; color?: string }) {
   const k = R / 174; // mark geometry measured on a 174-unit outer radius
-  const d = [174, 142, 117, 86]
-    .map((r) => {
-      const p = hexPoints(r * k).split(" ");
-      return `M${p.join("L")}Z`;
-    })
-    .join(" ");
+  const { brand } = useBrand();
   return (
     <>
       <polygon points={hexPoints(R)} fill="transparent" />
-      <path d={d} fill={color} fillRule="evenodd" className="hex-cell" style={{ transform: `scale(${expanded ? 1 : 1.12})` }} />
+      <g className="hex-cell" style={{ transform: `scale(${expanded ? 1 : 1.12})` }}>
+        <path d={markPath(brand.mark)} transform={`scale(${k})`} fill={color} fillRule="evenodd" />
+      </g>
     </>
   );
 }

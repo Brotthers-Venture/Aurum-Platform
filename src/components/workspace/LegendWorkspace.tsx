@@ -20,7 +20,7 @@ export type WorkspaceAttention = { tag: string; title: string; detail: string; h
 const usd0 = (v: number) => `$${Math.round(v).toLocaleString("en-US")}`;
 const money = (v: number, ccy = "USD") => `${ccy === "BRL" ? "R$" : "$"}${Math.round(v).toLocaleString("en-US")}`;
 
-function Panel({ title, children, actions, className, bodyClass, tag = "#B8975A" }: { title?: ReactNode; children: ReactNode; actions?: ReactNode; className?: string; bodyClass?: string; tag?: string }) {
+function Panel({ title, children, actions, className, bodyClass, tag = "var(--tenant-metal)" }: { title?: ReactNode; children: ReactNode; actions?: ReactNode; className?: string; bodyClass?: string; tag?: string }) {
   return (
     <section className={cx("flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[12px] border border-[#E7E0D2] bg-[#FDFBF7]", className)}>
       <header className="flex h-11 shrink-0 items-center gap-3 border-b border-[#EFE9DD] px-4">

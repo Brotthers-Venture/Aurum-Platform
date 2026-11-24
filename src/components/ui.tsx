@@ -16,7 +16,7 @@ const buttonVariants: Record<ButtonVariant, string> = {
   gold: "bg-gold-400 text-ink-900 hover:bg-gold-500",
   brand: "bg-brand text-brand-ink hover:opacity-90",
   /** Aurum logo gold, navy text — reserved for Aurum's own sign-in */
-  aurum: "bg-[#F8C618] text-ink-900 shadow-[0_6px_16px_-8px_rgba(184,140,0,0.7)] hover:bg-[#EDB80B]",
+  aurum: "bg-[var(--tenant-accent)] text-[var(--tenant-accent-ink)] shadow-[0_6px_16px_-8px_rgba(0,0,0,0.35)] hover:brightness-[0.95]",
 };
 const buttonSizes = { sm: "h-8 px-3", md: "h-9 px-4", lg: "h-11 px-5 text-[14px]" };
 

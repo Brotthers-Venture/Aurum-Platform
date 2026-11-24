@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Building2, Check, CircleAlert, CircleCheck, FileUp, Lock, Mail, Pencil, Plus, Printer, Trash2, User } from "lucide-react";
 import { Button, cx } from "@/components/ui";
-import Image from "next/image";
 import { AurumLogo } from "@/components/brand/Logo";
 import { LoginStage } from "@/components/auth/LoginStage";
-import { Field, inputClass } from "@/components/auth/AuthShell";
+import { useBrand } from "@/components/brand/BrandProvider";
+import { Backdrop, Field, inputClass } from "@/components/auth/AuthShell";
 import {
   STAGES,
   STEPS,
@@ -30,9 +30,9 @@ import {
 /* Client onboarding for company formation: seven short steps with a running quote beside them.
    Progress is kept on this device until the client submits. */
 
-const GOLD = "#B8975A";
+const GOLD = "var(--tenant-metal)";
 const input =
-  "h-11 w-full rounded-[6px] border border-[#D9D2C3] bg-white px-3.5 text-[14px] text-ink-900 placeholder:text-stone-400 transition-shadow focus:border-[#B8975A] focus:outline-none focus:ring-4 focus:ring-[#B8975A]/15";
+  "h-11 w-full rounded-[6px] border border-[#D9D2C3] bg-white px-3.5 text-[14px] text-ink-900 placeholder:text-stone-400 transition-shadow focus:border-[var(--tenant-metal)] focus:outline-none focus:ring-4 focus:ring-[var(--tenant-metal)]/15";
 const label = "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500";
 const COUNTRIES = ["United States", "Brazil", "United Kingdom", "Canada", "Cayman Islands", "Portugal", "Spain", "Switzerland", "Mexico", "Other"];
 const PURPOSES = ["Holding company", "Operating business", "Fund vehicle", "Special purpose vehicle", "Real estate", "Other"];
@@ -45,6 +45,7 @@ function roleWords(units?: string, type?: string) {
 }
 
 export function IncorporationFlow() {
+  const { brand: B } = useBrand();
   const [d, setD] = useState<Draft>(blankDraft);
   const [resume, setResume] = useState<Draft | null>(null);
   const [done, setDone] = useState(false);
@@ -124,8 +125,8 @@ export function IncorporationFlow() {
                 <CircleCheck size={13} style={{ color: GOLD }} /> Saved as you go
               </span>
             )}
-            <a href="mailto:formation@aurumasset.us" className="flex items-center gap-1.5 hover:text-ink-900">
-              <Mail size={13} /> formation@aurumasset.us
+            <a href={`mailto:formation@${B.domain}`} className="flex items-center gap-1.5 hover:text-ink-900">
+              <Mail size={13} /> formation@{B.domain}
             </a>
           </span>
         </div>
@@ -263,14 +264,15 @@ function Landing({
   onBegin: () => void;
   ready: boolean;
 }) {
+  const { brand: B } = useBrand();
   const codes = jurisdictions.map((j) => ({ code: j.code.replace("US-", ""), name: j.name, from: Math.min(...j.types.map((t) => t.govFee)) + j.serviceFee }));
   return (
     <LoginStage
-      background={<Image src="/brand/login-bg.jpg" alt="" fill priority sizes="100vw" className="object-cover" />}
-      logo={<AurumLogo variant="dark" height={44} priority />}
+      background={<Backdrop brand={B} />}
+      logo={<AurumLogo variant={B.login.backdrop === "gold" ? "dark" : "white"} height={44} priority />}
       statement={
         <>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">Aurum Corporate Services</div>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">{B.name} Corporate Services</div>
           <h1 className="mt-4 font-serif text-[64px] font-normal leading-[1.02] tracking-[-0.015em] drop-shadow-[0_2px_20px_rgba(0,0,0,0.25)]">Formed properly.</h1>
           <p className="mt-5 max-w-[460px] text-[15px] leading-relaxed text-white/80">
             Companies, partnerships and fund vehicles in the United States, the Caribbean and Brazil. One application covers the filing, the identity checks and the records that
@@ -289,7 +291,7 @@ function Landing({
       }
       footer={
         <>
-          <span>© 2026 Aurum Asset Management · Orlando, Florida</span>
+          <span>© 2026 {B.legal.footer}</span>
           <span className="flex gap-6">
             <a href="#" className="hover:text-white">
               Privacy
@@ -300,7 +302,7 @@ function Landing({
             <a href="#" className="hover:text-white">
               Regulatory notices
             </a>
-            <a href="mailto:formation@aurumasset.us" className="hover:text-white">
+            <a href={`mailto:formation@${B.domain}`} className="hover:text-white">
               Formation desk
             </a>
           </span>
@@ -310,12 +312,12 @@ function Landing({
       {resume && (
         <div className="-mx-1 mb-6 rounded-[8px] bg-[#FBF6EA] px-4 py-3 text-[12.5px] text-ink-900 ring-1 ring-[#EAD9B4]">
           Your application{resume.name ? ` for ${resume.name}` : ""} is saved.
-          <button onClick={onResume} className="ml-1 font-semibold underline decoration-[#B8975A] underline-offset-4">
+          <button onClick={onResume} className="ml-1 font-semibold underline decoration-[var(--tenant-metal)] underline-offset-4">
             Continue it
           </button>
         </div>
       )}
-      <h2 className="font-serif text-[24px] leading-tight text-ink-900">Form a company with Aurum</h2>
+      <h2 className="font-serif text-[24px] leading-tight text-ink-900">Form a company with {B.name}</h2>
       <p className="mt-1.5 text-[13px] text-stone-500">Start your application. About fifteen minutes.</p>
       <form
         className="mt-6 space-y-5"
@@ -340,7 +342,7 @@ function Landing({
           </label>
           <label className="flex items-center gap-2.5 text-[13px] text-stone-600">
             <input type="checkbox" checked={d.updates} onChange={() => set({ updates: !d.updates })} className="h-4 w-4 rounded-[2px] border-stone-300 accent-ink-900" />
-            Keep me informed about Aurum services
+            Keep me informed about {B.name} services
           </label>
         </div>
         <Button type="submit" variant="aurum" size="lg" className="w-full" disabled={!ready}>
@@ -352,14 +354,14 @@ function Landing({
         or
         <span className="h-px flex-1 bg-stone-200" />
       </div>
-      <a href="mailto:formation@aurumasset.us?subject=Company%20formation" className="block">
+      <a href={`mailto:formation@${B.domain}?subject=Company%20formation`} className="block">
         <Button variant="secondary" size="lg" className="w-full" type="button">
           Speak to a formation officer
         </Button>
       </a>
       <p className="mt-6 flex items-start gap-2 text-[12px] text-stone-500">
         <Lock size={13} strokeWidth={1.8} className="mt-[2px] shrink-0" />
-        Identity documents are encrypted and seen only by Aurum compliance. Nothing is filed until an officer has reviewed your application.
+        Identity documents are encrypted and seen only by {B.name} compliance. Nothing is filed until an officer has reviewed your application.
       </p>
       <div className="mt-5 rounded-[6px] bg-stone-50 px-3.5 py-3 text-[11.5px] leading-relaxed text-stone-500">
         <span className="font-semibold text-stone-600">Have to hand:</span> a passport or national ID for each owner and director, proof of address from the last three months, the
@@ -405,7 +407,9 @@ function Where({ d, set }: { d: Draft; set: (p: Partial<Draft>) => void }) {
                 onClick={() => set({ jurisdiction: x.id, entityType: x.types.length === 1 ? x.types[0].id : undefined, suffix: "" })}
                 className={cx(
                   "group relative flex gap-4 rounded-[10px] border bg-white p-5 text-left transition-all",
-                  sel ? "border-[#B8975A] shadow-[0_0_0_3px_rgba(184,151,90,0.15)]" : "border-[#E6E0D4] hover:border-[#CFC6B3] hover:shadow-[0_4px_14px_rgba(15,35,64,0.06)]",
+                  sel
+                    ? "border-[var(--tenant-metal)] shadow-[0_0_0_3px_rgba(184,151,90,0.15)]"
+                    : "border-[#E6E0D4] hover:border-[#CFC6B3] hover:shadow-[0_4px_14px_rgba(15,35,64,0.06)]",
                 )}
               >
                 <span
@@ -436,8 +440,11 @@ function Where({ d, set }: { d: Draft; set: (p: Partial<Draft>) => void }) {
           <div className="mb-4 font-serif text-[22px] text-ink-900">Entity type in {j.name}</div>
           <div className="divide-y divide-[#EFEAE0] overflow-hidden rounded-[10px] border border-[#E6E0D4] bg-white">
             {j.types.map((t) => (
-              <label key={t.id} className={cx("flex cursor-pointer items-start gap-3 px-5 py-4", d.entityType === t.id && "bg-[#FBF7EE] shadow-[inset_3px_0_0_#B8975A]")}>
-                <input type="radio" checked={d.entityType === t.id} onChange={() => set({ entityType: t.id, suffix: "" })} className="mt-1 h-4 w-4 accent-[#0F2340]" />
+              <label
+                key={t.id}
+                className={cx("flex cursor-pointer items-start gap-3 px-5 py-4", d.entityType === t.id && "bg-[#FBF7EE] shadow-[inset_3px_0_0_var(--tenant-metal)]")}
+              >
+                <input type="radio" checked={d.entityType === t.id} onChange={() => set({ entityType: t.id, suffix: "" })} className="mt-1 h-4 w-4 accent-[var(--tenant-ink)]" />
                 <span className="flex-1">
                   <span className="block text-[14px] font-semibold text-ink-900">
                     {t.name} <span className="font-normal text-stone-500">({t.short})</span>
@@ -475,6 +482,7 @@ function NameBadge({ name }: { name: string }) {
 }
 
 function Company({ d, set }: { d: Draft; set: (p: Partial<Draft>) => void }) {
+  const { brand: B } = useBrand();
   const t = typeOf(d)!;
   const j = jurisdictionOf(d)!;
   return (
@@ -523,12 +531,12 @@ function Company({ d, set }: { d: Draft; set: (p: Partial<Draft>) => void }) {
         <div className="text-[13px] font-semibold text-ink-900">Company address</div>
         {(
           [
-            ["agent", `Use Aurum’s registered office in ${j.name}`, "Included with the registered agent service."],
-            ["own", "Use our own business address", "The registered office stays with Aurum; this is where the company operates."],
+            ["agent", `Use ${B.name}’s registered office in ${j.name}`, "Included with the registered agent service."],
+            ["own", "Use our own business address", `The registered office stays with ${B.name}; this is where the company operates.`],
           ] as const
         ).map(([v, a, b]) => (
           <label key={v} className="flex cursor-pointer items-start gap-3">
-            <input type="radio" checked={d.addressMode === v} onChange={() => set({ addressMode: v })} className="mt-1 h-4 w-4 accent-[#0F2340]" />
+            <input type="radio" checked={d.addressMode === v} onChange={() => set({ addressMode: v })} className="mt-1 h-4 w-4 accent-[var(--tenant-ink)]" />
             <span>
               <span className="block text-[13px] font-medium text-ink-900">{a}</span>
               <span className="block text-[12px] text-stone-500">{b}</span>
@@ -598,7 +606,7 @@ function People({ d, set, words, owned }: { d: Draft; set: (p: Partial<Draft>) =
               <span
                 key={p.id}
                 title={`${p.name || "Unnamed"} ${p.pct}%`}
-                style={{ width: `${Math.min(100, p.pct)}%`, background: ["#0F2340", GOLD, "#5B7592", "#8C6D3F", "#2B4366"][i % 5] }}
+                style={{ width: `${Math.min(100, p.pct)}%`, background: ["var(--tenant-ink)", GOLD, "#5B7592", "#8C6D3F", "#2B4366"][i % 5] }}
                 className="border-r border-white last:border-0"
               />
             ))}
@@ -724,13 +732,14 @@ function Upload({ value, onFile, labelText }: { value?: string; onFile: (n: stri
 }
 
 function Identity({ d, set }: { d: Draft; set: (p: Partial<Draft>) => void }) {
+  const { brand: B } = useBrand();
   const upd = (id: string, p: Partial<Person>) => set({ people: d.people.map((x) => (x.id === id ? { ...x, ...p } : x)) });
   const list = checkedPeople(d);
   return (
     <>
       <H
         title="Identity checks"
-        sub="Registries and banks require us to verify the people behind every company. Documents go straight to Aurum’s compliance team and are screened against sanctions and politically exposed person lists."
+        sub={`Registries and banks require us to verify the people behind every company. Documents go straight to ${B.name}’s compliance team and are screened against sanctions and politically exposed person lists.`}
       />
       <div className="space-y-3">
         {list.map((p) => (
@@ -762,7 +771,7 @@ function Identity({ d, set }: { d: Draft; set: (p: Partial<Draft>) => void }) {
               </span>
               {(["no", "yes"] as const).map((v) => (
                 <label key={v} className="flex cursor-pointer items-center gap-1.5 capitalize">
-                  <input type="radio" checked={p.pep === v} onChange={() => upd(p.id, { pep: v })} className="h-4 w-4 accent-[#0F2340]" /> {v}
+                  <input type="radio" checked={p.pep === v} onChange={() => upd(p.id, { pep: v })} className="h-4 w-4 accent-[var(--tenant-ink)]" /> {v}
                 </label>
               ))}
             </div>
@@ -783,7 +792,7 @@ function Identity({ d, set }: { d: Draft; set: (p: Partial<Draft>) => void }) {
         </div>
       </Panel>
       <p className="mt-4 flex items-center gap-2 text-[11.5px] text-stone-500">
-        <Lock size={12} /> Documents are encrypted and seen only by the Aurum compliance team. In this preview, only file names are kept.
+        <Lock size={12} /> Documents are encrypted and seen only by the {B.name} compliance team. In this preview, only file names are kept.
       </p>
     </>
   );
@@ -902,7 +911,7 @@ function Review({ d, set, go, words }: { d: Draft; set: (p: Partial<Draft>) => v
           ] as const
         ).map(([v, a, b]) => (
           <label key={v} className="flex cursor-pointer items-start gap-3">
-            <input type="radio" checked={d.pay === v} onChange={() => set({ pay: v })} className="mt-1 h-4 w-4 accent-[#0F2340]" />
+            <input type="radio" checked={d.pay === v} onChange={() => set({ pay: v })} className="mt-1 h-4 w-4 accent-[var(--tenant-ink)]" />
             <span>
               <span className="block text-[13px] font-medium text-ink-900">{a}</span>
               <span className="block text-[12px] text-stone-500">{b}</span>
@@ -925,7 +934,7 @@ function SubmitButton({ onSubmit, pay }: { onSubmit: () => void; pay: Draft["pay
         disabled={!sure}
         onClick={onSubmit}
         className="flex h-11 items-center gap-2 rounded-[8px] px-6 text-[13.5px] font-semibold text-ink-900 disabled:opacity-35"
-        style={{ background: "#F8C618" }}
+        style={{ background: "var(--tenant-accent)" }}
       >
         Submit application{pay === "card" ? " and pay" : ""} <ArrowRight size={15} />
       </button>
@@ -936,6 +945,7 @@ function SubmitButton({ onSubmit, pay }: { onSubmit: () => void; pay: Draft["pay
 /* ───────────────────────── quote ───────────────────────── */
 
 function Quote({ d }: { d: Draft }) {
+  const { brand: B } = useBrand();
   const j = jurisdictionOf(d);
   const t = typeOf(d);
   const q = quote(d);
@@ -989,7 +999,7 @@ function Quote({ d }: { d: Draft }) {
       )}
       <div className="mt-3 flex gap-3 px-1 text-[12.5px] leading-relaxed text-stone-600">
         <span className="mt-[9px] h-px w-4 shrink-0" style={{ background: GOLD }} />
-        <span>Nothing is charged until you submit, and nothing is filed until an Aurum officer has reviewed it.</span>
+        <span>Nothing is charged until you submit, and nothing is filed until a {B.name} officer has reviewed it.</span>
       </div>
     </div>
   );
@@ -998,6 +1008,7 @@ function Quote({ d }: { d: Draft }) {
 /* ───────────────────────── confirmation ───────────────────────── */
 
 function Confirmation({ d }: { d: Draft }) {
+  const { brand: B } = useBrand();
   const j = jurisdictionOf(d)!;
   const t = typeOf(d)!;
   const q = quote(d);
@@ -1047,8 +1058,8 @@ function Confirmation({ d }: { d: Draft }) {
         <Panel className="mt-4">
           <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-stone-500">Payment</div>
           <p className="mt-2 text-[13px] text-stone-700">
-            Transfer <b className="num text-ink-900">{usd(q.today)}</b> quoting <b className="num text-ink-900">{d.ref}</b>. Our bank details arrive by email from
-            formation@aurumasset.us — always confirm them by phone before sending.
+            Transfer <b className="num text-ink-900">{usd(q.today)}</b> quoting <b className="num text-ink-900">{d.ref}</b>. Our bank details arrive by email from formation@
+            {B.domain} — always confirm them by phone before sending.
           </p>
         </Panel>
       )}

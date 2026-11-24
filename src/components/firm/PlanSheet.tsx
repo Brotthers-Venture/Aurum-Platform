@@ -180,7 +180,7 @@ export function PlanSheet({ plan: seed, crumbs = [], onChange }: { plan: Plan; c
       <div className="mt-4 grid grid-cols-[repeat(6,minmax(0,1fr))_minmax(0,1.6fr)] overflow-hidden rounded-[14px] border border-stone-200 bg-white shadow-card">
         {(
           [
-            ["Tasks", s.tasks, "#0F2340"],
+            ["Tasks", s.tasks, "var(--tenant-ink)"],
             ["Completed", s.completed, STATUS_COLOR.Completed],
             ["In progress", s.inProgress, STATUS_COLOR["In progress"]],
             ["Not started", s.notStarted, STATUS_COLOR["Not started"]],
@@ -190,7 +190,7 @@ export function PlanSheet({ plan: seed, crumbs = [], onChange }: { plan: Plan; c
         ).map(([l, v, c]) => (
           <div key={l} className="border-r border-stone-100 px-4 py-3">
             <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-stone-500">{l}</div>
-            <div className="num mt-0.5 text-[22px] font-semibold" style={{ color: v && l !== "Tasks" ? c : "#0F2340" }}>
+            <div className="num mt-0.5 text-[22px] font-semibold" style={{ color: v && l !== "Tasks" ? c : "var(--tenant-ink)" }}>
               {v}
             </div>
           </div>

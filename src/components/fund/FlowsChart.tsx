@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const C_CONTRIB = "#0F2340";
+const C_CONTRIB = "var(--tenant-ink)";
 const C_DIST = "#1F8A84";
 
 export function FlowsChart({ flows: quarterlyFlows, note }: { flows: { q: string; contributions: number; distributions: number }[]; note: string }) {
@@ -63,7 +63,7 @@ export function FlowsChart({ flows: quarterlyFlows, note }: { flows: { q: string
                 <rect x={pad.l + band * i} y={pad.t} width={band} height={ih} fill={hover === i ? "#F7F7F4" : "transparent"} />
                 {bar(cx - bw - 1, d.contributions, C_CONTRIB)}
                 {bar(cx + 1, d.distributions, C_DIST)}
-                <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill={hover === i ? "#0F2340" : "#6F6A61"}>
+                <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill={hover === i ? "var(--tenant-ink)" : "#6F6A61"}>
                   {d.q}
                 </text>
               </g>

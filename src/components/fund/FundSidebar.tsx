@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantName } from "@/components/brand/TenantName";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -77,7 +78,7 @@ export function FundSidebar() {
   return (
     <div className="shrink-0 p-3 pr-0">
       <nav className="flex h-full w-[236px] flex-col rounded-[18px] border border-stone-200 bg-cream text-ink-900 shadow-card">
-        <Link href="/admin" aria-label="Aurum home" className="block px-5 pb-4 pt-5">
+        <Link href="/admin" aria-label="Home" className="block px-5 pb-4 pt-5">
           <AurumLogo variant="dark" height={40} priority />
         </Link>
         <div className="px-3">
@@ -136,7 +137,7 @@ export function FundSidebar() {
             )}
           </Link>
           <Link href="/admin" className="flex items-center gap-2 rounded-[10px] px-2.5 py-2 text-[12px] font-medium text-stone-500 hover:bg-stone-100 hover:text-ink-900">
-            <ArrowLeft size={14} strokeWidth={1.8} /> Aurum Platform
+            <ArrowLeft size={14} strokeWidth={1.8} /> <TenantName /> Platform
           </Link>
         </div>
       </nav>

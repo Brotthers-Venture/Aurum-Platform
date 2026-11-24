@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { Band, BrandCenter, FRAME, DarkCenter, MarkCenter, R, hexPoints, offset, ringOrder, type Slot } from "./HexNav";
 import { GpLogo } from "@/components/brand/GpLogo";
+import { markPath } from "@/components/brand/Logo";
+import { useBrand } from "@/components/brand/BrandProvider";
 import { GoldField } from "@/components/admin/GoldField";
 import { firmById, firmModules } from "@/lib/firm";
 import { formations } from "@/lib/formation";
@@ -24,11 +26,7 @@ import { INDICATIVE_BRL_USD } from "@/lib/data";
  */
 
 type Pt = { x: number; y: number };
-type Level =
-  | { kind: "root" }
-  | { kind: "fund"; from: Slot }
-  | { kind: "gp"; gpId: string; from: Slot }
-  | { kind: "module"; id: string; from: Pt };
+type Level = { kind: "root" } | { kind: "fund"; from: Slot } | { kind: "gp"; gpId: string; from: Slot } | { kind: "module"; id: string; from: Pt };
 
 type Node = {
   id: string;
@@ -50,13 +48,6 @@ type Node = {
 };
 
 const CREAM = "#FBF3DC";
-/** The Aurum mark at orbit size (outer band, gap, inner band — radii from the master logo). */
-const ORBIT_MARK = [174, 142, 117, 86]
-  .map((r) => {
-    const p = hexPoints((r * 25) / 174).split(" ");
-    return `M${p.join("L")}Z`;
-  })
-  .join(" ");
 const DWELL_MS = 420;
 const MOVE_PX = 6;
 
@@ -74,6 +65,7 @@ const gpModules: { id: string; label: [string, string?]; path: string }[] = [
 
 export function AdminHub() {
   const router = useRouter();
+  const { brand } = useBrand();
   const [level, setLevel] = useState<Level>({ kind: "root" });
   const [revealed, setRevealed] = useState(false);
   const [active, setActive] = useState<string | null>(null);
@@ -121,8 +113,8 @@ export function AdminHub() {
   let center: ReactNode;
   let centerFrom: Pt | null = null;
   let accent = "#FBF3DC"; // Aurum levels: cream; GP levels use the GP's own colour
-  let outlineColor = "#F8C618";
-  let bandOn = "#F8C618"; // frame colour on hover
+  let outlineColor = "var(--tenant-accent)";
+  let bandOn = "var(--tenant-accent)"; // frame colour on hover
   let ringShown = true;
 
   if (level.kind === "root") {
@@ -205,8 +197,8 @@ export function AdminHub() {
       : level.kind === "module"
         ? [{ label: "Aurum", target: "root" }, { label: firmById(level.id)!.name }]
         : level.kind === "fund"
-        ? [{ label: "Aurum", target: "root" }, { label: "Fund Solution" }]
-        : [{ label: "Aurum", target: "root" }, { label: "Fund Solution", target: "fund" }, { label: gpById(level.gpId)!.shortName }];
+          ? [{ label: "Aurum", target: "root" }, { label: "Fund Solution" }]
+          : [{ label: "Aurum", target: "root" }, { label: "Fund Solution", target: "fund" }, { label: gpById(level.gpId)!.shortName }];
   const crumbTo = (t: "root" | "fund") => (t === "root" ? toRoot() : go({ kind: "fund", from: "ne" }));
 
   const step = Math.sqrt(3) * R + 10;
@@ -234,7 +226,7 @@ export function AdminHub() {
     const here = level.kind === "module" && level.id === m.id;
     return {
       id: here ? "aurum" : m.id,
-      color: here ? "#F8C618" : m.color,
+      color: here ? "var(--tenant-accent)" : m.color,
       label: here ? "Aurum solutions" : `${m.name}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`,
       href: here ? "/admin" : m.href,
       badge: here ? 0 : m.badge,
@@ -328,8 +320,8 @@ export function AdminHub() {
                 onClick={() => activate(n)}
                 onKeyDown={(e) => e.key === "Enter" && activate(n)}
               >
-                <polygon points={hexPoints(R)} fill={on ? n.accent ?? accent : "#FFFFFF"} style={{ transition: "fill 220ms" }} />
-                <Band w={FRAME.outer} color={on ? n.band ?? bandOn : n.outline ? outlineColor : "#E3DCCD"} style={{ transition: "fill 220ms" }} />
+                <polygon points={hexPoints(R)} fill={on ? (n.accent ?? accent) : "#FFFFFF"} style={{ transition: "fill 220ms" }} />
+                <Band w={FRAME.outer} color={on ? (n.band ?? bandOn) : n.outline ? outlineColor : "#E3DCCD"} style={{ transition: "fill 220ms" }} />
                 <Band
                   r={R - FRAME.outer - FRAME.gap}
                   w={FRAME.inner}
@@ -341,7 +333,7 @@ export function AdminHub() {
                     <div className="flex h-full w-full items-center justify-center">{n.art(on)}</div>
                   </foreignObject>
                 )}
-                <text textAnchor="middle" fill={on && (n.accent ?? accent) !== CREAM ? "#FFFFFF" : "#0F2340"} style={{ transition: "fill 200ms" }}>
+                <text textAnchor="middle" fill={on && (n.accent ?? accent) !== CREAM ? "#FFFFFF" : "var(--tenant-ink)"} style={{ transition: "fill 200ms" }}>
                   {!n.art && (
                     <tspan x={0} y={n.label[1] ? -4 : 6} fontSize={16} fontWeight={600} letterSpacing="-0.01em">
                       {n.label[0]}
@@ -358,7 +350,15 @@ export function AdminHub() {
                     fontSize={9.5}
                     fontWeight={600}
                     letterSpacing="0.16em"
-                    fill={n.subTone === "accent" ? (on && (n.accent ?? accent) !== CREAM ? outlineColor : n.subColor ?? "#8A6A00") : on && (n.accent ?? accent) !== CREAM ? "rgba(255,255,255,0.65)" : "#A39B8A"}
+                    fill={
+                      n.subTone === "accent"
+                        ? on && (n.accent ?? accent) !== CREAM
+                          ? outlineColor
+                          : (n.subColor ?? "#8A6A00")
+                        : on && (n.accent ?? accent) !== CREAM
+                          ? "rgba(255,255,255,0.65)"
+                          : "#A39B8A"
+                    }
                   >
                     {n.sub}
                   </tspan>
@@ -369,11 +369,7 @@ export function AdminHub() {
 
           <g
             className={centerFrom ? "hex-glide" : undefined}
-            style={
-              centerFrom
-                ? ({ "--fx": `${centerFrom.x}px`, "--fy": `${centerFrom.y}px`, cursor: "pointer" } as CSSProperties)
-                : { cursor: "pointer" }
-            }
+            style={centerFrom ? ({ "--fx": `${centerFrom.x}px`, "--fy": `${centerFrom.y}px`, cursor: "pointer" } as CSSProperties) : { cursor: "pointer" }}
             role="button"
             tabIndex={0}
             aria-label={level.kind === "root" ? "Aurum — show solutions" : "Back"}
@@ -413,11 +409,11 @@ export function AdminHub() {
             <title>{o.label}</title>
             <circle r={34} fill="transparent" />
             <g className="orbit-inner">
-              <path d={ORBIT_MARK} fill={o.color} fillRule="evenodd" />
+              <path d={markPath(brand.mark)} transform="scale(0.14368)" fill={o.color} fillRule="evenodd" />
             </g>
             {o.badge > 0 && (
               <g transform="translate(21 -24)">
-                <circle r={10} fill={o.color} stroke="#F1EDE4" strokeWidth={2.5} />
+                <circle r={10} fill={o.color} stroke="var(--tenant-canvas)" strokeWidth={2.5} />
                 <text textAnchor="middle" y={3.6} fontSize={10.5} fontWeight={700} fill="#FFFFFF">
                   {o.badge}
                 </text>
@@ -426,7 +422,6 @@ export function AdminHub() {
           </g>
         ))}
       </svg>
-
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TenantName } from "@/components/brand/TenantName";
 import type { Metadata } from "next";
 import { ArrowLeft, Check, UserPlus } from "lucide-react";
 import { AdminTopBar } from "@/components/admin/AdminTopBar";
@@ -172,7 +173,7 @@ export default function AccessPage() {
       <AdminTopBar context="Access & permissions" />
       <main className="w-full flex-1 space-y-6 px-8 py-8">
         <Link href="/admin" className="inline-flex items-center gap-1.5 text-[12px] font-medium text-stone-500 hover:text-ink-900">
-          <ArrowLeft size={14} strokeWidth={1.8} /> Aurum Platform
+          <ArrowLeft size={14} strokeWidth={1.8} /> <TenantName /> Platform
         </Link>
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-stone-200 pb-6">
           <div>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TenantName } from "@/components/brand/TenantName";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AdminTopBar } from "@/components/admin/AdminTopBar";
@@ -24,7 +25,7 @@ export default async function ComingSoon({ params }: { params: Promise<{ solutio
       <AdminTopBar context={s.name} />
       <main className="mx-auto w-full max-w-[1100px] flex-1 px-8 py-10">
         <Link href="/admin" className="inline-flex items-center gap-1.5 text-[12px] font-medium text-stone-500 hover:text-ink-900">
-          <ArrowLeft size={14} strokeWidth={1.8} /> Aurum Platform
+          <ArrowLeft size={14} strokeWidth={1.8} /> <TenantName /> Platform
         </Link>
         <div className="mt-10 grid gap-12 md:grid-cols-[minmax(0,1fr)_320px]">
           <div>

@@ -55,6 +55,13 @@
 }
 
 :root {
+  /* tenant brand — overwritten at runtime by the white-label settings */
+  --tenant-ink: #0f2340;
+  --tenant-accent: #f8c618;
+  --tenant-accent-ink: #0f2340;
+  --tenant-metal: #b8975a;
+  --tenant-canvas: #f1ede4;
+  --tenant-surface: #ffffff;
   --brand: #b8975a;
   --brand-2: #d8c296;
   --brand-ink: #0f2340;

@@ -1,5 +1,7 @@
 "use client";
 
+import { TenantName } from "@/components/brand/TenantName";
+import { useBrand } from "@/components/brand/BrandProvider";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
@@ -639,9 +641,10 @@ function MeetMenu({ onPost }: { onPost: (meet: NonNullable<Message["meet"]>) => 
 /* ───────────────────────── main ───────────────────────── */
 
 export function CommsWorkspace(props: Props) {
+  const { brand: tenant } = useBrand();
   const viewerId = props.mode === "aurum" ? ME : props.personId;
   const viewer = personById(viewerId)!;
-  const accent = props.mode === "client" ? props.accent : "#0F2340";
+  const accent = props.mode === "client" ? props.accent : "var(--tenant-ink)";
   const accentInk = props.mode === "client" ? props.accentInk : "#FFFFFF";
   const isAurum = props.mode === "aurum";
   const isClientAdmin = viewer.clientRole === "admin";
@@ -806,7 +809,7 @@ export function CommsWorkspace(props: Props) {
     ""
   );
   const convSub = channel
-    ? [isAurum ? (channel.clientId ? clientById(channel.clientId)?.short : "Aurum internal") : null, space?.firmWide ? null : space?.name, channel.topic].filter(Boolean).join(" · ")
+    ? [isAurum ? (channel.clientId ? clientById(channel.clientId)?.short : `${tenant.name} internal`) : null, space?.firmWide ? null : space?.name, channel.topic].filter(Boolean).join(" · ")
     : "Direct message";
   const members = channel ? channelMembers(channel) : dm ? dm.memberIds.map((x) => personById(x)!) : [];
   const announceOnly = channel?.announce && !(viewerId === ME || role === "owner");
@@ -835,7 +838,7 @@ export function CommsWorkspace(props: Props) {
                 if (f) open(f.id);
               }}
             >
-              {s.firmWide ? <AurumMark size={16} color={spaceId === s.id ? "#F8C618" : "#A39B8A"} /> : undefined}
+              {s.firmWide ? <AurumMark size={16} color={spaceId === s.id ? "var(--tenant-accent)" : "#A39B8A"} /> : undefined}
             </HexTile>
           ))}
           <div className="mt-auto flex flex-col items-center gap-2">
@@ -865,7 +868,7 @@ export function CommsWorkspace(props: Props) {
               <div className="flex items-center gap-2 text-[10.5px] font-bold uppercase tracking-[0.16em]" style={{ color: COMM }}>
                 <AurumMark size={11} color={COMM} /> Chat Room
               </div>
-              <div className="mt-1.5 text-[17px] font-semibold tracking-[-0.01em] text-ink-900">Aurum</div>
+              <div className="mt-1.5 text-[17px] font-semibold tracking-[-0.01em] text-ink-900"><TenantName /></div>
               <div className="mt-0.5 text-[11px] text-stone-500">Your administration team</div>
             </>
           )}
@@ -873,7 +876,7 @@ export function CommsWorkspace(props: Props) {
         <div className="scroll-quiet flex-1 overflow-y-auto px-2 pb-4">
           {isAurum ? (
             <>
-              {section(`${spaceId}-int`, spaceById(spaceId)?.firmWide ? "Firm-wide" : "Aurum internal", visible.filter((c) => c.spaceId === spaceId && c.clientId === null))}
+              {section(`${spaceId}-int`, spaceById(spaceId)?.firmWide ? "Firm-wide" : `${tenant.name} internal`, visible.filter((c) => c.spaceId === spaceId && c.clientId === null))}
               {clients
                 .filter((cl) => cl.spaceIds.includes(spaceId))
                 .map((cl) => section(`${spaceId}-${cl.id}`, cl.short, visible.filter((c) => c.spaceId === spaceId && c.clientId === cl.id), clientColor(cl.id)))}

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { cx } from "@/components/ui";
 import { AurumMark } from "@/components/brand/Logo";
+import { TenantName } from "@/components/brand/TenantName";
 import { GpLogo } from "@/components/brand/GpLogo";
 import { FundCover } from "@/components/fund/FundCard";
 import { gpById } from "@/lib/gps";
@@ -231,7 +232,7 @@ function Shell({
             <div className="w-full max-w-[420px]">{children}</div>
           </div>
           <footer className="flex items-center justify-center gap-2 pb-6 text-[11px] text-stone-400">
-            <Lock size={11} /> Secured by <AurumMark size={11} /> Aurum
+            <Lock size={11} /> Secured by <AurumMark size={11} /> <TenantName />
           </footer>
         </main>
       </div>
@@ -378,7 +379,7 @@ function NdaGate({ mode, brand, room, email, onSubmit }: { mode: "acknowledge" |
       >
         <p className="font-semibold text-ink-900">Non-disclosure agreement — {room.name}</p>
         <p>
-          You are receiving confidential information about {room.name} from {brand.wordmark} and its administrator, Aurum Asset Management (“Disclosing Parties”), for the sole
+          You are receiving confidential information about {room.name} from {brand.wordmark} and its administrator, <TenantName legal /> (“Disclosing Parties”), for the sole
           purpose of evaluating a potential transaction.
         </p>
         <p>1. You will keep the information confidential and use it only for that purpose. You may share it with your advisers who need it and are bound by equivalent duties.</p>
