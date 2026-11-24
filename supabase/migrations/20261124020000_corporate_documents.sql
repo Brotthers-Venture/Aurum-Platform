@@ -1,6 +1,6 @@
 -- Corporate records for each vehicle: legal identity (LEI) and versioned formation documents.
 -- Files live in the private Storage bucket "fund-documents" at {gp_id}/{fund_id}/{doc_type}/v{n}-{file};
--- this table is the register. Rows are append-only: a new version supersedes, nothing is overwritten.
+-- this table is the register. Files are never overwritten: a new version supersedes; labels can be edited; removal archives.
 
 -- ── Legal identity on the fund ─────────────────────────────────────────────
 alter table funds
@@ -29,7 +29,8 @@ create table fund_documents (
   visibility      text not null default 'internal' check (visibility in ('internal','gp','investors')),
   uploaded_by     uuid not null references auth.users(id),
   uploaded_at     timestamptz not null default now(),
-  unique (fund_id, doc_type, title, version)
+  archived_at     timestamptz,                      -- "removed" from the data room; the file and row are kept
+  unique (fund_id, storage_path)
 );
 create index fund_documents_fund on fund_documents (fund_id, doc_type);
 
@@ -53,14 +54,24 @@ begin
 end $$;
 create trigger fund_documents_version before insert on fund_documents for each row execute function check_document_version();
 
-create or replace function forbid_document_change() returns trigger language plpgsql as $$
-begin raise exception 'fund documents are append-only; upload a new version instead'; end $$;
-create trigger fund_documents_immutable before update or delete on fund_documents for each row execute function forbid_document_change();
+-- The file is immutable; only its labels may change (name, type, access, effective date) or it may be archived.
+create or replace function guard_document_change() returns trigger language plpgsql as $$
+begin
+  if tg_op = 'DELETE' then raise exception 'fund documents cannot be deleted; archive them instead'; end if;
+  if (new.id, new.fund_id, new.storage_path, new.sha256, new.size_bytes, new.mime_type, new.version, new.supersedes, new.uploaded_by, new.uploaded_at)
+     is distinct from
+     (old.id, old.fund_id, old.storage_path, old.sha256, old.size_bytes, old.mime_type, old.version, old.supersedes, old.uploaded_by, old.uploaded_at) then
+    raise exception 'a stored file cannot be changed; upload a new version instead';
+  end if;
+  if old.archived_at is not null and new.archived_at is null then raise exception 'archived documents stay archived'; end if;
+  return new;
+end $$;
+create trigger fund_documents_guard before update or delete on fund_documents for each row execute function guard_document_change();
 
 -- Current version of each document
 create view fund_documents_current with (security_invoker = true) as
 select d.* from fund_documents d
-where not exists (select 1 from fund_documents n where n.supersedes = d.id);
+where d.archived_at is null and not exists (select 1 from fund_documents n where n.supersedes = d.id);
 
 -- ── Row-level security ────────────────────────────────────────────────────
 alter table fund_documents enable row level security;
@@ -74,6 +85,8 @@ create policy fund_docs_read_investor on fund_documents for select
          and exists (select 1 from commitments c where c.fund_id = fund_documents.fund_id and c.investor_id in (select my_investor_ids())));
 create policy fund_docs_insert on fund_documents for insert
   with check (has_permission('fund.setup.edit', fund_id) and uploaded_by = auth.uid());
+create policy fund_docs_relabel on fund_documents for update
+  using (has_permission('fund.setup.edit', fund_id)) with check (has_permission('fund.setup.edit', fund_id));
 
 -- ── Storage bucket + object policies (only where Supabase Storage exists) ──
 do $$
