@@ -870,7 +870,7 @@ export function CommsWorkspace(props: Props) {
             </>
           )}
         </div>
-        <div className="flex-1 overflow-y-auto px-2 pb-4">
+        <div className="scroll-quiet flex-1 overflow-y-auto px-2 pb-4">
           {isAurum ? (
             <>
               {section(`${spaceId}-int`, spaceById(spaceId)?.firmWide ? "Firm-wide" : "Aurum internal", visible.filter((c) => c.spaceId === spaceId && c.clientId === null))}

@@ -86,7 +86,7 @@ export function FundSidebar() {
             <ChevronsUpDown size={14} strokeWidth={1.8} className="text-stone-400" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-3 py-4">
+        <div className="scroll-quiet flex-1 overflow-y-auto px-3 py-4">
           {groups.map((g, gi) => (
             <div key={gi} className={gi > 0 ? "mt-5" : ""}>
               {g.label && <div className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-400">{g.label}</div>}
