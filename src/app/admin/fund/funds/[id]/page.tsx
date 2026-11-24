@@ -4,7 +4,7 @@ import { ArrowLeft, Download, FileText, Plus, Scale } from "lucide-react";
 import { Button, ButtonLink, KeyValue, PageHeader, Panel, Stat, StatRow, Status } from "@/components/ui";
 import { Tabs } from "@/components/Tabs";
 import { FundCorporateRecords } from "@/components/fund/FundCorporateRecords";
-import { CORPORATE_DOC_TYPES, corporateRecords } from "@/lib/corporateDocs";
+import { corporateRecords } from "@/lib/corporateDocs";
 import {
   capitalAccounts,
   capitalCalls,
@@ -271,15 +271,9 @@ export default async function FundDetail({ params }: { params: Promise<{ id: str
           { id: "docs", label: "Documents", count: docs.length, content: docsTab },
           {
             id: "records",
-            label: "Corporate records",
-            count: CORPORATE_DOC_TYPES.filter((d) => d.required && (corporateRecords[f.id] ?? []).some((r) => r.type === d.id)).length,
-            countOf: CORPORATE_DOC_TYPES.filter((d) => d.required).length,
-            content: (
-              <FundCorporateRecords
-                fund={{ name: f.name, legalForm: f.legalForm, domicile: f.domicile, lei: f.lei, gp: f.gp }}
-                initial={corporateRecords[f.id] ?? []}
-              />
-            ),
+            label: "Data room",
+            count: (corporateRecords[f.id] ?? []).length + (f.lei ? 1 : 0),
+            content: <FundCorporateRecords lei={f.lei} initial={corporateRecords[f.id] ?? []} />,
           },
           ...(pipeline.length
             ? [

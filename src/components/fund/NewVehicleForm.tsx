@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, CircleAlert, CircleCheck, Copy, ExternalLink, Link2, Loader2, Search, X } from "lucide-react";
 import { Button, ButtonLink, cx } from "@/components/ui";
-import { CorporateDocuments } from "@/components/fund/CorporateDocuments";
-import { CORPORATE_DOC_TYPES, type CorporateFile } from "@/lib/corporateDocs";
+import { DataRoom, LpaUpload } from "@/components/fund/DataRoom";
+import { currentFiles, type RoomFile } from "@/lib/corporateDocs";
 import { formatAddress, type GleifDetail, type GleifEntity } from "@/lib/gleif";
 import { funds } from "@/lib/data";
 import { gps } from "@/lib/gps";
@@ -39,14 +39,14 @@ const titleCase = (s: string) =>
         })
     : s
 
-function Section({ n, title, desc, aside, children }: { n: number; title: string; desc: string; aside?: ReactNode; children: ReactNode }) {
+function Section({ n, title, desc, aside, children }: { n: number; title: string; desc?: string; aside?: ReactNode; children: ReactNode }) {
   return (
     <section className="rounded-[4px] border border-stone-200 bg-white">
-      <header className="flex items-start gap-4 border-b border-stone-200 px-6 py-4">
+      <header className="flex items-center gap-4 border-b border-stone-200 px-6 py-3.5">
         <span className="num flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-ink-900 text-[11px] font-semibold">{n}</span>
         <div className="flex-1">
           <h2 className="text-[14px] font-semibold">{title}</h2>
-          <p className="text-[12px] text-stone-500">{desc}</p>
+          {desc && <p className="text-[12px] text-stone-500">{desc}</p>}
         </div>
         {aside}
       </header>
@@ -106,6 +106,15 @@ function Row({ label, children, mono }: { label: string; children: ReactNode; mo
     <div className="grid grid-cols-[180px_1fr] gap-4 border-b border-stone-100 py-2.5 text-[13px] last:border-0">
       <dt className="text-stone-500">{label}</dt>
       <dd className={cx("text-ink-900", mono && "font-mono text-[12.5px]")}>{children}</dd>
+    </div>
+  );
+}
+
+function Fact({ label, children, mono, wide }: { label: string; children: ReactNode; mono?: boolean; wide?: boolean }) {
+  return (
+    <div className={cx("min-w-0", wide && "col-span-2")}>
+      <dt className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-stone-500">{label}</dt>
+      <dd className={cx("mt-1 text-[13px] text-ink-900", mono && "font-mono text-[12.5px]")}>{children}</dd>
     </div>
   );
 }
@@ -177,7 +186,7 @@ export function NewVehicleForm() {
   const [currency, setCurrency] = useState<"USD" | "BRL">("USD");
   const [strategy, setStrategy] = useState("");
   const [vintage, setVintage] = useState("");
-  const [docs, setDocs] = useState<CorporateFile[]>([]);
+  const [docs, setDocs] = useState<RoomFile[]>([]);
   const [capturedAt, setCapturedAt] = useState<string | null>(null);
   const [created, setCreated] = useState(false);
   const [leiCheck, setLeiCheck] = useState<{ state: "idle" | "checking" | "pending" | "invalid" }>({ state: "idle" });
@@ -276,31 +285,23 @@ export function NewVehicleForm() {
   const manualOk = manual && manual.legalName && manual.domicile && (!manual.viaRapidLei || (manual.formationDate && manual.registeredAs && manual.address));
   const ready = (vehicle || manualOk) && gpId && shortName && !duplicate;
   const gp = gps.find((g) => g.id === gpId);
-  const lpaFile = docs.filter((d) => d.type === "lpa").sort((a, b) => b.version - a.version)[0];
-  const missingRequired = CORPORATE_DOC_TYPES.filter((t) => t.required && !docs.some((d) => d.type === t.id));
-  const formationYear = vehicle?.creationDate?.slice(0, 4) ?? manual?.formationDate.slice(0, 4);
+  const roomFiles = currentFiles(docs);
+  const lpaFile = roomFiles.find((d) => d.type === "lpa");
 
   if (created) {
     return (
-      <div className="mx-auto max-w-3xl space-y-6">
+      <div className="max-w-3xl space-y-6">
         <div className="rounded-[4px] border border-stone-200 bg-white p-8">
           <CircleCheck className="text-positive" size={28} />
           <h1 className="mt-4 text-[22px] font-semibold">{legalName} is set up</h1>
-          <p className="mt-1.5 text-[13px] text-stone-600">
-            Added under {gp?.name}. Its economics stay <strong>pending LPA review</strong>: no fees, carry or hurdle are applied, and no capital can be called, until the
-            LPA review is approved by two people.
-          </p>
+          <p className="mt-1 text-[13px] text-stone-600">{gp?.name} · economics pending LPA review</p>
           <dl className="mt-6 border-t border-stone-200 pt-2">
-            <Row label="LEI" mono={Boolean(vehicle)}>{vehicle ? vehicle.lei : manual?.viaRapidLei ? "Requested via RapidLEI · attaches when GLEIF publishes it" : "None"}</Row>
+            <Row label="LEI" mono={Boolean(vehicle)}>{vehicle ? vehicle.lei : manual?.viaRapidLei ? "Requested via RapidLEI" : "—"}</Row>
             <Row label="Domicile">{vehicle?.jurisdictionLabel ?? manual?.domicile}</Row>
             <Row label="Currency">{currency}</Row>
-            <Row label="Corporate records">
-              {docs.length} document{docs.length === 1 ? "" : "s"} on file
-              {missingRequired.length ? ` · missing ${missingRequired.map((t) => t.label).join(", ")}` : " · all required documents present"}
-            </Row>
-            <Row label="LPA">{lpaFile ? `${lpaFile.name} · queued for LPA review` : "Not uploaded yet"}</Row>
+            <Row label="Data room">{roomFiles.length} file{roomFiles.length === 1 ? "" : "s"}</Row>
+            <Row label="LPA review">{lpaFile ? `${lpaFile.title} · queued` : "Awaiting LPA"}</Row>
           </dl>
-          <p className="mt-6 text-[12px] text-stone-500">Preview only: this isn&apos;t saved yet. It will be once the platform is connected to its database (Supabase).</p>
           <div className="mt-6 flex gap-2">
             <ButtonLink href="/admin/fund/funds">Back to funds</ButtonLink>
             <Button variant="secondary" onClick={reset}>
@@ -313,22 +314,18 @@ export function NewVehicleForm() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-5">
       <div>
         <Link href="/admin/fund/funds" className="inline-flex items-center gap-1.5 text-[12px] text-stone-500 hover:text-ink-900">
           <ArrowLeft size={13} /> Funds
         </Link>
         <h1 className="mt-3 text-[26px] font-semibold tracking-tight">New vehicle</h1>
-        <p className="mt-1 text-[13px] text-stone-600">
-          Find the vehicle in GLEIF, the global register of Legal Entity Identifiers. Its legal identity comes from the register; its economics come from the LPA.
-        </p>
       </div>
 
       {/* 1 — Find */}
       <Section
         n={1}
-        title="Find the vehicle in GLEIF"
-        desc="Search by legal name, manager name or LEI."
+        title="Find in GLEIF"
         aside={
           (detail || manual) && (
             <Button variant="ghost" size="sm" onClick={reset}>
@@ -346,7 +343,7 @@ export function NewVehicleForm() {
                   autoFocus
                   aria-label="Search GLEIF"
                   className={cx(input, "pl-9")}
-                  placeholder="e.g. Strlex, Oyster Venture Fund, or a 20-character LEI"
+                  placeholder="Legal name, manager or LEI"
                   value={q}
                   onChange={(e) => {
                     setQ(e.target.value);
@@ -367,7 +364,7 @@ export function NewVehicleForm() {
               <div className="rounded-[3px] border border-stone-200">
                 <div className="flex items-center justify-between border-b border-stone-200 bg-stone-50 px-4 py-2 text-[11px] uppercase tracking-[0.08em] text-stone-500">
                   <span>
-                    {total} record{total === 1 ? "" : "s"} in GLEIF{total > results.length ? ` · showing ${results.length}` : ""}
+                    {total} result{total === 1 ? "" : "s"}
                   </span>
                   {loadingLei && <span className="normal-case tracking-normal">Loading {loadingLei}…</span>}
                 </div>
@@ -378,25 +375,19 @@ export function NewVehicleForm() {
                     ))}
                   </ul>
                 ) : (
-                  <p className="px-4 py-6 text-center text-[13px] text-stone-500">
-                    No match in GLEIF. Try the exact legal name, the manager&apos;s name, or the LEI.
-                  </p>
+                  <p className="px-4 py-6 text-center text-[13px] text-stone-500">No match</p>
                 )}
               </div>
             )}
 
-            <div className="flex items-center justify-between gap-4 rounded-[3px] bg-stone-50 px-4 py-3">
-              <p className="text-[12px] text-stone-600">
-                No LEI yet? Most vehicles need one before they trade or file Form PF or CVM reports.
-              </p>
-              <div className="flex shrink-0 gap-2">
-                <Button variant="ghost" size="sm" onClick={() => setManual(blankManual(false))}>
-                  Enter manually
-                </Button>
-                <Button variant="secondary" size="sm" onClick={() => setManual({ ...blankManual(true), legalName: q.trim().length >= 3 && !/^[A-Z0-9]{18}[0-9]{2}$/i.test(q.trim()) ? q.trim() : "" })}>
-                  Create an LEI with RapidLEI
-                </Button>
-              </div>
+            <div className="flex items-center justify-end gap-1 text-[12px]">
+              <span className="mr-1 text-stone-500">No LEI?</span>
+              <Button variant="ghost" size="sm" onClick={() => setManual(blankManual(false))}>
+                Enter manually
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setManual({ ...blankManual(true), legalName: q.trim().length >= 3 && !/^[A-Z0-9]{18}[0-9]{2}$/i.test(q.trim()) ? q.trim() : "" })}>
+                Create LEI with RapidLEI
+              </Button>
             </div>
           </>
         ) : isManager ? (
@@ -408,7 +399,7 @@ export function NewVehicleForm() {
               </div>
               <Pill tone="muted">Manager / entity</Pill>
             </div>
-            <Notice tone="info">This looks like a management company or operating entity, not a fund.{detail!.managedFunds.length ? " Pick the vehicle it manages:" : ""}</Notice>
+            {detail!.managedFunds.length > 0 && <p className="text-[12px] font-semibold uppercase tracking-[0.08em] text-stone-500">Funds it manages</p>}
             {detail!.managedFunds.length ? (
               <ul className="divide-y divide-stone-100 rounded-[3px] border border-stone-200">
                 {detail!.managedFunds.map((r) => (
@@ -417,9 +408,9 @@ export function NewVehicleForm() {
               </ul>
             ) : (
               <p className="text-[13px] text-stone-500">
-                GLEIF lists no funds linked to this entity.{" "}
+                Not a fund in GLEIF.{" "}
                 <button type="button" className="font-semibold text-ink-900 underline underline-offset-2" onClick={() => setDetail({ ...detail!, fundLike: true })}>
-                  Onboard it as a vehicle anyway
+                  Use as vehicle
                 </button>
               </p>
             )}
@@ -433,63 +424,46 @@ export function NewVehicleForm() {
                   {vehicle.lei} <ExternalLink size={11} />
                 </a>
               ) : (
-                <div className="mt-0.5 text-[12px] text-stone-500">{manual?.viaRapidLei ? "LEI to be issued by RapidLEI" : "Not sourced from GLEIF"}</div>
+                <div className="mt-0.5 text-[12px] text-stone-500">{manual?.viaRapidLei ? "LEI via RapidLEI" : "No LEI"}</div>
               )}
             </div>
-            {vehicle && <Pill tone="gold">From GLEIF</Pill>}
           </div>
         )}
       </Section>
 
       {/* 2 — Legal identity */}
       {(vehicle || manual) && (
-        <Section n={2} title="Legal identity" desc={vehicle ? `As registered in GLEIF · last updated ${date(vehicle.lastUpdate ?? "")}` : "Enter exactly as it appears in the certificate of formation."}>
+        <Section n={2} title="Legal identity">
           {vehicle ? (
             <>
-              <dl>
-                <Row label="Legal name">{legalName}</Row>
-                <Row label="LEI" mono>{vehicle.lei}</Row>
-                <Row label="Legal form">
-                  {vehicle.legalFormName ?? "—"}
-                  {vehicle.legalFormCode && <span className="ml-2 font-mono text-[11px] text-stone-400">ELF {vehicle.legalFormCode}</span>}
-                </Row>
-                <Row label="Domicile">{vehicle.jurisdictionLabel}</Row>
-                <Row label="Registry number" mono>{vehicle.registeredAs ?? "—"}</Row>
-                <Row label="Formation date">{vehicle.creationDate ? date(vehicle.creationDate) : "—"}</Row>
-                <Row label="Registered office">{formatAddress(vehicle.legalAddress)}</Row>
-                <Row label="Principal office">{formatAddress(vehicle.hqAddress)}</Row>
-                <Row label="Fund manager (GLEIF)">
-                  {vehicle.fundManager ? (
-                    <>
-                      {titleCase(vehicle.fundManager.legalName)} <span className="ml-1 font-mono text-[11px] text-stone-400">{vehicle.fundManager.lei}</span>
-                    </>
-                  ) : (
-                    <span className="text-stone-500">Not reported</span>
-                  )}
-                </Row>
-                <Row label="LEI status">
+              <dl className="grid grid-cols-2 gap-x-8 gap-y-5 md:grid-cols-4">
+                <Fact label="Legal name" wide>{legalName}</Fact>
+                <Fact label="Legal form">{vehicle.legalFormName ?? "—"}</Fact>
+                <Fact label="Domicile">{vehicle.jurisdictionLabel}</Fact>
+                <Fact label="Registry no." mono>{vehicle.registeredAs ?? "—"}</Fact>
+                <Fact label="Formed">{vehicle.creationDate ? date(vehicle.creationDate) : "—"}</Fact>
+                <Fact label="LEI status">
                   <span className="inline-flex items-center gap-2">
                     <Pill tone={vehicle.registrationStatus === "ISSUED" ? "ok" : "warn"}>{vehicle.registrationStatus}</Pill>
-                    {vehicle.nextRenewal && <span className="text-stone-500">renews {date(vehicle.nextRenewal)}</span>}
+                    {vehicle.nextRenewal && <span className="text-[12px] text-stone-500">to {date(vehicle.nextRenewal)}</span>}
                   </span>
-                </Row>
+                </Fact>
+                <Fact label="Fund manager">{vehicle.fundManager ? titleCase(vehicle.fundManager.legalName) : <span className="text-stone-400">Not reported</span>}</Fact>
+                <Fact label="Registered office" wide>{formatAddress(vehicle.legalAddress)}</Fact>
+                <Fact label="Principal office" wide>{formatAddress(vehicle.hqAddress)}</Fact>
               </dl>
               {vehicle.registrationStatus !== "ISSUED" && (
                 <Notice tone="warn">
-                  This LEI is {vehicle.registrationStatus?.toLowerCase()}. The vehicle can be onboarded, but the LEI must be renewed before regulatory filings.{" "}
+                  LEI {vehicle.registrationStatus?.toLowerCase()}.{" "}
                   <a href={RAPIDLEI_URL} target="_blank" rel="noreferrer" className="font-semibold underline">
-                    Renew it in RapidLEI
+                    Renew in RapidLEI
                   </a>
                 </Notice>
               )}
-              {vehicle.entityStatus !== "ACTIVE" && <Notice tone="warn">GLEIF reports this entity as {vehicle.entityStatus?.toLowerCase()}.</Notice>}
+              {vehicle.entityStatus !== "ACTIVE" && <Notice tone="warn">Entity {vehicle.entityStatus?.toLowerCase()} in GLEIF.</Notice>}
               {(vehicle.category !== "FUND" || !vehicle.fundManager) && (
                 <Notice tone="info">
-                  In GLEIF,{" "}
-                  {[vehicle.category !== "FUND" && "this vehicle is registered as a general entity rather than a fund", !vehicle.fundManager && "no fund manager is reported"]
-                    .filter(Boolean)
-                    .join(" and ")}
-                  . Banks, regulators and counterparties read these fields, so ask the issuer to correct the record.{" "}
+                  GLEIF: {[vehicle.category !== "FUND" && "registered as entity, not fund", !vehicle.fundManager && "no fund manager"].filter(Boolean).join(" · ")}.{" "}
                   <a href={RAPIDLEI_URL} target="_blank" rel="noreferrer" className="font-semibold text-ink-900 underline">
                     Update in RapidLEI
                   </a>
@@ -497,7 +471,7 @@ export function NewVehicleForm() {
               )}
             </>
           ) : (
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-2 gap-5 lg:grid-cols-3">
               <Field label="Legal name" required>
                 <input aria-label="Legal name" className={input} value={manual!.legalName} onChange={(e) => setManual({ ...manual!, legalName: e.target.value })} />
               </Field>
@@ -510,7 +484,7 @@ export function NewVehicleForm() {
               <Field label="Formation date" required={manual!.viaRapidLei}>
                 <input type="date" className={input} value={manual!.formationDate} onChange={(e) => setManual({ ...manual!, formationDate: e.target.value })} />
               </Field>
-              <Field label="Registry number" required={manual!.viaRapidLei} hint="e.g. the Delaware file number on the certificate of formation.">
+              <Field label="Registry number" required={manual!.viaRapidLei}>
                 <input className={input} value={manual!.registeredAs} onChange={(e) => setManual({ ...manual!, registeredAs: e.target.value })} />
               </Field>
               <Field label="Registered office" required={manual!.viaRapidLei}>
@@ -520,10 +494,9 @@ export function NewVehicleForm() {
           )}
           {duplicate && (
             <Notice tone="warn">
-              <strong>{duplicate.name}</strong> is already administered by Aurum
-              {vehicle && duplicate.lei === vehicle.lei ? ", with this LEI on file" : ""}. Its documents are kept in its corporate records.{" "}
+              Already administered: <strong>{duplicate.name}</strong>.{" "}
               <Link className="font-semibold underline" href={`/admin/fund/funds/${duplicate.id}?tab=records`}>
-                Open corporate records
+                Open data room
               </Link>
             </Notice>
           )}
@@ -532,8 +505,8 @@ export function NewVehicleForm() {
 
       {/* 3 — Administration */}
       {(vehicle || manual) && !duplicate && (
-        <Section n={3} title="Administration" desc="How Aurum will run this vehicle.">
-          <div className="grid grid-cols-2 gap-5">
+        <Section n={3} title="Administration">
+          <div className="grid grid-cols-2 gap-5 xl:grid-cols-5">
             <Field
               label="GP client"
               required
@@ -541,18 +514,17 @@ export function NewVehicleForm() {
                 gpId ? (
                   gpMatchedByLei ? (
                     <span className="inline-flex items-center gap-1 text-positive">
-                      <Link2 size={12} /> Matched through GLEIF&apos;s fund-manager link
+                      <Link2 size={12} /> Matched via GLEIF
                     </span>
                   ) : gpMatchedByOffice ? (
-                    "Matched by shared principal office in GLEIF. Please confirm."
+                    "Matched by office · confirm"
                   ) : vehicle ? (
-                    "Matched by manager name. Please confirm."
+                    "Matched by name · confirm"
                   ) : undefined
                 ) : (
                   <>
-                    No matching GP client.{" "}
                     <Link href="/admin/fund/gps/new" className="underline">
-                      Create one
+                      New GP client
                     </Link>
                   </>
                 )
@@ -567,10 +539,10 @@ export function NewVehicleForm() {
                 ))}
               </select>
             </Field>
-            <Field label="Display name" required hint="Shown in portals, reports and notices.">
+            <Field label="Display name" required>
               <input aria-label="Display name" className={input} value={shortName} onChange={(e) => setShortName(e.target.value)} />
             </Field>
-            <Field label="Reporting currency" required>
+            <Field label="Currency" required>
               <select className={input} value={currency} onChange={(e) => setCurrency(e.target.value as "USD" | "BRL")}>
                 <option value="USD">USD</option>
                 <option value="BRL">BRL</option>
@@ -579,7 +551,7 @@ export function NewVehicleForm() {
             <Field label="Strategy">
               <input className={input} placeholder="e.g. Venture capital" value={strategy} onChange={(e) => setStrategy(e.target.value)} />
             </Field>
-            <Field label="Vintage year" hint={formationYear ? `Formed in ${formationYear}. The vintage is usually the year of first close, which can differ.` : undefined}>
+            <Field label="Vintage">
               <input inputMode="numeric" className={input} placeholder="Year of first close" value={vintage} onChange={(e) => setVintage(e.target.value.replace(/\D/g, "").slice(0, 4))} />
             </Field>
           </div>
@@ -588,8 +560,7 @@ export function NewVehicleForm() {
 
       {/* RapidLEI application (no LEI yet) */}
       {manual?.viaRapidLei && !duplicate && (
-        <Section n={4} title="Apply for the LEI" desc="RapidLEI issues the LEI; Aurum applies on the GP's behalf." aside={<Pill tone="gold">RapidLEI</Pill>}>
-          <p className="text-[13px] text-stone-600">Copy these into a new fund application in RapidLEI. They match what GLEIF will publish, so keep them exactly as on the certificate of formation.</p>
+        <Section n={4} title="Apply for LEI · RapidLEI">
           <dl className="rounded-[3px] border border-stone-200 px-4">
             <CopyRow label="Legal name" value={manual.legalName} />
             <CopyRow label="Entity type" value="Fund" />
@@ -601,16 +572,13 @@ export function NewVehicleForm() {
             <CopyRow label="Fund manager" value={gp?.name ?? ""} />
             <CopyRow label="Fund manager LEI" value={gp?.lei ?? ""} />
           </dl>
-          {gp && !gp.lei && <Notice tone="warn">{gp.name} has no LEI on file. RapidLEI asks for the fund manager&apos;s LEI, so get or add the GP&apos;s LEI first.</Notice>}
-          <p className="text-[12px] text-stone-500">
-            Have ready: the certificate of formation, and the GP&apos;s signed authorization for Aurum to apply and renew on its behalf.
-          </p>
+          {gp && !gp.lei && <Notice tone="warn">{gp.name} has no LEI on file.</Notice>}
           <div className="flex flex-wrap items-end gap-3 border-t border-stone-100 pt-5">
             <a href={RAPIDLEI_URL} target="_blank" rel="noreferrer" className="mb-[22px] inline-flex h-10 items-center gap-2 rounded-[3px] bg-ink-900 px-4 text-[13px] font-semibold text-white hover:bg-ink-800">
               Open RapidLEI <ExternalLink size={13} />
             </a>
             <div className="ml-auto flex items-end gap-2">
-              <Field label="Issued LEI" hint={leiCheck.state === "pending" ? "Not in GLEIF yet. New LEIs can take up to a day to publish." : leiCheck.state === "invalid" ? "An LEI is 20 characters, ending in two digits." : "Paste it once RapidLEI issues it."}>
+              <Field label="Issued LEI" hint={leiCheck.state === "pending" ? "Not in GLEIF yet (can take a day)" : leiCheck.state === "invalid" ? "Invalid LEI" : " "}>
                 <input aria-label="Issued LEI" className={cx(input, "w-[260px] font-mono uppercase")} maxLength={20} value={manual.lei} onChange={(e) => setManual({ ...manual, lei: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") })} />
               </Field>
               <Button variant="secondary" className="mb-[22px] h-10" disabled={!manual.lei || leiCheck.state === "checking"} onClick={verifyIssuedLei}>
@@ -621,33 +589,17 @@ export function NewVehicleForm() {
         </Section>
       )}
 
-      {/* Corporate records */}
+      {/* Economics */}
       {(vehicle || manual) && !duplicate && (
-        <Section n={manual?.viaRapidLei ? 5 : 4} title="Corporate records" desc="Formation documents kept on file for this vehicle. Upload now or add them later from the fund page.">
-          <CorporateDocuments
-            files={docs}
-            onChange={setDocs}
-            gleif={vehicle && capturedAt ? { lei: vehicle.lei, legalName: vehicle.legalName, capturedAt, status: vehicle.registrationStatus } : null}
-          />
+        <Section n={manual?.viaRapidLei ? 5 : 4} title="Economics">
+          <LpaUpload files={docs} onChange={setDocs} />
         </Section>
       )}
 
-      {/* Economics */}
+      {/* Data room */}
       {(vehicle || manual) && !duplicate && (
-        <Section n={manual?.viaRapidLei ? 6 : 5} title="Economics" desc="Read from the LPA, not typed in.">
-          <Notice tone={lpaFile ? "ok" : "info"}>
-            {lpaFile ? (
-              <>
-                <strong>{lpaFile.name}</strong> (v{lpaFile.version}) goes to the LPA review agent when the vehicle is created. Fees, carry, hurdle, classes and waterfall
-                are extracted with the clause cited for every term, and take effect only after two people approve them.
-              </>
-            ) : (
-              <>
-                Management fee, carry, hurdle, share classes and waterfall are extracted from the LPA by the review agent, with the clause cited for every term. Upload the
-                LPA under Corporate records to start the review. Until it is approved, the vehicle shows <em>economics pending LPA review</em>.
-              </>
-            )}
-          </Notice>
+        <Section n={manual?.viaRapidLei ? 6 : 5} title="Data room">
+          <DataRoom files={docs} onChange={setDocs} gleif={vehicle && capturedAt ? { lei: vehicle.lei, capturedAt } : null} />
         </Section>
       )}
 

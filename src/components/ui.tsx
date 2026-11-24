@@ -39,11 +39,11 @@ export function ButtonLink({
 export function PageHeader({
   eyebrow,
   title,
-  description,
   actions,
 }: {
   eyebrow?: ReactNode;
   title: ReactNode;
+  /** @deprecated descriptions are no longer shown — keep pages lean */
   description?: ReactNode;
   actions?: ReactNode;
 }) {
@@ -52,7 +52,6 @@ export function PageHeader({
       <div className="min-w-0">
         {eyebrow && <div className="eyebrow mb-2">{eyebrow}</div>}
         <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.015em] text-ink-900">{title}</h1>
-        {description && <p className="mt-1.5 max-w-2xl text-[14px] text-stone-600">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
