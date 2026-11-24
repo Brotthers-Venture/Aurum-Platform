@@ -68,7 +68,7 @@ export const solutions: Solution[] = [
     name: "Corporate Solution",
     lines: ["Corporate", "Solution"],
     href: "/admin/corporate",
-    live: false,
+    live: true,
     slot: "nw",
     summary: "Formation, compliance and administration for companies and holding structures across 25 jurisdictions.",
     modules: ["Entity formation", "Registered agent", "Annual compliance", "Corporate records", "Beneficial ownership", "Board support"],

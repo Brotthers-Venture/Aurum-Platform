@@ -7,6 +7,7 @@ import { Band, BrandCenter, FRAME, DarkCenter, MarkCenter, R, hexPoints, offset,
 import { GpLogo } from "@/components/brand/GpLogo";
 import { GoldField } from "@/components/admin/GoldField";
 import { firmById, firmModules } from "@/lib/firm";
+import { formations } from "@/lib/formation";
 import { solutions } from "@/lib/solutions";
 import { gps, gpById, type GpClient } from "@/lib/gps";
 import { gpTotals } from "@/lib/gpData";
@@ -130,7 +131,7 @@ export function AdminHub() {
       id: s.id,
       slot: s.slot,
       label: s.lines,
-      sub: s.live ? `${gps.length} GPS` : "COMING SOON",
+      sub: !s.live ? "COMING SOON" : s.id === "fund" ? `${gps.length} GPS` : `${formations.filter((f) => f.stage !== "Post-formation").length} IN PROGRESS`,
       subTone: s.live ? "accent" : "muted",
       outline: s.live,
       ...(s.id === "fund" ? { open: () => go({ kind: "fund", from: s.slot }) } : { href: s.href }),
