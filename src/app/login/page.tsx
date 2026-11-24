@@ -81,7 +81,7 @@ export default function LoginPage() {
           </p>
         )}
 
-        <Button type="submit" size="lg" className="w-full" disabled={busy}>
+        <Button type="submit" variant="aurum" size="lg" className="w-full" disabled={busy}>
           {busy ? "Verifying…" : "Continue"}
         </Button>
       </form>

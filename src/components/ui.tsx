@@ -5,7 +5,7 @@ export function cx(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(" ");
 }
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "gold" | "brand";
+type ButtonVariant = "primary" | "secondary" | "ghost" | "gold" | "brand" | "aurum";
 
 const buttonBase =
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[3px] text-[13px] font-semibold tracking-[0.01em] transition-colors disabled:opacity-50 disabled:pointer-events-none";
@@ -15,6 +15,8 @@ const buttonVariants: Record<ButtonVariant, string> = {
   ghost: "text-ink-900 hover:bg-stone-100",
   gold: "bg-gold-400 text-ink-900 hover:bg-gold-500",
   brand: "bg-brand text-brand-ink hover:opacity-90",
+  /** Aurum logo gold, navy text — reserved for Aurum's own sign-in */
+  aurum: "bg-[#F8C618] text-ink-900 shadow-[0_6px_16px_-8px_rgba(184,140,0,0.7)] hover:bg-[#EDB80B]",
 };
 const buttonSizes = { sm: "h-8 px-3", md: "h-9 px-4", lg: "h-11 px-5 text-[14px]" };
 

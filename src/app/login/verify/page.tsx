@@ -91,7 +91,7 @@ export default function VerifyPage() {
             />
           ))}
         </div>
-        <Button type="submit" size="lg" className="mt-7 w-full" disabled={!complete || busy}>
+        <Button type="submit" variant="aurum" size="lg" className="mt-7 w-full" disabled={!complete || busy}>
           {busy ? "Signing in…" : "Verify and sign in"}
         </Button>
       </form>
