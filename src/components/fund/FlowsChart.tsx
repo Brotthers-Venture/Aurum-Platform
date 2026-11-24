@@ -4,7 +4,7 @@ import { useState } from "react";
 import { quarterlyFlows } from "@/lib/data";
 
 const C_CONTRIB = "#0F2340";
-const C_DIST = "#C99A06";
+const C_DIST = "#B08D4E";
 
 export function FlowsChart() {
   const [hover, setHover] = useState<number | null>(null);
@@ -49,8 +49,8 @@ export function FlowsChart() {
         <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" onMouseLeave={() => setHover(null)}>
           {ticks.map((t) => (
             <g key={t}>
-              <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke={t === 0 ? "#CBD3DE" : "#EFEFEA"} />
-              <text x={pad.l - 10} y={y(t) + 4} textAnchor="end" fontSize={11} fill="#6A7687" className="num">
+              <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke={t === 0 ? "#D1C8B5" : "#EFEFEA"} />
+              <text x={pad.l - 10} y={y(t) + 4} textAnchor="end" fontSize={11} fill="#6F6A61" className="num">
                 {t}
               </text>
             </g>
@@ -62,7 +62,7 @@ export function FlowsChart() {
                 <rect x={pad.l + band * i} y={pad.t} width={band} height={ih} fill={hover === i ? "#F7F7F4" : "transparent"} />
                 {bar(cx - bw - 1, d.contributions, C_CONTRIB)}
                 {bar(cx + 1, d.distributions, C_DIST)}
-                <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill={hover === i ? "#0F2340" : "#6A7687"}>
+                <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill={hover === i ? "#0F2340" : "#6F6A61"}>
                   {d.q}
                 </text>
               </g>

@@ -258,7 +258,7 @@ export function AdminHub() {
                 onKeyDown={(e) => e.key === "Enter" && activate(n)}
               >
                 <polygon points={hexPoints(R)} fill={on ? n.accent ?? accent : "#FFFFFF"} style={{ transition: "fill 220ms" }} />
-                <Band w={FRAME.outer} color={on ? n.band ?? bandOn : n.outline ? outlineColor : "#DDE3EA"} style={{ transition: "fill 220ms" }} />
+                <Band w={FRAME.outer} color={on ? n.band ?? bandOn : n.outline ? outlineColor : "#E3DCCD"} style={{ transition: "fill 220ms" }} />
                 <Band
                   r={R - FRAME.outer - FRAME.gap}
                   w={FRAME.inner}
@@ -287,7 +287,7 @@ export function AdminHub() {
                     fontSize={9.5}
                     fontWeight={600}
                     letterSpacing="0.16em"
-                    fill={n.subTone === "accent" ? (on ? outlineColor : "#8A6A00") : on ? "rgba(255,255,255,0.65)" : "#98A3B3"}
+                    fill={n.subTone === "accent" ? (on ? outlineColor : "#8A6A00") : on ? "rgba(255,255,255,0.65)" : "#A39B8A"}
                   >
                     {n.sub}
                   </tspan>

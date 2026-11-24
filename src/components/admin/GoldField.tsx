@@ -98,7 +98,7 @@ export function GoldField({ className }: { className?: string }) {
     };
 
     const start = () => {
-      ctx.fillStyle = "#C99A06";
+      ctx.fillStyle = "#B08D4E";
       if (reduce) return paintStatic();
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(draw);

@@ -6,10 +6,10 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
  * Brand palette only: ink, gold, then neutrals. Identity never rests on colour alone —
  * every chart has a legend, direct end labels and a table view.
  */
-export const SERIES = ["#0F2340", "#C99A06", "#98A3B3", "#5B6B82"] as const;
-const GRID = "#E9EDF2";
-const AXIS = "#CBD3DE";
-const TICK = "#6A7687";
+export const SERIES = ["#0F2340", "#B08D4E", "#A39B8A", "#5B6B82"] as const;
+const GRID = "#ECE6DA";
+const AXIS = "#D1C8B5";
+const TICK = "#6F6A61";
 
 export type Fmt = (v: number) => string;
 

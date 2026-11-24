@@ -124,7 +124,7 @@ export function HexNav({
             <polygon
               points={hexPoints(R)}
               fill={isActive ? c.accent ?? accent : "#FFFFFF"}
-              stroke={isActive ? c.accent ?? accent : "#CBD3DE"}
+              stroke={isActive ? c.accent ?? accent : "#D1C8B5"}
               strokeWidth={1}
               style={{ transition: "fill 200ms, stroke 200ms" }}
             />
@@ -151,7 +151,7 @@ export function HexNav({
                 fontSize={9.5}
                 fontWeight={600}
                 letterSpacing="0.16em"
-                fill={c.subTone === "accent" ? (isActive ? outlineColor : "#8A6A00") : isActive ? "rgba(255,255,255,0.65)" : "#98A3B3"}
+                fill={c.subTone === "accent" ? (isActive ? outlineColor : "#8A6A00") : isActive ? "rgba(255,255,255,0.65)" : "#A39B8A"}
               >
                 {c.sub}
               </tspan>

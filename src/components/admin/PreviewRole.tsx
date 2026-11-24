@@ -34,14 +34,14 @@ export function RoleSwitcher() {
   const [open, setOpen] = useState(false);
   const staffAndGp = roles.filter((r) => r.audience !== "Investor");
   return (
-    <div className="relative ml-2 border-l border-white/15 pl-4">
+    <div className="relative ml-2 border-l border-stone-200 pl-4">
       <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2.5 text-left" aria-expanded={open}>
         <Avatar label={initials(user.name)} />
         <span className="hidden leading-tight sm:block">
-          <span className="block text-[12px] font-semibold text-white">{user.name}</span>
-          <span className="block text-[11px] text-white/50">{user.title}</span>
+          <span className="block text-[12px] font-semibold text-ink-900">{user.name}</span>
+          <span className="block text-[11px] text-stone-500">{user.title}</span>
         </span>
-        <ChevronDown size={14} className="text-white/40" />
+        <ChevronDown size={14} className="text-stone-400" />
       </button>
       {open && (
         <div className="absolute right-0 top-11 z-50 w-[300px] text-ink-900 rounded-[8px] border border-stone-200/70 bg-white shadow-card py-2 shadow-[0_8px_24px_rgba(11,21,25,0.10)]">

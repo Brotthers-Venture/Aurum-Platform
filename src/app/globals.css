@@ -17,44 +17,48 @@
   --color-ink-700: #2b4366;
   --color-ink-600: #475b7a;
 
-  --color-stone-25: #fbfcfd;
-  --color-stone-50: #f3f5f8;
-  --color-stone-100: #eceff4;
-  --color-stone-200: #e1e6ed;
-  --color-stone-300: #cbd3de;
-  --color-stone-400: #98a3b3;
-  --color-stone-500: #6a7687;
-  --color-stone-600: #505c6d;
-  --color-stone-700: #374253;
+  --color-stone-25: #fdfbf7;
+  --color-stone-50: #f1ede4;
+  --color-stone-100: #ebe6db;
+  --color-stone-200: #e3dccd;
+  --color-stone-300: #d1c8b5;
+  --color-stone-400: #a39b8a;
+  --color-stone-500: #6f6a61;
+  --color-stone-600: #555049;
+  --color-stone-700: #3b3833;
 
-  --color-gold-50: #fdf8e4;
-  --color-gold-100: #fbeeb8;
-  --color-gold-400: #f8c618;
-  --color-gold-500: #e0b000;
-  --color-gold-700: #8a6a00;
+  --color-gold-50: #faf6ec;
+  --color-gold-100: #efe5cf;
+  --color-gold-400: #d8c296;
+  --color-gold-500: #b8975a;
+  --color-gold-700: #7b6235;
 
   /* Status colours stay inside the brand: ink for done, gold for attention, red only for problems */
   --color-positive: #0f2340;
-  --color-positive-bg: #eceff4;
+  --color-positive-bg: #ebe6db;
   --color-caution: #7a5c00;
-  --color-caution-bg: #fbf3d9;
+  --color-caution-bg: #f6eddb;
   --color-negative: #9b3424;
   --color-negative-bg: #f6e7e3;
   --color-info: #374253;
-  --color-info-bg: #eef1f5;
+  --color-info-bg: #efebe2;
 
   --text-2xs: 0.6875rem;
 
+  /* cream surface for floating chrome (sidebar) */
+  --color-cream: #fbf8f1;
+  --color-champagne: #e8dcc0;
+
   /* soft card elevation used for every panel */
-  --shadow-card: 0 1px 2px rgba(15, 35, 64, 0.04), 0 2px 8px -2px rgba(15, 35, 64, 0.08);
+  --shadow-card: 0 1px 2px rgba(60, 45, 20, 0.04), 0 2px 8px -2px rgba(60, 45, 20, 0.08);
   --shadow-lift: 0 2px 4px rgba(15, 35, 64, 0.05), 0 12px 28px -10px rgba(15, 35, 64, 0.22);
 }
 
 :root {
-  --brand: #e0b000;
-  --brand-2: #f8c618;
+  --brand: #b8975a;
+  --brand-2: #d8c296;
   --brand-ink: #0f2340;
-  --brand-soft: #fdf8e4;
+  --brand-soft: #faf6ec;
 }
 
 @theme inline {
