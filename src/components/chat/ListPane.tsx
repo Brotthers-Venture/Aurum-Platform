@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Check, ChevronDown, Clock, ListFilter, Menu as MenuIcon, Paperclip, Search, X } from "lucide-react";
 import { cx } from "@/components/ui";
+import { useBrand } from "@/components/brand/BrandProvider";
+import { withTenant } from "@/lib/brand";
 import { Menu, menuHead, menuItem } from "@/components/shell/WorkstationTopBar";
 import {
   MATTER_STATUSES,
@@ -75,6 +77,7 @@ function MatterRow({ m, active, onClick, now, q }: { m: Matter; active: boolean;
     <button
       onClick={onClick}
       data-matter={m.id}
+      title={`${m.ref} · ${m.title} — ${m.linked.label}`}
       aria-current={active ? "true" : undefined}
       className={cx("relative grid w-full grid-cols-[auto_1fr_auto] items-center gap-x-2.5 border-b border-d-line-soft px-4 py-2 text-left hover:bg-d-surface-2", active && "bg-d-raise hover:bg-d-raise")}
     >
@@ -112,6 +115,8 @@ function sortMatters(ms: Matter[], sort: "updated" | "due" | "priority") {
 
 export function ListPane({ onMenu, setList }: { onMenu: () => void; setList: (ids: string[]) => void }) {
   const api = useChat();
+  const { brand } = useBrand();
+  const t = (x: string) => withTenant(x, brand.name);
   const { s, nav, now, q, setQ, filters, setFilters, group, setGroup, sort, setSort, selected, select, setNav, inboxAct, saveView } = api;
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [naming, setNaming] = useState(false);
@@ -269,7 +274,7 @@ export function ListPane({ onMenu, setList }: { onMenu: () => void; setList: (id
 
       <div className="min-h-0 flex-1 overflow-y-auto" role="list">
         {results ? (
-          <SearchResults q={q} results={results} open={openWhere} where={where} />
+          <SearchResults q={q} results={results} open={openWhere} where={where} tenant={brand.name} />
         ) : nav.kind === "inbox" ? (
           inbox.length === 0 ? (
             <Empty title="You're all caught up" body="Mentions, assignments, approvals and client replies land here." />
@@ -295,7 +300,7 @@ export function ListPane({ onMenu, setList }: { onMenu: () => void; setList: (id
                       <span className="tnum ml-auto">{relTime(i.at, now)}</span>
                     </span>
                     <span className={cx("mt-1 line-clamp-2 block text-[13px]", !st?.read ? "font-medium text-d-text" : "text-d-text-2")}>
-                      {i.reason === "Mention" || i.reason === "Client reply" ? `${personName(i.author)}: ${i.text}` : i.text}
+                      {t(i.reason === "Mention" || i.reason === "Client reply" ? `${personName(i.author)}: ${i.text}` : i.text)}
                     </span>
                   </button>
                   <div className="absolute right-2 top-1.5 hidden gap-0.5 rounded-[4px] bg-d-surface p-0.5 shadow-[var(--d-pop)] group-hover:flex group-has-[:focus-visible]:flex [@media(hover:none)]:flex">
@@ -321,7 +326,7 @@ export function ListPane({ onMenu, setList }: { onMenu: () => void; setList: (id
                   {personName(m.author)} · {where(m.where)}
                   <span className="tnum ml-auto">{relTime(m.at, now)}</span>
                 </span>
-                <span className="mt-1 line-clamp-2 block text-[13px] text-d-text">{m.body}</span>
+                <span className="mt-1 line-clamp-2 block text-[13px] text-d-text">{t(m.body)}</span>
               </button>
             ))
           )
@@ -332,7 +337,7 @@ export function ListPane({ onMenu, setList }: { onMenu: () => void; setList: (id
             drafts.map(([w, d]) => (
               <button key={w} onClick={() => openWhere(w)} className="w-full border-b border-d-line-soft px-4 py-2.5 text-left hover:bg-d-surface-2">
                 <span className="text-[11.5px] text-d-text-3">{where(w)}</span>
-                <span className="mt-1 line-clamp-2 block text-[13px] text-d-text-2">{d}</span>
+                <span className="mt-1 line-clamp-2 block text-[13px] text-d-text-2">{t(d)}</span>
               </button>
             ))
           )
@@ -409,11 +414,13 @@ function SearchResults({
   results,
   open,
   where,
+  tenant,
 }: {
   q: string;
   results: { matters: Matter[]; messages: { id: string; where: string; body: string; author: string }[]; files: { a: { name: string }; m: { id: string; where: string } }[] };
   open: (where: string) => void;
   where: (id: string) => string;
+  tenant: string;
 }) {
   const none = !results.matters.length && !results.messages.length && !results.files.length;
   if (none) return <Empty title={`Nothing found for “${q}”`} body="Search looks in matter titles and references, messages and attachment names." />;
@@ -436,7 +443,7 @@ function SearchResults({
             {personName(m.author)} · {where(m.where)}
           </span>
           <span className="mt-0.5 line-clamp-2 block text-[12.5px] text-d-text-2">
-            <Highlight text={m.body} q={q} />
+            <Highlight text={withTenant(m.body, tenant)} q={q} />
           </span>
         </button>
       ))}

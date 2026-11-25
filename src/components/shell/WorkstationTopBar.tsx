@@ -9,7 +9,7 @@ import { useBrand } from "@/components/brand/BrandProvider";
 import { useTheme } from "./ThemeProvider";
 import { usePreviewRole } from "@/components/admin/PreviewRole";
 import { FIRM, type FirmId } from "@/lib/firm-colors";
-import { moduleName } from "@/lib/brand";
+import { moduleName, withTenant } from "@/lib/brand";
 import { loadChat, visibleInbox, type InboxItem } from "@/lib/chat-store";
 import { personName } from "@/lib/chat";
 import type { ThemePref } from "@/lib/theme";
@@ -194,7 +194,7 @@ export function WorkstationTopBar({ app, onSearch, entity }: { app: string; onSe
                   <span className="tnum">{new Date(i.at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
                 </div>
                 <div className="mt-0.5 line-clamp-2 text-d-text">
-                  {i.reason === "Assigned" ? i.text : <><span className="font-medium">{personName(i.author)}</span> <span className="text-d-text-2">{i.text}</span></>}
+                  {i.reason === "Assigned" ? i.text : <><span className="font-medium">{personName(i.author)}</span> <span className="text-d-text-2">{withTenant(i.text, brand.name)}</span></>}
                 </div>
               </Link>
             ))}

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowLeft, Check, CornerDownRight, FileText, Hash, Menu as MenuIcon, MoreHorizontal, PanelRight, Pencil, Reply, ShieldAlert, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, CornerDownRight, FileText, Hash, Menu as MenuIcon, MoreHorizontal, PanelRight, Pencil, Reply, ShieldAlert, X } from "lucide-react";
 import { cx } from "@/components/ui";
 import { Menu, menuHead, menuItem } from "@/components/shell/WorkstationTopBar";
 import { useBrand } from "@/components/brand/BrandProvider";
+import { withTenant } from "@/lib/brand";
 import { MATTER_STATUSES, PRIORITIES, REACTIONS, VIEWER, chatPeople, isExternal, personName, type ChatMessage, type Matter } from "@/lib/chat";
 import { useChat } from "./context";
 import { Composer } from "./Composer";
@@ -35,6 +36,8 @@ function MatterHeader({ m }: { m: Matter }) {
   const toggle = (k: "status" | "owner" | "priority" | "due") => () => setPropMenu(propMenu === k ? null : k);
   const d = canDecide(m);
   const [note, setNote] = useState("");
+  const [more, setMore] = useState(false);
+  const showProps = more || !!propMenu;
   return (
     <header className="shrink-0 border-b border-d-line bg-d-bg">
       <div className="flex h-12 items-center gap-2 px-4">
@@ -47,7 +50,20 @@ function MatterHeader({ m }: { m: Matter }) {
           <PanelRight size={15} />
         </button>
       </div>
-      <div className="flex flex-wrap items-center gap-x-1 gap-y-1 px-3 pb-2.5">
+      {/* Phones: one summary line that expands on tap */}
+      <button
+        onClick={() => setMore((x) => !x)}
+        aria-expanded={showProps}
+        className="flex w-full items-center gap-2 px-4 pb-2.5 text-left text-[12.5px] text-d-text-2 md:hidden"
+      >
+        <StatusRing status={m.status} size={12} />
+        <span className="min-w-0 flex-1 truncate">
+          {m.status} · {personName(m.owner)} · {m.priority}
+          {m.dueDate ? ` · due ${shortDay(m.dueDate)}` : ""}
+        </span>
+        <ChevronDown size={14} className={cx("shrink-0 transition-transform", showProps && "rotate-180")} />
+      </button>
+      <div className={cx("flex-wrap items-center gap-x-1 gap-y-1 px-3 pb-2.5", showProps ? "flex" : "hidden md:flex")}>
         <Prop label="Status" open={propMenu === "status"} onToggle={toggle("status")} value={<span className="flex items-center gap-1.5"><StatusRing status={m.status} size={12} />{m.status}</span>}>
           <div className={menuHead}>Status · S</div>
           {MATTER_STATUSES.map((st) => (
@@ -133,6 +149,7 @@ function ExternalBanner({ names }: { names: string[] }) {
 
 function MessageItem({ m, replies, onThread }: { m: ChatMessage; replies: number; onThread?: () => void }) {
   const { react, editMessage, convert, select, s } = useChat();
+  const { brand } = useBrand();
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(m.body);
   const [menu, setMenu] = useState(false);
@@ -143,12 +160,12 @@ function MessageItem({ m, replies, onThread }: { m: ChatMessage; replies: number
   };
   if (m.kind === "event")
     return (
-      <div className="relative flex items-start gap-3 py-1.5 pl-[38px] text-[12.5px] text-d-text-3">
+      <div className="relative flex flex-col gap-0.5 py-1.5 pl-[38px] text-[12.5px] text-d-text-3 sm:flex-row sm:items-start sm:gap-3">
         <span aria-hidden className="absolute left-[13px] top-[11px] h-[7px] w-[7px] rounded-full border border-d-line-strong bg-d-bg" />
         <span className="min-w-0 flex-1">
-          <span className="text-d-text-2">{personName(m.author)}</span> {m.body}
+          <span className="text-d-text-2">{personName(m.author)}</span> {withTenant(m.body, brand.name)}
         </span>
-        <span className="tnum shrink-0 text-[11px]">{shortDay(m.at)} {clock(m.at)}</span>
+        <span className="tnum shrink-0 whitespace-nowrap text-[11px]">{shortDay(m.at)} {clock(m.at)}</span>
       </div>
     );
   const ext = isExternal(m.author);
@@ -187,7 +204,7 @@ function MessageItem({ m, replies, onThread }: { m: ChatMessage; replies: number
           </form>
         ) : (
           <div className="mt-0.5 space-y-1 text-[14px] leading-[1.55] text-d-text">
-            <RichText body={m.body} onRef={openRef} />
+            <RichText body={withTenant(m.body, brand.name)} onRef={openRef} />
           </div>
         )}
         {history && m.edits && (
@@ -259,6 +276,9 @@ function MessageItem({ m, replies, onThread }: { m: ChatMessage; replies: number
                 </button>
                 <button className={menuItem} onClick={() => (convert(m.id, "qa"), setMenu(false))}>
                   Into a Q&A answer (draft)
+                </button>
+                <button className={menuItem} onClick={() => (convert(m.id, "change"), setMenu(false))}>
+                  Into a change request (bank details)
                 </button>
               </Menu>
             )}

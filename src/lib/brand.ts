@@ -137,6 +137,8 @@ export const MODULE_DEFAULTS: Record<FirmId, string> = {
   billing: "Billing",
   compliance: "Compliance",
 };
+/** Seed and demo text carries {tenant}; it is resolved to the tenant’s name when shown. */
+export const withTenant = (text: string, name: string) => text.replace(/{tenant}/g, name);
 export const moduleName = (b: Pick<Brand, "moduleNames">, id: FirmId) => b.moduleNames?.[id]?.trim() || MODULE_DEFAULTS[id];
 
 /* ───────────────────────── colour helpers ───────────────────────── */

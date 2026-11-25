@@ -3,6 +3,7 @@
 import { ModuleName } from "@/components/brand/ModuleName";
 import { TenantName } from "@/components/brand/TenantName";
 import { useBrand } from "@/components/brand/BrandProvider";
+import { withTenant } from "@/lib/brand";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
@@ -252,6 +253,7 @@ function MessageItem({
   onReact: (emoji: string) => void;
   onFile: (attId: string) => void;
 }) {
+  const { brand } = useBrand();
   const p = personById(m.authorId);
   const client = p && p.org !== "aurum" ? clientById(p.org) : undefined;
   const name = m.authorId === viewerId ? "You" : p?.name;
@@ -269,7 +271,7 @@ function MessageItem({
             {m.pinned && <Pin size={11} className="text-gold-700" aria-label="Pinned" />}
           </div>
         )}
-        {m.body && <p className="whitespace-pre-wrap text-[14px] leading-[1.55] text-stone-700">{m.body}</p>}
+        {m.body && <p className="whitespace-pre-wrap text-[14px] leading-[1.55] text-stone-700">{withTenant(m.body, brand.name)}</p>}
         {m.meet && (
           <div className="mt-1.5">
             <MeetCard meet={m.meet} />
@@ -810,7 +812,7 @@ export function CommsWorkspace(props: Props) {
     ""
   );
   const convSub = channel
-    ? [isAurum ? (channel.clientId ? clientById(channel.clientId)?.short : `${tenant.name} internal`) : null, space?.firmWide ? null : space?.name, channel.topic].filter(Boolean).join(" · ")
+    ? [isAurum ? (channel.clientId ? clientById(channel.clientId)?.short : `${tenant.name} internal`) : null, space?.firmWide ? null : space?.name, withTenant(channel.topic, tenant.name)].filter(Boolean).join(" · ")
     : "Direct message";
   const members = channel ? channelMembers(channel) : dm ? dm.memberIds.map((x) => personById(x)!) : [];
   const announceOnly = channel?.announce && !(viewerId === ME || role === "owner");

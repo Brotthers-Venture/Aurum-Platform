@@ -49,7 +49,7 @@ export type ChatApi = {
   markConvRead: (where: string) => void;
   saveView: (name: string) => void;
   createMatter: (m: { title: string; linkedFrom?: string; status?: MatterStatus; priority?: Priority }) => string;
-  convert: (msgId: string, to: "matter" | "task" | "qa") => void;
+  convert: (msgId: string, to: "matter" | "task" | "qa" | "change") => void;
 };
 
 export const ChatCtx = createContext<ChatApi | null>(null);

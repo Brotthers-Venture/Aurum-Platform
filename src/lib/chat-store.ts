@@ -22,7 +22,7 @@ import {
 import { loadPlans, planFolders, plans as seedPlans, savePlans, type PlanRow } from "./plans";
 
 export const CHAT_KEY = "aurum-chat-v1";
-const VERSION = 3;
+const VERSION = 4;
 
 export type ChatState = {
   v: number;

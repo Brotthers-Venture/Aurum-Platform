@@ -329,6 +329,46 @@ export function CorporateChat() {
       setNewM({ title: msg.body.split("\n")[0].slice(0, 90), from: msg.where });
       return;
     }
+    if (to === "change") {
+      // Bank details are never handled in chat: open a four-eyes change request instead.
+      const used = (s?.matters ?? []).filter((x) => x.ref.startsWith("BNK-")).map((x) => Number(x.ref.split("-")[1]) || 0);
+      const ref = `BNK-${Math.max(0, ...used) + 1}`;
+      const id = "mt-" + uid();
+      const conv = s?.channels.find((c) => c.id === msg.where)?.name;
+      const label = m?.linked.label ?? (conv ? `#${conv}` : personName(msg.author));
+      const cr: Matter = {
+        id,
+        ref,
+        title: `Change request — ${msg.body.split(String.fromCharCode(10))[0].slice(0, 70)}`,
+        status: "Awaiting approval",
+        priority: "High",
+        owner: VIEWER,
+        participants: [...new Set([VIEWER, msg.author, "carla"])],
+        linked: { kind: "bank", id: "cr-" + uid(), label },
+        labels: ["Four-eyes", "Bank details"],
+        createdAt: iso(),
+        updatedAt: iso(),
+        requestedBy: VIEWER,
+        source: { where: msg.where, messageId: msg.id },
+      };
+      commit((x) => ({
+        ...x,
+        matters: [cr, ...x.matters],
+        messages: [
+          ...x.messages,
+          event(msg.where, `converted a message to change request ${ref} — bank details go through the four-eyes change request`),
+          event(id, `opened this change request from a message by ${personName(msg.author)}`),
+          { ...msg, id: uid(), where: id, replyTo: undefined, reactions: undefined },
+          event(id, "requested approval — a second approver verifies the details before anything is sent"),
+        ],
+      }));
+      audit("Opened change request", cr, `from message ${msg.id}`);
+      flash(`${ref} opened — a second approver must verify it`);
+      setSelected(id);
+      setNavState({ kind: "view", id: "v-open" });
+      setFilters({ status: "open" });
+      return;
+    }
     if (to === "task") {
       if (m?.linked.kind !== "plan") return flash("Only matters linked to a project plan can create PMO tasks.");
       const res = addPlanRow(m.linked.id, msg.body.split("\n")[0].slice(0, 120), { owner: personName(VIEWER) });

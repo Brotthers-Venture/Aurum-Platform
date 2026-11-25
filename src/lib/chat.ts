@@ -40,6 +40,8 @@ export type Matter = {
   /** who asked for the approval — four-eyes: they cannot approve it themselves */
   requestedBy?: string;
   approvals?: { by: string; at: string; decision: "approved" | "rejected"; note?: string }[];
+  /** the message this matter was converted from */
+  source?: { where: string; messageId: string };
 };
 
 export type Channel = { id: string; name: string; topic: string; external: boolean; members: string[] };
@@ -181,6 +183,21 @@ export const seedMatters: Matter[] = [
     createdAt: ferreira.submitted + "T10:00:00Z",
     updatedAt: "2026-11-24T09:15:00Z",
     requestedBy: "noah",
+  },
+  {
+    id: "mt-bnk5",
+    ref: "BNK-5",
+    title: "Updated wire instructions — Cordillera investors",
+    status: "Awaiting approval",
+    priority: "High",
+    owner: "noah",
+    participants: ["noah", "luiza", "carla", "sofia"],
+    linked: { kind: "bank", id: "cr-bnk5", label: "Cordillera Infrastructure I" },
+    labels: ["Four-eyes", "Bank details"],
+    createdAt: "2026-11-24T11:20:00Z",
+    updatedAt: "2026-11-24T11:40:00Z",
+    requestedBy: "luiza",
+    source: { where: "ch-client-cordillera", messageId: "c-" + (commsMessages.find((m) => /wire instructions/.test(m.body))?.id ?? "") },
   },
   {
     id: "mt-sub1045",
@@ -352,6 +369,9 @@ const msg = (where: string, author: string, at: string, body: string, p: Partial
 const ev = (where: string, author: string, at: string, body: string): ChatMessage => ({ id: `e${++n}`, where, author, at, body, kind: "event" });
 const pdf = (name: string, size: number, source?: string): ChatAttachment => ({ name, size, type: "pdf", source });
 
+const wireAsk = commsMessages.find((m) => /wire instructions/.test(m.body));
+const WIRE_AT = wireAsk?.at ?? "2026-11-24T10:45:00Z";
+const WIRE_BODY = wireAsk?.body ?? "Two investors asked for updated wire instructions. Can {tenant} send them through the portal?";
 const paid = c7.allocations.filter((a) => a.paidDate).sort((a, b) => a.paidDate!.localeCompare(b.paidDate!));
 const outstanding = c7.allocations.filter((a) => !a.paidDate);
 const cc7Remind = "s-cc7-remind";
@@ -449,6 +469,19 @@ export const seedMessages: ChatMessage[] = [
   msg("dm-marcus", "marcus", "2026-11-24T10:10:00Z", "Owen will need the FY2026 capital account statements by January 10 for the audit."),
 
   ...carried,
+
+  // A client asks for wire instructions in chat: converted to a four-eyes change request, never answered in chat.
+  ev("ch-client-cordillera", "luiza", "2026-11-24T11:20:00Z", "converted a message to change request BNK-5 — bank details go through the four-eyes change request"),
+  msg(
+    "ch-client-cordillera",
+    "luiza",
+    "2026-11-24T11:21:00Z",
+    "Sofia — we've opened #BNK-5. Updated wire instructions reach investors only through the investor portal, after a second approver has verified them. We never send bank details in chat.",
+  ),
+  ev("mt-bnk5", "luiza", "2026-11-24T11:20:00Z", "opened this change request from a message by Sofia Klein in #client-cordillera"),
+  msg("mt-bnk5", "sofia", WIRE_AT, WIRE_BODY),
+  ev("mt-bnk5", "luiza", "2026-11-24T11:22:00Z", "requested approval — instructions are verified by a second approver and published only in the investor portal"),
+  msg("mt-bnk5", "noah", "2026-11-24T11:40:00Z", "I'll check the instructions against the fund's signed bank letter before I approve."),
 ];
 
 /** Inbox items already handled in this demo (read or done) before the preview starts. */
@@ -523,6 +556,19 @@ export function recordSummary(l: Linked): RecordSummary | null {
       files: [],
     };
   }
+  if (l.kind === "bank" && l.id.startsWith("cr-"))
+    return {
+      kind: "Change request",
+      title: "Bank details",
+      sub: l.label,
+      facts: [
+        { label: "Control", value: "Second approver required (four-eyes)" },
+        { label: "Delivery", value: "Investor portal only — never in chat or email" },
+        { label: "Status", value: "Pending review", tone: "warn" },
+      ],
+      href: `/admin/fund/banking`,
+      files: [],
+    };
   if (l.kind === "bank") {
     const r = profileChangeRequests.find((p) => p.id === l.id);
     if (!r) return null;

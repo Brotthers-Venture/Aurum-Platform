@@ -215,7 +215,7 @@ export const clientById = (id: string) => clients.find((c) => c.id === id);
 export const channels: Channel[] = [
   // firm-wide
   { id: "a-announcements", spaceId: "aurum", clientId: null, name: "announcements", topic: "Firm-wide notices from the partners", announce: true },
-  { id: "a-general", spaceId: "aurum", clientId: null, name: "general", topic: "Everyone at Aurum" },
+  { id: "a-general", spaceId: "aurum", clientId: null, name: "general", topic: "Everyone at {tenant}" },
   { id: "a-compliance", spaceId: "aurum", clientId: null, name: "compliance-bulletins", topic: "Policy updates, training and regulatory changes" },
 
   // Fund Solution — internal
@@ -223,26 +223,26 @@ export const channels: Channel[] = [
   { id: "f-close", spaceId: "fund", clientId: null, name: "quarter-close", topic: "Q4 2026 close — checklist and sign-offs" },
   { id: "f-kyc", spaceId: "fund", clientId: null, name: "kyc-reviews", topic: "Screening matches and onboarding decisions", private: true, memberIds: [ME, "luiza", "carla"] },
   // Fund Solution — Strlex
-  { id: "f-strlex-general", spaceId: "fund", clientId: "strlex", name: "general", topic: "Strlex Capital × Aurum", guestIds: [] },
+  { id: "f-strlex-general", spaceId: "fund", clientId: "strlex", name: "general", topic: "Strlex Capital × {tenant}", guestIds: [] },
   { id: "f-strlex-stx", spaceId: "fund", clientId: "strlex", name: "stx-anchor-fund", topic: "STX-Anchor Capital Formation Fund — administration", guestIds: ["laura"] },
   { id: "f-strlex-fees", spaceId: "fund", clientId: "strlex", name: "fees", topic: "Management fee and expense allocation", private: true, memberIds: [ME, "luiza", "lucas", "emma"] },
   // Fund Solution — other GPs
-  { id: "f-arbor-general", spaceId: "fund", clientId: "arbor", name: "general", topic: "Arbor Partners × Aurum" },
-  { id: "f-cord-general", spaceId: "fund", clientId: "cordillera", name: "general", topic: "Cordillera × Aurum" },
+  { id: "f-arbor-general", spaceId: "fund", clientId: "arbor", name: "general", topic: "Arbor Partners × {tenant}" },
+  { id: "f-cord-general", spaceId: "fund", clientId: "cordillera", name: "general", topic: "Cordillera × {tenant}" },
   { id: "f-cord-infra", spaceId: "fund", clientId: "cordillera", name: "infrastructure-i", topic: "Cordillera Infrastructure I — capital activity", guestIds: ["owen"] },
-  { id: "f-atl-general", spaceId: "fund", clientId: "atlantico", name: "general", topic: "Atlântico Capital × Aurum" },
+  { id: "f-atl-general", spaceId: "fund", clientId: "atlantico", name: "general", topic: "Atlântico Capital × {tenant}" },
 
   // Multi-Family
   { id: "m-general", spaceId: "multi-family", clientId: null, name: "general", topic: "Family Office team" },
-  { id: "m-halv-general", spaceId: "multi-family", clientId: "halvorsen", name: "general", topic: "Halvorsen Family × Aurum" },
+  { id: "m-halv-general", spaceId: "multi-family", clientId: "halvorsen", name: "general", topic: "Halvorsen Family × {tenant}" },
   { id: "m-halv-succession", spaceId: "multi-family", clientId: "halvorsen", name: "succession", topic: "Trust restructuring", private: true, memberIds: [ME, "helena", "victoria"] },
-  { id: "m-val-general", spaceId: "multi-family", clientId: "valenca", name: "general", topic: "Valença Family × Aurum" },
+  { id: "m-val-general", spaceId: "multi-family", clientId: "valenca", name: "general", topic: "Valença Family × {tenant}" },
 
   // Banking
   { id: "b-general", spaceId: "banking", clientId: null, name: "general", topic: "Banking operations" },
   { id: "b-payments", spaceId: "banking", clientId: null, name: "payment-approvals", topic: "Outgoing wires awaiting second approval" },
   { id: "b-strlex", spaceId: "banking", clientId: "strlex", name: "treasury", topic: "Strlex operating and fund accounts" },
-  { id: "b-porto", spaceId: "banking", clientId: "portoreal", name: "general", topic: "Porto Real Holdings × Aurum" },
+  { id: "b-porto", spaceId: "banking", clientId: "portoreal", name: "general", topic: "Porto Real Holdings × {tenant}" },
 
   // Blockchain
   { id: "c-general", spaceId: "blockchain", clientId: null, name: "general", topic: "Digital assets team" },
@@ -255,7 +255,7 @@ export const channels: Channel[] = [
   // Corporate
   { id: "k-general", spaceId: "corporate", clientId: null, name: "general", topic: "Corporate services team" },
   { id: "k-filings", spaceId: "corporate", clientId: null, name: "annual-filings", topic: "Deadlines across jurisdictions" },
-  { id: "k-altamira", spaceId: "corporate", clientId: "altamira", name: "general", topic: "Altamira Holdings × Aurum" },
+  { id: "k-altamira", spaceId: "corporate", clientId: "altamira", name: "general", topic: "Altamira Holdings × {tenant}" },
 ];
 
 export const channelById = (id: string) => channels.find((c) => c.id === id);
@@ -314,7 +314,7 @@ export const messages: Message[] = [
     where: "a-announcements",
     authorId: ME,
     at: "2026-11-17T13:05:00Z",
-    body: "Welcome to Aurum Communication. All client conversations move here from email starting December 1. Everything is encrypted and kept under our records policy — please don’t use personal messaging apps for client matters.",
+    body: "Welcome to {tenant} Communication. All client conversations move here from email starting December 1. Everything is encrypted and kept under our records policy — please don’t use personal messaging apps for client matters.",
     pinned: true,
   },
   {
@@ -355,7 +355,7 @@ export const messages: Message[] = [
     where: "f-strlex-general",
     authorId: "luiza",
     at: "2026-11-10T14:00:00Z",
-    body: "Welcome to your Aurum workspace, Lucas and Emma. This is where we’ll share notices, drafts and anything that needs your sign-off.",
+    body: "Welcome to your {tenant} workspace, Lucas and Emma. This is where we’ll share notices, drafts and anything that needs your sign-off.",
   },
   { id: id(), where: "f-strlex-general", authorId: "lucas", at: "2026-11-10T14:22:00Z", body: "Thanks Luiza — much better than our email chains.", reactions: [{ emoji: "👍", by: ["luiza", ME] }] },
   {
@@ -435,7 +435,7 @@ export const messages: Message[] = [
   { id: id(), where: "f-cord-infra", authorId: "marcus", at: "2026-11-21T13:20:00Z", body: "Owen from Blake Morrow will need the FY2026 capital account statements by January 10." },
   { id: id(), where: "f-cord-infra", authorId: "owen", at: "2026-11-21T14:00:00Z", body: "Thank you. A PBC list is attached.", attachments: [{ id: "x9", kind: "file", ...pdf("FY2026 PBC list — Cordillera Infrastructure I.pdf", 220_000) }] },
   { id: id(), where: "f-cord-infra", authorId: "rafael", at: "2026-11-21T15:05:00Z", body: "Noted. We’ll deliver the statements by January 8." },
-  { id: id(), where: "f-cord-general", authorId: "sofia", at: "2026-11-24T10:45:00Z", body: "Two investors asked for updated wire instructions. Can Aurum send them through the portal?" },
+  { id: id(), where: "f-cord-general", authorId: "sofia", at: "2026-11-24T10:45:00Z", body: "Two investors asked for updated wire instructions. Can {tenant} send them through the portal?" },
 
   { id: id(), where: "f-arbor-general", authorId: "james", at: "2026-11-20T12:00:00Z", body: "Second close is moving to January 15. Updated timeline attached.", attachments: [{ id: "x10", kind: "file", ...pdf("Arbor Fund II — closing timeline.pdf", 150_000) }] },
   { id: id(), where: "f-atl-general", authorId: "ana", at: "2026-11-19T19:30:00Z", body: "Obrigada pelo relatório do Q3 — all clear from our side." },
