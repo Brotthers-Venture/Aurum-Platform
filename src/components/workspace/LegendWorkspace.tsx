@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronsUpDown, EyeOff, LayoutGrid, MoreVertical, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, ChevronsUpDown, EyeOff, LayoutGrid, MoreVertical, Plus, SlidersHorizontal } from "lucide-react";
 import { cx } from "@/components/ui";
 import { Columns, Lines, MEANING } from "@/components/analytics/charts";
 import { fmtShort, useAnalyticsView } from "@/components/analytics/AnalyticsPanels";
@@ -13,20 +13,44 @@ import { periodLabel, type FundAnalytics, type PeriodFx } from "@/lib/analytics"
 const UP = "var(--color-up)"; // turquoise — gains / money returned
 const DOWN = "var(--color-down)"; // brick — declines
 
-export type WorkspaceCall = { id: string; fund: string; fundId: string; number: number; notice: string; due: string; amount: number; received: number; status: string; currency: string };
+export type WorkspaceCall = {
+  id: string;
+  fund: string;
+  fundId: string;
+  number: number;
+  notice: string;
+  due: string;
+  amount: number;
+  received: number;
+  status: string;
+  currency: string;
+};
 export type WorkspaceEvent = { id: string; title: string; status: string; side: string; type: string; href: string };
 export type WorkspaceAttention = { tag: string; title: string; detail: string; href: string };
 
 const usd0 = (v: number) => `$${Math.round(v).toLocaleString("en-US")}`;
 const money = (v: number, ccy = "USD") => `${ccy === "BRL" ? "R$" : "$"}${Math.round(v).toLocaleString("en-US")}`;
 
-function Panel({ title, children, actions, className, bodyClass, tag = "var(--tenant-metal)" }: { title?: ReactNode; children: ReactNode; actions?: ReactNode; className?: string; bodyClass?: string; tag?: string }) {
+function Panel({
+  title,
+  children,
+  actions,
+  className,
+  bodyClass,
+  tag = "var(--tenant-metal)",
+}: {
+  title?: ReactNode;
+  children: ReactNode;
+  actions?: ReactNode;
+  className?: string;
+  bodyClass?: string;
+  tag?: string;
+}) {
   return (
-    <section className={cx("flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[12px] border border-stone-200 bg-white", className)}>
+    <section className={cx("group/panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[12px] border border-stone-200 bg-white", className)} data-tag={tag}>
       <header className="flex h-11 shrink-0 items-center gap-3 border-b border-stone-100 px-4">
-        <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: tag }} />
-        <div className="min-w-0 flex-1 truncate text-[13px] text-ink-900">{title}</div>
-        <div className="flex items-center gap-1 text-stone-400">
+        <div className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink-900">{title}</div>
+        <div className="flex items-center gap-1 text-stone-400 opacity-0 transition-opacity focus-within:opacity-100 group-hover/panel:opacity-100">
           {actions}
           <button type="button" aria-label="Panel options" className="rounded-[6px] p-1 hover:bg-stone-100 hover:text-ink-900">
             <MoreVertical size={15} />
@@ -113,7 +137,6 @@ export function LegendWorkspace({
         .filter((r) => r.s.commitment > 0),
     [v.perFund, last],
   );
-  const movers = [...rows].sort((a, b) => Math.abs(b.chPct) - Math.abs(a.chPct));
   const gps = [...new Map(data.funds.map((x) => [x.gpId, x.gpName])).entries()];
 
   return (
@@ -125,13 +148,20 @@ export function LegendWorkspace({
             key={t}
             type="button"
             onClick={() => setTab(t)}
-            className={cx("inline-flex h-8 items-center gap-2 rounded-[8px] px-3 text-[13px]", tab === t ? "bg-champagne font-semibold text-ink-900" : "text-stone-500 hover:bg-stone-100 hover:text-ink-900")}
+            className={cx(
+              "inline-flex h-8 items-center gap-2 rounded-[8px] px-3 text-[13px]",
+              tab === t ? "bg-champagne font-semibold text-ink-900" : "text-stone-500 hover:bg-stone-100 hover:text-ink-900",
+            )}
           >
             {t === "Overview" && <LayoutGrid size={14} />}
             {t}
           </button>
         ))}
-        <button type="button" aria-label="New layout" className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] text-stone-400 hover:bg-stone-100 hover:text-ink-900">
+        <button
+          type="button"
+          aria-label="New layout"
+          className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] text-stone-400 hover:bg-stone-100 hover:text-ink-900"
+        >
           <Plus size={15} />
         </button>
         <span className="mx-auto inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3 py-1 text-[12px] text-ink-900">
@@ -154,12 +184,24 @@ export function LegendWorkspace({
         </label>
       </div>
 
-      <div className="grid gap-2 xl:grid-cols-[minmax(270px,21%)_minmax(0,1fr)_minmax(320px,25%)] xl:grid-rows-[460px_minmax(420px,auto)]">
+      <div className="grid gap-2 xl:grid-cols-[300px_minmax(0,1fr)_380px] xl:grid-rows-[460px]">
         {/* account */}
         <Panel
-          title={<span className="text-stone-500">Portfolio</span>}
+          title={
+            <span className="flex items-center justify-between">
+              Portfolio
+              <Link href="/admin/fund/capital-calls/new" className="rounded-[7px] border border-stone-200 px-2.5 py-1 text-[12px] font-semibold text-ink-900 hover:bg-stone-100">
+                New call
+              </Link>
+            </span>
+          }
           actions={
-            <button type="button" aria-label={hide ? "Show values" : "Hide values"} onClick={() => setHide((h) => !h)} className="rounded-[6px] p-1 hover:bg-stone-100 hover:text-ink-900">
+            <button
+              type="button"
+              aria-label={hide ? "Show values" : "Hide values"}
+              onClick={() => setHide((h) => !h)}
+              className="rounded-[6px] p-1 hover:bg-stone-100 hover:text-ink-900"
+            >
               <EyeOff size={15} />
             </button>
           }
@@ -167,15 +209,16 @@ export function LegendWorkspace({
         >
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-[22px] text-ink-900">{scope === "all" ? "All vehicles" : gps.find(([id]) => `gp:${id}` === scope)?.[1]}</div>
-              <div className="num mt-0.5 text-[26px] font-medium tracking-[-0.01em] text-ink-900">{mask(usd0(v.end.nav))}</div>
+              <div className="text-[12.5px] text-stone-500">{scope === "all" ? "All vehicles" : gps.find(([id]) => `gp:${id}` === scope)?.[1]}</div>
+              <div className="fig mt-1 text-[34px] leading-none text-ink-900">{mask(usd0(v.end.nav))}</div>
             </div>
-            <Link href="/admin/fund/capital-calls/new" className="whitespace-nowrap rounded-[8px] bg-stone-100 px-3 py-1.5 text-[12px] font-semibold text-ink-900 hover:bg-champagne">
-              New call
-            </Link>
           </div>
           <div className="mt-1 text-[12.5px]">
-            <Delta v={qChange} /> <span className="num" style={{ color: qChange >= 0 ? UP : DOWN }}>({(qPct * 100).toFixed(2)}%)</span> <span className="text-stone-500">this quarter</span>
+            <Delta v={qChange} />{" "}
+            <span className="num" style={{ color: qChange >= 0 ? UP : DOWN }}>
+              ({(qPct * 100).toFixed(2)}%)
+            </span>{" "}
+            <span className="text-stone-500">this quarter</span>
           </div>
           <div className="mt-3 h-[120px]">
             <svg viewBox="0 0 240 110" preserveAspectRatio="none" className="h-full w-full" aria-hidden>
@@ -238,7 +281,15 @@ export function LegendWorkspace({
             </span>
           </div>
           <div className="min-h-0 flex-1">
-            <Lines categories={lab} series={[{ name: "NAV", color: MEANING.value, values: ser.map((s) => s.nav) }, { name: "Paid-in", color: MEANING.capitalIn, values: ser.map((s) => s.paidIn) }]} fmt={f} height={250} />
+            <Lines
+              categories={lab}
+              series={[
+                { name: "NAV", color: MEANING.value, values: ser.map((s) => s.nav) },
+                { name: "Paid-in", color: MEANING.capitalIn, values: ser.map((s) => s.paidIn) },
+              ]}
+              fmt={f}
+              height={250}
+            />
             <Columns
               categories={lab}
               series={[
@@ -251,7 +302,12 @@ export function LegendWorkspace({
           </div>
           <div className="mt-1 flex items-center gap-1 text-[12px]">
             {(["1Y", "3Y", "ITD"] as const).map((r) => (
-              <button key={r} type="button" onClick={() => setRange(r)} className={cx("rounded-[6px] px-2 py-1", range === r ? "font-semibold text-ink-900" : "text-stone-400 hover:text-ink-900")}>
+              <button
+                key={r}
+                type="button"
+                onClick={() => setRange(r)}
+                className={cx("rounded-[6px] px-2 py-1", range === r ? "font-semibold text-ink-900" : "text-stone-400 hover:text-ink-900")}
+              >
                 {r}
               </button>
             ))}
@@ -262,15 +318,88 @@ export function LegendWorkspace({
           </div>
         </Panel>
 
+        {/* recent */}
+        <Panel
+          title={
+            <span className="inline-flex items-center gap-4">
+              {(
+                [
+                  ["attention", "Needs attention"],
+                  ["activity", "Recent activity"],
+                ] as const
+              ).map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setRight(k)}
+                  className={cx("text-[13px] font-semibold", right === k ? "text-ink-900" : "text-stone-400 hover:text-ink-900")}
+                >
+                  {label}
+                  {k === "attention" ? <span className="ml-1 font-normal text-stone-400">{attention.length}</span> : null}
+                </button>
+              ))}
+            </span>
+          }
+          bodyClass="px-4 pb-3 pt-1"
+        >
+          {right === "attention" ? (
+            <ul>
+              {attention.map((a) => (
+                <li key={a.title}>
+                  <Link href={a.href} className="group flex items-center gap-3 rounded-[8px] px-1 py-2.5 hover:bg-stone-100/60">
+                    <span className="w-[78px] shrink-0 text-[11.5px] font-medium text-stone-500">
+                      {a.tag
+                        .split(" ")
+                        .map((w, i) => (w.length <= 3 ? w.toUpperCase() : i ? w.toLowerCase() : w[0].toUpperCase() + w.slice(1).toLowerCase()))
+                        .join(" ")}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[12.5px] font-semibold text-ink-900">{a.title}</span>
+                      <span className="block truncate text-[11.5px] text-stone-500">{a.detail}</span>
+                    </span>
+                    <ArrowRight size={13} className="text-stone-300 group-hover:text-ink-900" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <table className="w-full text-[12.5px]">
+              <thead>
+                <tr className="text-left text-[11.5px] font-semibold text-stone-500">
+                  <th className="pb-2 font-semibold">Item</th>
+                  <th className="pb-2 font-semibold">Status</th>
+                  <th className="pb-2 font-semibold">Side</th>
+                </tr>
+              </thead>
+              <tbody>
+                {events.map((e) => (
+                  <tr key={e.id} className="hover:bg-stone-100/60">
+                    <td className="max-w-[150px] truncate py-[8px] font-semibold text-ink-900">
+                      <Link href={e.href}>{e.title}</Link>
+                    </td>
+                    <td className="py-[8px]">
+                      <span className={cx("inline-flex rounded-[6px] border px-2 py-0.5 text-[11.5px]", pill[e.status] ?? "border-stone-200 text-stone-500")}>{e.status}</span>
+                    </td>
+                    <td className="py-[8px]" style={{ color: e.side === "Distribution" ? UP : MEANING.capitalIn }}>
+                      {e.side}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </Panel>
+      </div>
+      <div className="grid gap-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
         {/* positions */}
-        <Panel title={<Search size={15} className="text-stone-400" />} actions={<SlidersHorizontal size={15} className="mx-1" />} bodyClass="px-4 pb-3">
-          <h3 className="pb-3 pt-3 text-[20px] text-ink-900">Vehicles</h3>
+        <Panel title="Vehicles" actions={<SlidersHorizontal size={15} className="mx-1" />} bodyClass="px-4 pb-3 pt-2">
           <table className="w-full text-[12.5px]">
             <thead>
               <tr className="text-left text-[11.5px] font-semibold text-stone-500">
                 <th className="pb-2 font-semibold">Vehicle</th>
                 <th className="pb-2 text-right font-semibold">NAV</th>
                 <th className="pb-2 text-right font-semibold">TVPI</th>
+                <th className="pb-2 pl-3 font-semibold">Last 9 quarters</th>
                 <th className="pb-2 text-right font-semibold">Quarter</th>
               </tr>
             </thead>
@@ -279,47 +408,19 @@ export function LegendWorkspace({
                 .sort((a, b) => b.s.nav - a.s.nav)
                 .map((r) => (
                   <tr key={r.f.id} className="hover:bg-stone-100/60">
-                    <td className="max-w-[140px] truncate py-[9px] font-semibold text-ink-900">
+                    <td className="max-w-[260px] truncate py-[9px] font-semibold text-ink-900">
                       <Link href={`/admin/fund/funds/${r.f.id}`}>{r.f.shortName}</Link>
                     </td>
                     <td className="num py-[9px] text-right text-ink-900">{mask(f(r.s.nav))}</td>
                     <td className="num py-[9px] text-right text-stone-600">{r.m.tvpi ? `${r.m.tvpi.toFixed(2)}x` : "—"}</td>
+                    <td className="py-[9px] pl-3">
+                      <Spark values={r.spark} w={88} />
+                    </td>
                     <td className="py-[9px] text-right">
                       <Delta v={r.ch} money={f} />
                     </td>
                   </tr>
                 ))}
-            </tbody>
-          </table>
-        </Panel>
-
-        {/* movers */}
-        <Panel title={null} actions={<Plus size={15} className="mx-1" />} bodyClass="px-4 pb-3">
-          <h3 className="flex items-center gap-1.5 pb-3 pt-3 text-[20px] text-ink-900">
-            Movers <ChevronsUpDown size={15} className="text-stone-400" />
-          </h3>
-          <table className="w-full text-[12.5px]">
-            <thead>
-              <tr className="text-left text-[11.5px] font-semibold text-stone-500">
-                <th className="w-5 pb-2" />
-                <th className="pb-2 font-semibold">Vehicle</th>
-                <th className="pb-2" />
-                <th className="pb-2 text-right font-semibold">Change</th>
-              </tr>
-            </thead>
-            <tbody>
-              {movers.map((r, i) => (
-                <tr key={r.f.id} className="hover:bg-stone-100/60">
-                  <td className="num py-[8px] text-stone-400">{i + 1}</td>
-                  <td className="max-w-[110px] truncate py-[8px] font-semibold text-ink-900">{r.f.shortName}</td>
-                  <td className="py-[8px]">
-                    <Spark values={r.spark} />
-                  </td>
-                  <td className="py-[8px] text-right">
-                    <Delta v={r.chPct} pct />
-                  </td>
-                </tr>
-              ))}
             </tbody>
           </table>
         </Panel>
@@ -357,7 +458,10 @@ export function LegendWorkspace({
                     <td className="num whitespace-nowrap px-2 py-[9px] text-stone-600">{c.due}</td>
                     <td className="num whitespace-nowrap px-2 py-[9px] text-right text-ink-900">{mask(money(c.amount, c.currency))}</td>
                     <td className="num whitespace-nowrap px-2 py-[9px] text-right">
-                      <span className="rounded-[6px] px-1.5 py-0.5 font-semibold" style={{ background: pctFunded >= 1 ? "var(--color-up-bg)" : "var(--color-stone-100)", color: pctFunded >= 1 ? UP : "var(--color-stone-700)" }}>
+                      <span
+                        className="rounded-[6px] px-1.5 py-0.5 font-semibold"
+                        style={{ background: pctFunded >= 1 ? "var(--color-up-bg)" : "var(--color-stone-100)", color: pctFunded >= 1 ? UP : "var(--color-stone-700)" }}
+                      >
                         {mask(money(c.received, c.currency))}
                       </span>
                     </td>
@@ -367,70 +471,15 @@ export function LegendWorkspace({
                       </span>
                     </td>
                     <td className="px-4 py-[9px]">
-                      <span className={cx("inline-flex whitespace-nowrap rounded-[6px] border px-2 py-0.5 text-[11.5px]", pill[c.status] ?? "border-stone-200 text-stone-500")}>{c.status}</span>
+                      <span className={cx("inline-flex whitespace-nowrap rounded-[6px] border px-2 py-0.5 text-[11.5px]", pill[c.status] ?? "border-stone-200 text-stone-500")}>
+                        {c.status}
+                      </span>
                     </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-        </Panel>
-
-        {/* recent */}
-        <Panel title={<Search size={15} className="text-stone-400" />} actions={<SlidersHorizontal size={15} className="mx-1" />} bodyClass="px-4 pb-3">
-          <div className="flex items-center gap-3 pb-2 pt-3">
-            {(
-              [
-                ["attention", "Needs attention"],
-                ["activity", "Recent activity"],
-              ] as const
-            ).map(([k, label]) => (
-              <button key={k} type="button" onClick={() => setRight(k)} className={cx("text-[20px]", right === k ? "text-ink-900" : "text-stone-300 hover:text-stone-500")}>
-                {label}
-              </button>
-            ))}
-          </div>
-          {right === "attention" ? (
-            <ul>
-              {attention.map((a) => (
-                <li key={a.title}>
-                  <Link href={a.href} className="group flex items-center gap-3 rounded-[8px] px-1 py-2.5 hover:bg-stone-100/60">
-                    <span className="w-[64px] shrink-0 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-stone-400">{a.tag}</span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[12.5px] font-semibold text-ink-900">{a.title}</span>
-                      <span className="block truncate text-[11.5px] text-stone-500">{a.detail}</span>
-                    </span>
-                    <ArrowRight size={13} className="text-stone-300 group-hover:text-ink-900" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <table className="w-full text-[12.5px]">
-              <thead>
-                <tr className="text-left text-[11.5px] font-semibold text-stone-500">
-                  <th className="pb-2 font-semibold">Item</th>
-                  <th className="pb-2 font-semibold">Status</th>
-                  <th className="pb-2 font-semibold">Side</th>
-                </tr>
-              </thead>
-              <tbody>
-                {events.map((e) => (
-                  <tr key={e.id} className="hover:bg-stone-100/60">
-                    <td className="max-w-[150px] truncate py-[8px] font-semibold text-ink-900">
-                      <Link href={e.href}>{e.title}</Link>
-                    </td>
-                    <td className="py-[8px]">
-                      <span className={cx("inline-flex rounded-[6px] border px-2 py-0.5 text-[11.5px]", pill[e.status] ?? "border-stone-200 text-stone-500")}>{e.status}</span>
-                    </td>
-                    <td className="py-[8px]" style={{ color: e.side === "Distribution" ? UP : MEANING.capitalIn }}>
-                      {e.side}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </Panel>
       </div>
       <p className="px-2 text-right text-[11px] text-stone-400">As of {periodLabel(data.periods[last]) === "Today" ? "today" : data.periods[last]} · USD</p>

@@ -3,16 +3,16 @@
 import { useState } from "react";
 import { ArrowRight, BellRing } from "lucide-react";
 import { cx } from "@/components/ui";
-import { AreaChart, Bar, CLASS_COLOR, PALETTE, Panel, SampleTag, Seg, Stacked, Stat, StatRow, useWealth } from "./ui";
-import { REPORT_LABEL, WATCH, groupBy, money, pct, sampleSeries, shortDate, signed, type GroupKey } from "@/lib/wealth";
+import { AreaChart, Bar, Panel, SampleTag, Seg, useCountUp, useWealth } from "./ui";
+import { Honeycomb } from "./Honeycomb";
+import { REPORT_LABEL, WATCH, money, pct, sampleSeries, shortDate, signed } from "@/lib/wealth";
 
 const PERIODS = ["1M", "3M", "YTD", "1Y", "3Y", "All"] as const;
 type Period = (typeof PERIODS)[number];
 
 export function Overview() {
-  const { f, t, ccy, open, go } = useWealth();
+  const { f, t, ccy, open, go, mode, actorId } = useWealth();
   const [period, setPeriod] = useState<Period>("YTD");
-  const [by, setBy] = useState<GroupKey>("cls");
   const m = (v: number, d = 1) => money(v, ccy, d);
 
   // Sample history: the period's start is derived from the YTD change so the end point always equals today's net worth.
@@ -30,7 +30,6 @@ export function Overview() {
   }[period];
   const vals = sampleSeries(n, spanStart, t.net, f.id === "halvorsen" ? 3 : 7);
 
-  const groups = groupBy(f, t.assets, by);
   const ranked = [...t.assets].filter((a) => a.ytd !== 0).sort((a, b) => b.ytdPct - a.ytdPct);
   const parts = [
     { label: "Investment return", v: t.investmentReturn, note: "price, income and currency of each holding" },
@@ -40,48 +39,63 @@ export function Overview() {
   const mx = Math.max(...parts.map((p) => Math.abs(p.v)));
   const alerts = (WATCH[f.id] ?? []).filter((w) => w.state === "triggered");
 
+  const shown = useCountUp(t.net);
+  const first = f.people.find((p) => p.memberId === actorId)?.name.split(" ")[0];
+  const span = { "1M": 30, "3M": 91, YTD: 328, "1Y": 365, "3Y": 1095, All: 2555 }[period];
+  const pointLabel = (i: number) => {
+    const d = new Date(Date.parse("2026-11-24T12:00:00Z") - (1 - i / (n - 1)) * span * 864e5);
+    return d.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-6">
+      <section className="rise grid items-end gap-6 lg:grid-cols-[minmax(0,1fr)_auto]">
         <div>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-d-text-3">{f.name} · net worth</div>
-          <div className="mt-2 font-display text-[56px] font-light leading-none tracking-[-0.03em] text-d-text tabular-nums max-sm:text-[40px]">{money(t.net, ccy, 2)}</div>
-          <div className="mt-2 text-[13.5px] text-d-text-2">
-            <b className={cx("font-semibold tabular-nums", t.change >= 0 ? "text-d-pos" : "text-d-neg")}>{signed(m(t.change, 2), t.change)}</b> this year ·{" "}
-            {pct(t.change / t.start)} · as of {REPORT_LABEL}
+          <p className="text-[14px] text-d-text-2">
+            {mode === "client" && first ? `Good evening, ${first}. Here is where ${f.name.replace(" Family", "")} wealth stands.` : `${f.name} — consolidated net worth`}
+          </p>
+          <div className="fig mt-3 text-[64px] leading-[0.95] text-d-text max-sm:text-[42px]">{money(shown, ccy, 2)}</div>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13.5px]">
+            <span
+              className={cx("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-semibold tabular-nums", t.change >= 0 ? "text-d-pos" : "text-d-neg")}
+              style={{ background: `color-mix(in oklab, ${t.change >= 0 ? "var(--d-pos)" : "var(--d-neg)"} 12%, transparent)` }}
+            >
+              {signed(m(t.change, 2), t.change)} · {pct(t.change / t.start)}
+            </span>
+            <span className="text-d-text-3">since 1 January · valued {REPORT_LABEL}</span>
           </div>
         </div>
-        <div className="rounded-[10px] border border-d-line bg-d-surface px-4 py-3 text-[12.5px] max-sm:hidden">
-          <div className="text-[11px] text-d-text-3">Relationship manager</div>
-          <div className="font-semibold text-d-text">{f.rm.name}</div>
-          <div className="text-d-text-3">{f.rm.title}</div>
-        </div>
-      </div>
-
-      <StatRow cols={4}>
-        <Stat label="Gross assets" value={m(t.gross)} note={`${t.assets.length} holdings`} />
-        <Stat label="Liabilities" value={m(-t.debt)} note={`${t.liabs.length} ${t.liabs.length === 1 ? "facility" : "facilities"}`} />
-        <Stat label="Available liquidity" value={m(t.liquid)} note="cash and listed securities" />
-        <Stat
-          label="Investment return YTD"
-          value={signed(m(t.investmentReturn, 2), t.investmentReturn)}
-          tone={t.investmentReturn >= 0 ? "pos" : "neg"}
-          note={pct(t.investmentReturn / t.start)}
-        />
-      </StatRow>
+        <dl className="grid grid-cols-3 gap-x-8 gap-y-1 text-[12.5px] max-sm:gap-x-4">
+          {(
+            [
+              ["Assets", m(t.gross)],
+              ["Liabilities", m(-t.debt)],
+              ["Available now", m(t.liquid)],
+            ] as const
+          ).map(([k, v]) => (
+            <div key={k}>
+              <dt className="text-d-text-3">{k}</dt>
+              <dd className="fig mt-0.5 text-[22px] text-d-text">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       <Panel
-        title="Change in wealth"
+        title="Net worth over time"
         note={<SampleTag />}
         action={<Seg size="sm" value={period} onChange={setPeriod} options={PERIODS.map((p) => ({ id: p, label: p }))} />}
         pad={false}
       >
         <div className="px-3 pb-2 pt-3">
-          <AreaChart values={vals} labels={labels} fmt={(v) => money(v, ccy, Math.max(...vals) - Math.min(...vals) < 3e6 ? 1 : 0)} id={`nw-${period}`} />
+          <AreaChart values={vals} labels={labels} fmt={(v) => money(v, ccy, Math.max(...vals) - Math.min(...vals) < 3e6 ? 1 : 0)} id={`nw-${period}`} pointLabel={pointLabel} />
         </div>
       </Panel>
 
-      <div className="grid gap-4 lg:grid-cols-[1.05fr_1fr_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)]">
+        <Panel title="What you own" note="by asset class">
+          <Honeycomb />
+        </Panel>
         <Panel title="What moved your wealth this year">
           {parts.map((p) => (
             <div key={p.label} className="mb-3">
@@ -100,49 +114,9 @@ export function Overview() {
             <b className="font-semibold tabular-nums text-d-text">{signed(m(t.change, 2), t.change)}</b>
           </div>
         </Panel>
+      </div>
 
-        <Panel
-          title="Allocation"
-          action={
-            <Seg
-              size="sm"
-              value={by}
-              onChange={setBy}
-              options={[
-                { id: "cls", label: "Class" },
-                { id: "ccy", label: "Currency" },
-                { id: "custodian", label: "Custodian" },
-              ]}
-            />
-          }
-        >
-          <Stacked
-            parts={groups.map((g, i) => ({
-              key: g.key,
-              value: g.usd,
-              color: by === "cls" ? (CLASS_COLOR[g.key as keyof typeof CLASS_COLOR] ?? PALETTE[i]) : PALETTE[i % PALETTE.length],
-            }))}
-          />
-          <div className="mt-3 space-y-0.5">
-            {groups.slice(0, 8).map((g, i) => (
-              <div key={g.key} className="grid grid-cols-[10px_1fr_auto_auto] items-center gap-2 py-1 text-[12.5px]">
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ background: by === "cls" ? (CLASS_COLOR[g.key as keyof typeof CLASS_COLOR] ?? PALETTE[i]) : PALETTE[i % PALETTE.length] }}
-                />
-                <span className="truncate text-d-text">{g.key}</span>
-                <span className="tabular-nums text-d-text-3">{pct(g.usd / t.gross)}</span>
-                <b className="w-[64px] text-right font-medium tabular-nums text-d-text">{m(g.usd)}</b>
-              </div>
-            ))}
-            {groups.length > 8 && (
-              <div className="pt-1 text-[11.5px] text-d-text-3">
-                + {groups.length - 8} more · {m(groups.slice(8).reduce((s, g) => s + g.usd, 0))}
-              </div>
-            )}
-          </div>
-        </Panel>
-
+      <div className="grid gap-4 lg:grid-cols-3">
         <Panel title="Highest and lowest returns" note="this year">
           {[...ranked.slice(0, 3), ...ranked.slice(-3).reverse()].map((a, i) => (
             <button
@@ -164,9 +138,6 @@ export function Overview() {
             </button>
           ))}
         </Panel>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-[1.05fr_1fr]">
         <Panel
           title="Coming up"
           note="next 90 days"

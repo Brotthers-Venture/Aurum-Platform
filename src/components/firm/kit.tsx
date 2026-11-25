@@ -22,7 +22,7 @@ export function ModuleHeader({ color, title, action }: { color: string; title: s
       <div className="flex items-center gap-3">
         <AurumMark size={30} color={color} />
         <div>
-          <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.015em] text-ink-900">{title}</h1>
+          <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.02em] text-ink-900">{title}</h1>
         </div>
       </div>
       {action}
@@ -48,7 +48,19 @@ export function ModuleTabs<T extends string>({ tabs, tab, setTab, color }: { tab
   );
 }
 
-export function ActionButton({ color, children, onClick, disabled, type }: { color: string; children: ReactNode; onClick?: () => void; disabled?: boolean; type?: "submit" | "button" }) {
+export function ActionButton({
+  color,
+  children,
+  onClick,
+  disabled,
+  type,
+}: {
+  color: string;
+  children: ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+  type?: "submit" | "button";
+}) {
   return (
     <button
       type={type ?? "button"}
@@ -64,21 +76,25 @@ export function ActionButton({ color, children, onClick, disabled, type }: { col
 
 export function GhostButton({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[10px] border border-stone-300 bg-white px-3.5 text-[13px] font-semibold text-ink-900 hover:border-ink-900">
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[10px] border border-stone-300 bg-white px-3.5 text-[13px] font-semibold text-ink-900 hover:border-ink-900"
+    >
       {children}
     </button>
   );
 }
 
 export function Card({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cx("rounded-[16px] border border-stone-200/80 bg-white shadow-card", className)}>{children}</div>;
+  return <div className={cx("rounded-[12px] border border-stone-200/80 bg-white", className)}>{children}</div>;
 }
 
 export function Kpi({ label, value, note, tone }: { label: string; value: ReactNode; note?: string; tone?: "warn" }) {
   return (
     <Card className="px-5 py-4">
-      <div className="text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">{label}</div>
-      <div className={cx("num mt-1.5 text-[24px] font-semibold tracking-[-0.01em]", tone === "warn" ? "text-[#9A4422]" : "text-ink-900")}>{value}</div>
+      <div className="text-[12px] text-stone-500">{label}</div>
+      <div className={cx("fig mt-1 text-[28px] leading-tight", tone === "warn" ? "text-[#9A4422]" : "text-ink-900")}>{value}</div>
       {note && <div className="mt-0.5 text-[11px] text-stone-500">{note}</div>}
     </Card>
   );
@@ -86,10 +102,10 @@ export function Kpi({ label, value, note, tone }: { label: string; value: ReactN
 
 const pillTones = {
   neutral: "bg-stone-100 text-stone-600",
-  good: "bg-[#E7F2EB] text-[#245F3C]",
-  warn: "bg-[#FBF1E4] text-[#8A5A1E]",
-  bad: "bg-[#F8E9E2] text-[#9A4422]",
-  info: "bg-[#EEF1F6] text-ink-700",
+  good: "bg-[color-mix(in_oklab,var(--d-pos,#245F3C)_14%,transparent)] text-[var(--d-pos,#245F3C)]",
+  warn: "bg-[color-mix(in_oklab,var(--d-warn,#8A5A1E)_14%,transparent)] text-[var(--d-warn,#8A5A1E)]",
+  bad: "bg-[color-mix(in_oklab,var(--d-neg,#9A4422)_14%,transparent)] text-[var(--d-neg,#9A4422)]",
+  info: "bg-[color-mix(in_oklab,var(--d-info,#334155)_14%,transparent)] text-[var(--d-info,#334155)]",
   gold: "bg-gold-50 text-gold-700",
 };
 export function Pill({ tone = "neutral", children }: { tone?: keyof typeof pillTones; children: ReactNode }) {
@@ -131,7 +147,11 @@ export function Initials({ name, size = 26 }: { name: string; size?: number }) {
     .join("")
     .toUpperCase();
   return (
-    <span className="inline-flex shrink-0 items-center justify-center rounded-[8px] bg-gold-100 font-semibold text-gold-700" style={{ width: size, height: size, fontSize: size * 0.36 }} title={name}>
+    <span
+      className="inline-flex shrink-0 items-center justify-center rounded-[8px] bg-gold-100 font-semibold text-gold-700"
+      style={{ width: size, height: size, fontSize: size * 0.36 }}
+      title={name}
+    >
       {i}
     </span>
   );

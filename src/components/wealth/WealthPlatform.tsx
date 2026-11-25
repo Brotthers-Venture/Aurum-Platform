@@ -22,6 +22,7 @@ export function WealthPlatform({
   family,
   mode,
   actor,
+  actorId,
   page,
   onPage,
   showNav = true,
@@ -29,6 +30,7 @@ export function WealthPlatform({
   family: Family;
   mode: WealthMode;
   actor: string;
+  actorId?: string;
   page?: WealthPageId;
   onPage?: (p: WealthPageId) => void;
   showNav?: boolean;
@@ -57,7 +59,7 @@ export function WealthPlatform({
     } catch {}
   };
   const t = useMemo(() => totals(family), [family]);
-  const ctx = { f: family, t, ccy, setCcy, open: setAsset, mode, actor, go };
+  const ctx = { f: family, t, ccy, setCcy, open: setAsset, mode, actor, actorId, go };
 
   return (
     <Ctx.Provider value={ctx}>

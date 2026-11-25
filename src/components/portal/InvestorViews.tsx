@@ -32,30 +32,65 @@ export function InvestorOverview({ gp }: { gp: GpClient }) {
 
   return (
     <main className="mx-auto max-w-[1200px] px-8 py-10">
-      <div className="eyebrow">Account overview · reported as of September 30, 2026</div>
-      <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.02em]">{me.name}</h1>
-
-      <dl className="mt-8 grid grid-cols-2 gap-y-6 border-y border-stone-200 py-6 md:grid-cols-5">
-        {[
-          ["Total commitments", money(total.commitment)],
-          ["Contributed", money(total.contributed)],
-          ["Unfunded", money(total.unfunded)],
-          ["Distributions", money(total.distributed)],
-          ["Net asset value", money(total.nav)],
-        ].map(([k, v], i) => (
-          <div key={k} className={i > 0 ? "md:border-l md:border-stone-200 md:pl-6" : ""}>
-            <dt className="eyebrow">{k}</dt>
-            <dd className="num mt-2 text-[22px] font-medium tracking-[-0.015em]">{v}</dd>
+      <section className="grid items-end gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+        <div>
+          <p className="text-[14px] text-stone-500">{me.name} · net asset value as of 30 September 2026</p>
+          <div className="fig mt-3 text-[60px] leading-[0.95] text-ink-900 max-sm:text-[40px]">{money(total.nav)}</div>
+          <p className="mt-3 text-[13.5px] text-stone-600">
+            {total.contributed ? (
+              <>
+                {(() => {
+                  const r = (total.nav + total.distributed) / total.contributed - 1;
+                  return Math.abs(r) < 0.0005 ? (
+                    <>Level with the {money(total.contributed)} you have paid in, counting distributions.</>
+                  ) : (
+                    <>
+                      {r > 0 ? "Up" : "Down"} <b className="font-semibold text-ink-900">{(Math.abs(r) * 100).toFixed(1)}%</b> on the {money(total.contributed)} you have paid in,
+                      counting distributions.
+                    </>
+                  );
+                })()}
+              </>
+            ) : (
+              "Nothing paid in yet."
+            )}
+          </p>
+        </div>
+        <div>
+          <div className="flex justify-between text-[12.5px] text-stone-500">
+            <span>Your commitments</span>
+            <span className="num font-semibold text-ink-900">{money(total.commitment)}</span>
           </div>
-        ))}
-      </dl>
+          <div className="mt-2 flex h-3 gap-[2px] overflow-hidden rounded-full bg-stone-100">
+            <span className="rounded-l-full" style={{ width: `${(total.contributed / (total.commitment || 1)) * 100}%`, background: "var(--tenant-ink)" }} />
+          </div>
+          <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+            {(
+              [
+                ["Paid in", money(total.contributed), "var(--tenant-ink)"],
+                ["Still to call", money(total.unfunded), "var(--color-stone-200)"],
+                ["Distributions", money(total.distributed), undefined],
+                ["Funds", String(accts.length), undefined],
+              ] as const
+            ).map(([k, v, c]) => (
+              <div key={k}>
+                <dt className="flex items-center gap-1.5 text-[12px] text-stone-500">
+                  {c && <span className="h-2 w-2 rounded-full" style={{ background: c }} />}
+                  {k}
+                </dt>
+                <dd className="fig mt-0.5 text-[20px] text-ink-900">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      </section>
 
       {(pending || openCalls.length > 0) && (
         <div className="mt-8 grid gap-4 lg:grid-cols-2">
           {pending && (
             <div className="flex flex-col justify-between rounded-[4px] bg-brand p-6 text-brand-ink">
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] opacity-70">Action required · Subscription</div>
+                <div className="text-[12px] font-medium opacity-70">Your subscription is waiting for you</div>
                 <h2 className="mt-3 text-[18px] font-semibold">{fundById(pending.fundId)!.name}</h2>
                 <p className="num mt-1 text-[13px] opacity-70">{money(pending.commitment)} commitment</p>
               </div>
@@ -232,14 +267,16 @@ export function InvestorSubscriptions({ gp }: { gp: GpClient }) {
     <main className="mx-auto max-w-[1200px] px-8 py-10">
       <div className="eyebrow">{me.name}</div>
       <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.02em]">Subscriptions</h1>
-      <p className="mt-1.5 text-[14px] text-stone-600">
-        Your investor profile is saved once and reused for every subscription — you only confirm what has changed.
-      </p>
+      <p className="mt-1.5 text-[14px] text-stone-600">Your investor profile is saved once and reused for every subscription — you only confirm what has changed.</p>
       {mine.length > 0 && (
         <>
           <h2 className="eyebrow mb-3 mt-10">In progress</h2>
           {mine.map((o) => (
-            <Link key={o.id} href={`/subscribe/${o.fundId}`} className="group flex items-center gap-8 rounded-[8px] border border-stone-200/70 bg-white shadow-card p-6 hover:border-brand">
+            <Link
+              key={o.id}
+              href={`/subscribe/${o.fundId}`}
+              className="group flex items-center gap-8 rounded-[8px] border border-stone-200/70 bg-white shadow-card p-6 hover:border-brand"
+            >
               <div className="flex-1">
                 <div className="flex items-center gap-3">
                   <span className="text-[17px] font-semibold">{fundById(o.fundId)!.name}</span>

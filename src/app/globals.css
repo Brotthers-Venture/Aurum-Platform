@@ -732,3 +732,43 @@ html[data-eco-enter] .eco-enter-item {
 .ws-portal {
   --font-serif: "Source Serif 4 Variable", Georgia, serif;
 }
+
+/* ───────── House style for labels (Nov 2026): sentence case, no tracked capitals ─────────
+   Small labels were set in tracked uppercase across the platform; they read as template chrome.
+   Inside the Direction D shell and the portals they now render in sentence case at a legible size. */
+.ws .uppercase,
+.ws .eyebrow {
+  text-transform: none;
+  letter-spacing: -0.003em;
+  font-weight: 500;
+  font-size: max(11.5px, min(0.78em, 13px));
+}
+/* Large figures: one display face, light, tabular. */
+.ws .fig {
+  font-family: var(--font-display);
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ws .rise {
+    animation: ws-rise 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .ws .drawer-in {
+    animation: ws-drawer 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+@keyframes ws-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes ws-drawer {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+.ws .data-table thead th {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+  font-weight: 500;
+}

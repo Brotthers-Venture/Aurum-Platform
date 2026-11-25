@@ -39,7 +39,7 @@ export function AssetDrawer({ id }: { id: string }) {
   const watch = (WATCH[f.id] ?? []).filter((w) => w.asset === a.id);
 
   return (
-    <aside className="fixed inset-y-0 right-0 z-40 flex w-[420px] max-w-full flex-col border-l border-d-line bg-d-surface shadow-lift" role="dialog" aria-label={a.name}>
+    <aside className="drawer-in fixed inset-y-0 right-0 z-40 flex w-[420px] max-w-full flex-col border-l border-d-line bg-d-surface shadow-lift" role="dialog" aria-label={a.name}>
       <header className="flex items-start gap-3 border-b border-d-line px-5 py-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 text-[11.5px] text-d-text-3">

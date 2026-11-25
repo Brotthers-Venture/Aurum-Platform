@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { cx } from "@/components/ui";
 import type { AssetClass, Ccy, Family, Totals } from "@/lib/wealth";
 
@@ -13,6 +13,7 @@ export type WealthCtx = {
   open: (assetId: string | null) => void;
   mode: WealthMode;
   actor: string;
+  actorId?: string;
   go: (page: WealthPageId) => void;
 };
 export const Ctx = createContext<WealthCtx | null>(null);
@@ -148,7 +149,7 @@ export function Stacked({ parts }: { parts: { key: string; value: number; color:
   );
 }
 
-/** Line/area chart with three y ticks; `fmt` formats ticks. Hover shows the value at the nearest point. */
+/** Area chart with a hover crosshair: move across it to read the value at any point. */
 export function AreaChart({
   values,
   labels,
@@ -156,6 +157,7 @@ export function AreaChart({
   height = 220,
   color = "var(--tenant-accent)",
   id = "a",
+  pointLabel,
 }: {
   values: number[];
   labels: string[];
@@ -163,7 +165,9 @@ export function AreaChart({
   height?: number;
   color?: string;
   id?: string;
+  pointLabel?: (i: number) => string;
 }) {
+  const [hover, setHover] = useState<number | null>(null);
   const W = 1000;
   const H = height;
   const min = Math.min(...values) * 0.995;
@@ -171,11 +175,24 @@ export function AreaChart({
   const X = (i: number) => 56 + (i / (values.length - 1)) * (W - 70);
   const Y = (v: number) => 10 + (1 - (v - min) / (max - min || 1)) * (H - 36);
   const d = values.map((v, i) => `${i ? "L" : "M"}${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join("");
+  const onMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * W;
+    setHover(Math.max(0, Math.min(values.length - 1, Math.round(((x - 56) / (W - 70)) * (values.length - 1)))));
+  };
+  const hv = hover === null ? null : values[hover];
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full" role="img" aria-label="Chart">
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      className="block h-auto w-full touch-none select-none"
+      role="img"
+      aria-label="Chart"
+      onPointerMove={onMove}
+      onPointerLeave={() => setHover(null)}
+    >
       <defs>
         <linearGradient id={`g-${id}`} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0" stopColor={color} stopOpacity="0.2" />
+          <stop offset="0" stopColor={color} stopOpacity="0.22" />
           <stop offset="1" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
@@ -191,8 +208,30 @@ export function AreaChart({
         );
       })}
       <path d={`${d}L${X(values.length - 1)},${H - 26}L${X(0)},${H - 26}Z`} fill={`url(#g-${id})`} />
-      <path d={d} fill="none" stroke={color} strokeWidth={2} vectorEffect="non-scaling-stroke" />
-      <circle cx={X(values.length - 1)} cy={Y(values[values.length - 1])} r={4} fill={color} />
+      <path d={d} fill="none" stroke={color} strokeWidth={2} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+      {hover === null ? (
+        <circle cx={X(values.length - 1)} cy={Y(values[values.length - 1])} r={4.5} fill={color} stroke="var(--d-surface)" strokeWidth={2} />
+      ) : (
+        <g>
+          <line x1={X(hover)} x2={X(hover)} y1={8} y2={H - 26} stroke="var(--d-text-3)" strokeDasharray="3 3" />
+          <circle cx={X(hover)} cy={Y(hv!)} r={5} fill={color} stroke="var(--d-surface)" strokeWidth={2} />
+          {(() => {
+            const left = X(hover) > W - 190;
+            const tx = left ? X(hover) - 12 : X(hover) + 12;
+            return (
+              <g>
+                <rect x={left ? tx - 164 : tx} y={12} width={164} height={44} rx={7} fill="var(--d-surface)" stroke="var(--d-line-strong)" />
+                <text x={(left ? tx - 164 : tx) + 12} y={30} fontSize={11} fill="var(--d-text-3)">
+                  {pointLabel ? pointLabel(hover) : `Point ${hover + 1}`}
+                </text>
+                <text x={(left ? tx - 164 : tx) + 12} y={48} fontSize={14} fontWeight={600} fill="var(--d-text)" className="tabular-nums">
+                  {fmt(hv!)}
+                </text>
+              </g>
+            );
+          })()}
+        </g>
+      )}
       {labels.map((l, i) => (
         <text key={l + i} x={X((i / Math.max(1, labels.length - 1)) * (values.length - 1))} y={H - 8} textAnchor="middle" fontSize={11} fill="var(--d-text-3)">
           {l}
@@ -200,6 +239,25 @@ export function AreaChart({
       ))}
     </svg>
   );
+}
+
+/** Counts up to a figure once, on first render; respects reduced motion. */
+export function useCountUp(target: number, ms = 900) {
+  const [v, setV] = useState(target);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0;
+    const t0 = performance.now();
+    const from = target * 0.94;
+    const step = (now: number) => {
+      const k = Math.min(1, (now - t0) / ms);
+      setV(from + (target - from) * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, ms]);
+  return v;
 }
 
 export function Empty({ children }: { children: ReactNode }) {

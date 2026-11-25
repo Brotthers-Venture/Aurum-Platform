@@ -145,7 +145,7 @@ export function ClientPortal() {
             ))}
           />
         ) : view === "wealth" && family ? (
-          <WealthPlatform family={family} mode="client" actor={member.name} />
+          <WealthPlatform family={family} mode="client" actor={member.name} actorId={member.id} />
         ) : view === "onboarding" ? (
           <div className="mx-auto max-w-[820px] space-y-10">
             {mine.map((c) => (
