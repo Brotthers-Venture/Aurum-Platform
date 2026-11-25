@@ -18,7 +18,7 @@ import {
   type RoomBrandOverride,
 } from "@/lib/dataroom-extras";
 import { Pill, field, fieldLabel } from "@/components/firm/kit";
-import { COVERS, roomCover } from "@/lib/covers";
+import { COVERS, coverPosition, roomCover } from "@/lib/covers";
 
 /* Document analytics (time per page by version), share links, and per-room branding with a live preview. */
 
@@ -541,7 +541,7 @@ export function RoomBranding({ room, docs, previewHref, flash, onSaved }: { room
                 return (
                   <button key={c.id} onClick={() => set({ banner: c.src })} title={c.label} aria-pressed={on} className={cx("relative h-10 overflow-hidden rounded-[6px] ring-offset-1", on ? "ring-2 ring-ink-900" : "ring-1 ring-stone-200 hover:ring-stone-400")}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={c.src} alt={c.label} className="h-full w-full object-cover" />
+                    <img src={c.src} alt={c.label} style={{ objectPosition: c.position }} className="h-full w-full object-cover" />
                   </button>
                 );
               })}
@@ -649,7 +649,7 @@ export function RoomBranding({ room, docs, previewHref, flash, onSaved }: { room
               <div className="h-[380px]">
                 <div className="relative h-[110px] overflow-hidden" style={{ background: d.primary }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={bannerImg} alt="" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+                  <img src={bannerImg} alt="" style={{ objectPosition: coverPosition(bannerImg) }} className="absolute inset-0 h-full w-full object-cover opacity-80" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <span className="absolute inset-x-0 top-0 h-[3px]" style={{ background: d.secondary }} />
                   <div className="relative flex h-full flex-col justify-between p-4">
@@ -707,7 +707,7 @@ export function RoomBranding({ room, docs, previewHref, flash, onSaved }: { room
               <div className="grid h-[380px] grid-cols-[42%_1fr]">
                 <div className="relative overflow-hidden" style={{ background: d.primary }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={bannerImg} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
+                  <img src={bannerImg} alt="" style={{ objectPosition: coverPosition(bannerImg) }} className="absolute inset-0 h-full w-full object-cover opacity-60" />
                   <div className="relative flex h-full flex-col justify-between p-5">
                     {mark(true)}
                     <div>

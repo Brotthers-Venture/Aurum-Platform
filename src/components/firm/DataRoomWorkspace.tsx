@@ -25,7 +25,7 @@ import {
 import { QuestionCard, RoomConsole } from "@/components/dataroom/RoomConsole";
 import { localAnswerDrafts, localQuestions } from "@/lib/dataroom-local";
 import { ROOM_TEMPLATES, loadRoomBrands, type RoomTemplate } from "@/lib/dataroom-extras";
-import { coverSrc, roomCover } from "@/lib/covers";
+import { coverPosition, coverSrc, roomCover } from "@/lib/covers";
 import { ActionButton, Card, GhostButton, Kpi, ModuleHeader, ModuleTabs, Pill, Toast, field, fieldLabel, fmtShort, td, th, useTab, useToast } from "./kit";
 
 const C = FIRM.dataroom;
@@ -163,7 +163,7 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
                   >
                     <div className="relative h-[112px] overflow-hidden bg-stone-100">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={banners[r.id] ?? roomCover(r)} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+                      <img src={banners[r.id] ?? roomCover(r)} alt="" style={{ objectPosition: coverPosition(banners[r.id] ?? roomCover(r)) }} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
                     </div>
                     <div className="p-5">
                     <div className="flex items-center justify-between">
@@ -395,8 +395,8 @@ function NewRoom({ onClose, onSave }: { onClose: () => void; onSave: (r: Room, t
               <div key={t.id} className="flex flex-col rounded-[10px] border border-stone-200 bg-white hover:border-stone-300">
                 <div className="relative h-[128px] overflow-hidden rounded-t-[10px] bg-stone-100">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={coverSrc(t.cover)} alt="" className="h-full w-full object-cover" />
-                  <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-[5px] bg-black/45 px-1.5 py-0.5 text-[10.5px] font-medium text-white backdrop-blur-[2px]">
+                  <img src={coverSrc(t.cover)} alt="" style={{ objectPosition: coverPosition(coverSrc(t.cover)) }} className="h-full w-full object-cover" />
+                  <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-[5px] bg-black/45 px-1.5 py-0.5 text-[10.5px] font-medium text-[#fff] backdrop-blur-[2px]">
                     <FolderClosed size={11} strokeWidth={1.8} /> {t.folders.length} folders · {t.folders.reduce((n, x) => n + x.items.length, 0)} documents
                   </span>
                 </div>

@@ -28,7 +28,7 @@ import { gpById } from "@/lib/gps";
 import { pageCount, pageText, type FolderAccess, type Question, type Room, type RoomBrand, type RoomDoc, type RoomSettings, type ShareLink } from "@/lib/dataroom";
 import { addLocalQuestion, trackPage } from "@/lib/dataroom-local";
 import { ENTRY_TONES, loadRoomBrands } from "@/lib/dataroom-extras";
-import { roomCover } from "@/lib/covers";
+import { coverPosition, roomCover } from "@/lib/covers";
 
 type Step = "email" | "verify" | "password" | "questions" | "nda" | "room";
 
@@ -205,7 +205,7 @@ function Shell({
               <img src={brand.banner} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={roomCover(room)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+              <img src={roomCover(room)} alt="" style={{ objectPosition: coverPosition(roomCover(room)) }} className="absolute inset-0 h-full w-full object-cover" />
             ))}
           {settings.showCover && (
             <div
@@ -671,7 +671,7 @@ function RoomInside({
             <div className="flex-1 overflow-y-auto">
               <div className="relative h-[180px] overflow-hidden" style={{ background: brand.primary }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={brand.banner ?? roomCover(room)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                <img src={brand.banner ?? roomCover(room)} alt="" style={{ objectPosition: coverPosition(brand.banner ?? roomCover(room)) }} className="absolute inset-0 h-full w-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
                 <div className="absolute bottom-4 left-8 text-white">
                   <div className="text-[20px] font-semibold tracking-[-0.01em]">{room.name}</div>

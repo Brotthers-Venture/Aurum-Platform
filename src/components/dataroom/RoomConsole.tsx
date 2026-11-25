@@ -42,7 +42,7 @@ import { localPageViews } from "@/lib/dataroom-local";
 import { ActionButton, GhostButton, Pill, field, fmtDate, fmtShort } from "@/components/firm/kit";
 import { DocAnalytics, LinksPanel, RoomBranding } from "./RoomExtras";
 import { loadRoomBrands } from "@/lib/dataroom-extras";
-import { roomCover } from "@/lib/covers";
+import { coverPosition, roomCover } from "@/lib/covers";
 
 /* The room console: a numbered index with a details rail, a party-by-party engagement read-out,
    a reference-numbered Q&A queue, one permissions grid for every audience, and an exportable audit trail. */
@@ -128,19 +128,19 @@ export function RoomConsole({
       {/* room header: the room's banner, then title, figures and tabs */}
       <div className="relative h-[148px] overflow-hidden bg-stone-100">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={banner} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={banner} alt="" style={{ objectPosition: coverPosition(banner) }} className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-black/5" />
-        <div className="relative flex h-full flex-col justify-between px-8 py-4 text-white">
+        <div className="relative flex h-full flex-col justify-between px-8 py-4 text-[#fff] [text-shadow:0_1px_2px_rgba(0,0,0,0.35)]">
           <div className="flex items-center gap-3 text-[12px]">
-            <button onClick={onBack} className="flex items-center gap-1 font-medium text-white/85 hover:text-white">
+            <button onClick={onBack} className="flex items-center gap-1 font-medium text-[rgba(255,255,255,0.85)] hover:text-[#fff]">
               <ArrowLeft size={13} /> All rooms
             </button>
-            <span className="text-white/40">/</span>
-            <span className="text-white/80">
+            <span className="text-[rgba(255,255,255,0.40)]">/</span>
+            <span className="text-[rgba(255,255,255,0.80)]">
               {room.purpose} · {room.client}
             </span>
           </div>
-          <div className="text-[12px] text-white/80">Updated {fmtShort(room.created)} · owner {room.owner}</div>
+          <div className="text-[12px] text-[rgba(255,255,255,0.80)]">Updated {fmtShort(room.created)} · owner {room.owner}</div>
         </div>
       </div>
       <div className="border-b border-stone-200 bg-white px-8 pt-4">
