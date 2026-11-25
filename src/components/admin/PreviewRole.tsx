@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { can, roleById, roles, users, type Permission, type RoleId } from "@/lib/access";
 import { Avatar } from "@/components/ui";
@@ -17,7 +17,24 @@ function userFor(role: RoleId) {
 
 /** Preview-only: lets you see the platform as each role. Replaced by Supabase Auth claims. */
 export function PreviewRoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<RoleId>("fund_services_head");
+  const [role, setRoleState] = useState<RoleId>("fund_services_head");
+  useEffect(() => {
+    try {
+      const v = window.localStorage.getItem("aurum-preview-role") as RoleId | null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (v && roles.some((r) => r.id === v)) setRoleState(v);
+    } catch {
+      /* no storage */
+    }
+  }, []);
+  const setRole = (r: RoleId) => {
+    setRoleState(r);
+    try {
+      window.localStorage.setItem("aurum-preview-role", r);
+    } catch {
+      /* no storage */
+    }
+  };
   return (
     <PreviewRoleContext.Provider value={{ role, setRole, user: userFor(role), can: (p) => can(role, p) }}>{children}</PreviewRoleContext.Provider>
   );

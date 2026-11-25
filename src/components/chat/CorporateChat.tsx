@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { cx } from "@/components/ui";
 import { WorkstationTopBar } from "@/components/shell/WorkstationTopBar";
+import { HexaRoom } from "@/components/shell/HexaRoom";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { recordAudit } from "@/lib/audit-local";
 import { addPlanRow, loadChat, saveChat, type ChatState } from "@/lib/chat-store";
@@ -109,7 +110,8 @@ export function CorporateChat() {
     setS((prev) => {
       if (!prev) return prev;
       const next = fn(prev);
-      saveChat(next);
+      // save after this render: saving notifies the top bar, which must not update mid-render
+      queueMicrotask(() => saveChat(next));
       return next;
     });
   }, []);
@@ -554,6 +556,7 @@ export function CorporateChat() {
       ) : (
         <ChatCtx.Provider value={api}>
           <div className="relative flex min-h-0 flex-1">
+            <HexaRoom defaultCollapsed />
             {/* Sidebar: inline from 1024, a drawer below */}
             <div className={cx("absolute inset-y-0 left-0 z-30 w-[260px] -translate-x-full transition-transform duration-150 ease-out lg:static lg:w-[232px] lg:translate-x-0", side && "translate-x-0")}>
               <Sidebar brandName={brand.name} onClose={() => setSide(false)} />

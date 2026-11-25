@@ -1,5 +1,7 @@
 "use client";
 
+import { ModuleName } from "@/components/brand/ModuleName";
+
 import { useMemo, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Check, Plus, Printer, Send, Trash2, X } from "lucide-react";
@@ -220,7 +222,9 @@ export function BillingWorkspace({ tab: initialTab, filter: initialFilter, brlPe
         <div className="flex items-center gap-3">
           <AurumMark size={30} color={BILLING} />
           <div>
-            <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.015em] text-ink-900">Billing</h1>
+            <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.015em] text-ink-900">
+              <ModuleName id="billing" />
+            </h1>
           </div>
         </div>
         <button

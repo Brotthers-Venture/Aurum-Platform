@@ -2,17 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Bell, ChevronDown, EllipsisVertical, LayoutGrid, LogOut, Palette, Search, ShieldCheck, UserCog } from "lucide-react";
+import { Bell, Check, ChevronDown, EllipsisVertical, Hexagon, LayoutGrid, LogOut, Palette, Search, ShieldCheck, UserCog } from "lucide-react";
 import { cx } from "@/components/ui";
 import { AurumLogo } from "@/components/brand/Logo";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { useTheme } from "./ThemeProvider";
 import { usePreviewRole } from "@/components/admin/PreviewRole";
-import { FIRM, type FirmId } from "@/lib/firm-colors";
 import { moduleName, withTenant } from "@/lib/brand";
 import { loadChat, visibleInbox, type InboxItem } from "@/lib/chat-store";
 import { personName } from "@/lib/chat";
 import type { ThemePref } from "@/lib/theme";
+import { hexasFor } from "@/lib/hexa";
+import { roles } from "@/lib/access";
+import { HexGlyph } from "./HexaRoom";
 
 /** Close a popover on outside click or Escape. */
 function useDismiss(open: boolean, close: () => void) {
@@ -31,19 +33,6 @@ function useDismiss(open: boolean, close: () => void) {
   return ref;
 }
 
-const APPS = [
-  { id: "home", label: "Home", href: "/admin" },
-  { id: "fund", label: "Fund", href: "/admin/fund" },
-  { id: "corporate", label: "Corporate", href: "/admin/corporate" },
-  { id: "dataroom", label: "Data rooms", href: "/admin/dataroom", firm: "dataroom" as FirmId },
-  { id: "billing", label: "Billing", href: "/admin/billing", firm: "billing" as FirmId },
-  { id: "compliance", label: "Compliance", href: "/admin/compliance", firm: "compliance" as FirmId },
-];
-const MORE: { id: FirmId; href: string }[] = [
-  { id: "sales", href: "/admin/sales" },
-  { id: "pmo", href: "/admin/pmo" },
-  { id: "communication", href: "/admin/communication" },
-];
 
 export function Menu({ children, className }: { children: ReactNode; className?: string }) {
   return <div className={cx("absolute z-50 rounded-[6px] bg-d-surface p-1.5 text-[12.5px] text-d-text shadow-[var(--d-pop)]", className)}>{children}</div>;
@@ -101,7 +90,8 @@ export function WorkstationTopBar({
   useEffect(() => {
     onActivity?.(open !== null);
   }, [open, onActivity]);
-  const { user } = usePreviewRole();
+  const { user, role, setRole } = usePreviewRole();
+  const hexas = hexasFor(role);
   const [notes, setNotes] = useState<{ items: InboxItem[]; unread: number }>({ items: [], unread: 0 });
 
   useEffect(() => {
@@ -119,88 +109,58 @@ export function WorkstationTopBar({
     };
   }, []);
 
-  const moreActive = MORE.find((m) => m.id === app);
   return (
-    <header ref={ref} className={cx("relative z-40 flex h-[52px] shrink-0 items-center gap-3 pl-4 pr-3 text-[13px]", eco ? "border-b border-transparent bg-transparent" : "border-b border-d-line bg-d-chrome")}>
+    <header ref={ref} className={cx("relative z-40 flex h-[56px] shrink-0 items-center gap-3 pl-4 pr-3 text-[13px]", eco ? "border-b border-transparent bg-transparent" : "border-b border-d-line bg-d-chrome")}>
       <Link href="/admin" aria-label={`${brand.name} home`} className="shrink-0">
-        <AurumLogo variant={theme === "dark" ? "white" : "dark"} height={22} />
+        <AurumLogo variant={theme === "dark" ? "white" : "dark"} height={32} />
       </Link>
-      <nav aria-label="Applications" className={cx("ml-3 h-full items-stretch", eco ? "hidden" : "hidden lg:flex")}>
-        {APPS.map((a) => (
-          <Link
-            key={a.id}
-            href={a.href}
-            aria-current={a.id === app ? "page" : undefined}
-            className={cx("relative flex items-center whitespace-nowrap px-2.5 font-medium text-d-text-2 hover:text-d-text xl:px-3", a.id === app && "text-d-text")}
-          >
-            {a.label}
-            {a.id === app && <span className="absolute inset-x-2.5 -bottom-px h-0.5 bg-d-text xl:inset-x-3" />}
-          </Link>
-        ))}
-        {moreActive && (
-          <span className="relative flex items-center gap-2 whitespace-nowrap px-3 font-medium text-d-text">
-            <span className="h-2 w-2 rounded-[2px]" style={{ background: FIRM[moreActive.id] }} aria-hidden />
-            {moduleName(brand, moreActive.id)}
-            <span className="absolute inset-x-3 -bottom-px h-0.5 bg-d-text" />
-          </span>
-        )}
-      </nav>
       <div className="relative">
         <button onClick={() => toggle("apps")} aria-label="More applications" aria-expanded={open === "apps"} className="flex h-8 w-8 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise hover:text-d-text">
           <LayoutGrid size={16} />
         </button>
         {open === "apps" && (
-          <Menu className="left-0 top-10 w-[240px]">
-            <div className={menuHead}>Applications</div>
-            <div className={eco ? undefined : "lg:hidden"}>
-              {APPS.map((a) => (
-                <Link key={a.id} href={a.href} onClick={close} className={menuItem}>
-                  {a.label}
-                </Link>
-              ))}
-              <div className="mx-1 my-1 h-px bg-d-line-soft" />
-            </div>
-            {MORE.map((m) => (
-              <Link key={m.id} href={m.href} onClick={close} className={cx(menuItem, m.id === app && "bg-d-raise")}>
-                <span className="h-2 w-2 rounded-[2px]" style={{ background: FIRM[m.id] }} aria-hidden />
-                {moduleName(brand, m.id)}
+          <Menu className="left-0 top-10 w-[260px]">
+            <div className={menuHead}>Your hexagons</div>
+            {hexas.map((h) => (
+              <Link key={h.id} href={h.href} onClick={close} className={cx(menuItem, h.id === app && "bg-d-raise")}>
+                <HexGlyph color={h.color} size={15} active={h.id === app} />
+                {h.firm ? moduleName(brand, h.firm) : h.name}
               </Link>
             ))}
+            <div className="mx-1 my-1 h-px bg-d-line-soft" />
+            <Link href="/admin" onClick={close} className={menuItem}>
+              <Hexagon size={15} className="text-d-text-2" /> Ecosystem
+            </Link>
           </Menu>
         )}
       </div>
 
       {entity}
 
-      {eco ? (
-        <>
-          <div className="flex-1" />
-          <label className="flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-3.5 text-d-text-3 focus-within:border-d-line-strong">
-            <Search size={15} className="shrink-0" />
-            <input
-              placeholder="Search funds, investors, documents"
-              aria-label="Search funds, investors, documents"
-              onFocus={() => onActivity?.(true)}
-              onBlur={() => onActivity?.(false)}
-              className="min-w-0 flex-1 bg-transparent text-[13px] text-d-text placeholder:text-d-text-3 focus:outline-none focus-visible:outline-none"
-            />
-          </label>
-          <div className="flex-1" />
-        </>
+      <div className="flex-1" />
+      {onSearch ? (
+        <button
+          onClick={onSearch}
+          className="flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-3.5 text-left text-d-text-3 hover:border-d-line-strong"
+          aria-label="Search or run a command"
+        >
+          <Search size={15} className="shrink-0" />
+          <span className="truncate text-[13px]">Search funds, investors, documents</span>
+          <kbd className="ml-auto hidden shrink-0 whitespace-nowrap rounded-[4px] border border-d-line px-1.5 font-sans text-[10.5px] text-d-text-3 sm:inline">Ctrl K</kbd>
+        </button>
       ) : (
-        <>
-          <button
-            onClick={onSearch}
-            className="ml-1 flex h-8 min-w-0 max-w-[420px] flex-1 items-center gap-2 rounded-[4px] border border-d-line bg-d-bg px-2.5 text-left text-d-text-3 hover:border-d-line-strong"
-            aria-label="Search or run a command"
-          >
-            <Search size={15} className="shrink-0" />
-            <span className="hidden truncate sm:inline">Search or run a command</span>
-            <kbd className="ml-auto hidden shrink-0 whitespace-nowrap rounded-[3px] border border-d-line px-1.5 font-sans text-[10.5px] text-d-text-3 sm:inline">Ctrl K</kbd>
-          </button>
-          <div className="flex-1" />
-        </>
+        <label className="flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-3.5 text-d-text-3 focus-within:border-d-line-strong">
+          <Search size={15} className="shrink-0" />
+          <input
+            placeholder="Search funds, investors, documents"
+            aria-label="Search funds, investors, documents"
+            onFocus={() => onActivity?.(true)}
+            onBlur={() => onActivity?.(false)}
+            className="min-w-0 flex-1 bg-transparent text-[13px] text-d-text placeholder:text-d-text-3 focus:outline-none focus-visible:outline-none"
+          />
+        </label>
       )}
+      <div className="flex-1" />
 
       <div className="relative">
         <button onClick={() => toggle("more")} aria-label="More" aria-expanded={open === "more"} className="flex h-8 w-8 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise hover:text-d-text">
@@ -282,6 +242,18 @@ export function WorkstationTopBar({
                   { v: "off", label: "Off" },
                 ]}
               />
+            </div>
+            <div className="mx-1 my-1 h-px bg-d-line-soft" />
+            <div className={menuHead}>Preview as · sets the hexagons shown</div>
+            <div className="max-h-[180px] overflow-y-auto">
+              {roles
+                .filter((r) => r.audience !== "Investor")
+                .map((r) => (
+                  <button key={r.id} onClick={() => setRole(r.id)} className={cx(menuItem, "h-7 text-[12.5px]")}>
+                    <span className="flex-1 truncate">{r.name}</span>
+                    {role === r.id && <Check size={13} />}
+                  </button>
+                ))}
             </div>
             <div className="mx-1 my-1 h-px bg-d-line-soft" />
             <Link href="/admin/access" onClick={close} className={menuItem}>

@@ -1,9 +1,10 @@
 import { WorkstationTopBar } from "@/components/shell/WorkstationTopBar";
 
 const APP: Record<string, string> = {
+  "Fund Solution": "fund",
   "Corporate Solution": "corporate",
   "Data rooms": "dataroom",
-  Billing: "billing",
+  Treasury: "billing",
   Compliance: "compliance",
   "Project management office": "pmo",
   Sales: "sales",

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { TenantName } from "@/components/brand/TenantName";
 import type { Metadata } from "next";
 import { ArrowLeft, Check, UserPlus } from "lucide-react";
-import { AdminTopBar } from "@/components/admin/AdminTopBar";
+import { AppShell } from "@/components/shell/AppShell";
 import { Avatar, Button, Panel, Status, cx } from "@/components/ui";
 import { Tabs } from "@/components/Tabs";
 import { auditLog, controls, permissionGroups, roleById, roles, users } from "@/lib/access";
@@ -169,8 +169,7 @@ export default function AccessPage() {
   );
 
   return (
-    <div className="flex ws ws-bridge min-h-dvh bg-d-bg flex-col">
-      <AdminTopBar context="Access & permissions" />
+    <AppShell context="Access & permissions">
       <main className="w-full flex-1 space-y-6 px-8 py-8">
         <Link href="/admin" className="inline-flex items-center gap-1.5 text-[12px] font-medium text-stone-500 hover:text-ink-900">
           <ArrowLeft size={14} strokeWidth={1.8} /> <TenantName /> Platform
@@ -207,6 +206,6 @@ export default function AccessPage() {
           ]}
         />
       </main>
-    </div>
+    </AppShell>
   );
 }

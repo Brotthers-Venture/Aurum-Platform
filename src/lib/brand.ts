@@ -145,7 +145,7 @@ export const MODULE_DEFAULTS: Record<FirmId, string> = {
   pmo: "PMO",
   communication: "Corporate Chat",
   dataroom: "Data rooms",
-  billing: "Billing",
+  billing: "Treasury",
   compliance: "Compliance",
 };
 /** Seed and demo text carries {tenant}; it is resolved to the tenant’s name when shown. */
