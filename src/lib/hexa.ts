@@ -25,6 +25,10 @@ export type Hexa = {
 
 const openFiles = onboarding.filter((o) => o.status === "Submitted" || o.status === "Changes requested").length;
 
+const FAMILY_PAGES: HexaPage[] = [
+  { label: "Halvorsen Family", href: "/admin/multi-family/halvorsen", group: "Families" },
+  { label: "Valença Family", href: "/admin/multi-family/valenca", group: "Families" },
+];
 const fromRing = (id: FirmId): HexaPage[] => {
   const m = firmModules.find((x) => x.id === id);
   if (!m) return [];
@@ -62,7 +66,7 @@ export const HEXAS: Hexa[] = [
     ],
   },
   { id: "corporate", name: "Corporate Solution", color: "var(--tenant-accent)", href: "/admin/corporate", base: "/admin/corporate", pages: [] },
-  { id: "multi-family", name: "Multi-Family Office", color: "var(--tenant-accent)", href: "/admin/multi-family", base: "/admin/multi-family", pages: [] },
+  { id: "multi-family", name: "Multi-Family Office", color: "var(--tenant-accent)", href: "/admin/multi-family", base: "/admin/multi-family", pages: [{ label: "Families", href: "/admin/multi-family" }, { label: "Onboarding", href: "/admin/multi-family/onboarding" }, ...FAMILY_PAGES] },
   { id: "communication", firm: "communication", name: "Corporate Chat", color: FIRM.communication, href: "/admin/communication", base: "/admin/communication", badge: badgeOf("communication"), pages: [] },
   { id: "dataroom", firm: "dataroom", name: "Data rooms", color: FIRM.dataroom, href: "/admin/dataroom", base: "/admin/dataroom", badge: badgeOf("dataroom"), pages: fromRing("dataroom") },
   { id: "billing", firm: "billing", name: "Treasury", color: FIRM.billing, href: "/admin/treasury", base: "/admin/treasury", badge: badgeOf("billing"), pages: [{ label: "Overview", href: "/admin/treasury" }, ...fromRing("billing")] },

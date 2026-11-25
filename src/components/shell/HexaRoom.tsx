@@ -1,5 +1,6 @@
 "use client";
 
+import { FAMILIES } from "@/lib/wealth";
 import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -81,7 +82,12 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
   if (collapsed)
     return (
       <nav aria-label="Hexa Room" className="hidden w-[56px] shrink-0 flex-col items-center border-r border-d-line bg-d-chrome py-3 md:flex">
-        <button onClick={toggleCollapsed} aria-label="Open the Hexa Room" title="Open the Hexa Room" className="mb-2 flex h-8 w-8 items-center justify-center rounded-[6px] text-d-text-3 hover:bg-d-raise hover:text-d-text">
+        <button
+          onClick={toggleCollapsed}
+          aria-label="Open the Hexa Room"
+          title="Open the Hexa Room"
+          className="mb-2 flex h-8 w-8 items-center justify-center rounded-[6px] text-d-text-3 hover:bg-d-raise hover:text-d-text"
+        >
           <ChevronsRight size={15} />
         </button>
         <div className="flex flex-1 flex-col items-center gap-1">
@@ -102,7 +108,12 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
             );
           })}
         </div>
-        <Link href="/admin" title="Ecosystem" aria-label="Ecosystem" className="flex h-9 w-9 items-center justify-center rounded-[6px] text-d-text-3 hover:bg-d-raise hover:text-d-text">
+        <Link
+          href="/admin"
+          title="Ecosystem"
+          aria-label="Ecosystem"
+          className="flex h-9 w-9 items-center justify-center rounded-[6px] text-d-text-3 hover:bg-d-raise hover:text-d-text"
+        >
           <Hexagon size={16} strokeWidth={1.7} />
         </Link>
       </nav>
@@ -113,7 +124,12 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
       <div className="flex h-11 items-center gap-2 px-4">
         <span className="text-[12px] font-semibold tracking-[0.02em] text-d-text">Hexa Room</span>
         <span className="tnum text-[11.5px] text-d-text-3">{list.length}</span>
-        <button onClick={toggleCollapsed} aria-label="Collapse the Hexa Room" title="Collapse" className="ml-auto flex h-7 w-7 items-center justify-center rounded-[6px] text-d-text-3 hover:bg-d-raise hover:text-d-text">
+        <button
+          onClick={toggleCollapsed}
+          aria-label="Collapse the Hexa Room"
+          title="Collapse"
+          className="ml-auto flex h-7 w-7 items-center justify-center rounded-[6px] text-d-text-3 hover:bg-d-raise hover:text-d-text"
+        >
           <ChevronsLeft size={15} />
         </button>
       </div>
@@ -121,7 +137,11 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
       <div className="scroll-quiet flex-1 overflow-y-auto px-2 pb-3">
         {list.map((h0) => {
           const outsider = member.party !== "employee";
-          const h = outsider ? { ...h0, badge: undefined, pages: h0.id === "pmo" || h0.id === "communication" ? [] : h0.pages } : h0;
+          const pages =
+            h0.id === "multi-family" && member.party === "tenant"
+              ? h0.pages.filter((p) => !p.group || FAMILIES.some((f) => f.tenantId === member.org && p.href.endsWith(`/${f.id}`)))
+              : h0.pages;
+          const h = outsider ? { ...h0, badge: undefined, pages: h0.id === "pmo" || h0.id === "communication" ? [] : pages } : h0;
           const active = here?.id === h.id;
           const expanded = h.pages.length > 0 && open.has(h.id);
           let lastGroup: string | undefined;
@@ -164,7 +184,10 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
                         <Link
                           href={p.href}
                           aria-current={on ? "page" : undefined}
-                          className={cx("relative flex h-[28px] items-center rounded-[5px] px-2 text-[12.5px] transition-colors", on ? "bg-d-raise font-medium text-d-text" : "text-d-text-2 hover:bg-d-raise hover:text-d-text")}
+                          className={cx(
+                            "relative flex h-[28px] items-center rounded-[5px] px-2 text-[12.5px] transition-colors",
+                            on ? "bg-d-raise font-medium text-d-text" : "text-d-text-2 hover:bg-d-raise hover:text-d-text",
+                          )}
                         >
                           {on && <span aria-hidden className="absolute -left-[9px] bottom-1.5 top-1.5 w-[2px] rounded-full" style={{ background: h.color }} />}
                           <span className="flex-1 truncate">{p.label}</span>

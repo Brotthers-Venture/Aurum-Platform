@@ -5,7 +5,7 @@
  */
 import { recordAudit } from "./audit-local";
 
-export type RefKind = "subscription" | "investor" | "screening" | "call" | "room" | "plan" | "formation" | "deal" | "bank" | "person";
+export type RefKind = "subscription" | "investor" | "screening" | "call" | "room" | "plan" | "formation" | "deal" | "bank" | "person" | "family" | "checklist";
 export type Ref = { kind: RefKind; id: string };
 export const refKey = (r: Ref) => `${r.kind}:${r.id}`;
 export const parseRef = (k: string): Ref | null => {
@@ -123,6 +123,10 @@ export function hrefOf(r: Ref) {
       return `/admin/pmo?tab=plan`;
     case "deal":
       return `/admin/sales`;
+    case "family":
+      return `/admin/multi-family/${r.id}`;
+    case "checklist":
+      return `/admin/multi-family/onboarding#${r.id}`;
     default:
       return "/admin";
   }

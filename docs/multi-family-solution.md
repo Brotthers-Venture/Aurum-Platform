@@ -119,3 +119,33 @@ manager names marked "(sample)" are fictional.
 6. Supabase persistence and row-level security per family (P4 of the integration blueprint).
 
 Each stage: tsc, eslint, build, visual check in both themes, then deploy.
+
+## 8. Implemented — 25 Nov 2026 (owner asked to build)
+
+Reference research: Altoo (wealth platform) and Clustdoc (client onboarding), from public feature lists and
+product pages, for **function only**. No wording, layout, icon or brand element was copied.
+
+**Wealth platform** (`src/components/wealth/*`, data `src/lib/wealth.ts`) — one component for the family (client portal,
+in the serving firm's brand) and the office (`/admin/multi-family/[family]`):
+- Overview: net worth, what moved it (investment return, flows, currency), allocation by class / currency / custodian,
+  highest and lowest returns, coming up (90 days), alerts from watch rules.
+- Explorer: every holding, grouped by class, currency, region, custodian, legal owner or liquidity; search; list, cards
+  and a return map (return against size); source and freshness on every value.
+- Structure: ownership map (people, entities, %, value held directly) and list; look-through value per entity.
+- Liquidity: statements vs confirmed vs projected over 30 / 60 / 90 days; accounts and facilities; cash by entity.
+- Reports: balance sheet, change in wealth (waterfall), allocation against targets, maturities; print to PDF.
+- Documents, to-dos shared with the office, and access for delegates (read only, selected entities, full).
+- Holding drawer: value, cost, return, income, private-markets multiples, property income and leverage, ownership
+  chain, watch rules, documents.
+- Reporting currency: USD, EUR, CHF, GBP, BRL (indicative demo rates).
+
+**Onboarding checklists** (`src/lib/checklist.ts`, `src/components/onboarding/Checklist.tsx`):
+- Templates: Multi-Family onboarding, Company formation, Annual KYC refresh.
+- Client side (client portal → Onboarding, and the formation screen): one list by section; upload, form answers or
+  e-signature per item; a returned item shows the reviewer's note and takes a new version; version history.
+- Office side (`/admin/multi-family/onboarding`): queue filtered to what needs review; accept or return with a note;
+  reminders; send a new checklist from a template; identity documents expiring within six months; Discuss in
+  Corporate Chat; activity feed. Every decision is a ledger event.
+
+Still proposed (not built): live bank and custodian feeds, real file storage and e-signature provider, Supabase
+persistence and row-level security per family.
