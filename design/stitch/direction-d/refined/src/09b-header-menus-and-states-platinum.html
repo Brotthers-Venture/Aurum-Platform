@@ -1,0 +1,168 @@
+<!doctype html><html lang="en" data-theme="light" data-type="a"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Header menus and states</title><link rel="stylesheet" href="file:///C:/Users/luca2/programming/aurum-platform/node_modules/@fontsource-variable/inter/index.css"><link rel="stylesheet" href="file:///C:/Users/luca2/programming/aurum-platform/node_modules/@fontsource-variable/manrope/index.css"><link rel="stylesheet" href="file:///C:/Users/luca2/programming/aurum-platform/node_modules/@fontsource/ibm-plex-sans/300.css"><link rel="stylesheet" href="file:///C:/Users/luca2/programming/aurum-platform/node_modules/@fontsource/ibm-plex-sans/400.css"><link rel="stylesheet" href="file:///C:/Users/luca2/programming/aurum-platform/node_modules/@fontsource-variable/source-serif-4/index.css"><style>
+/* Obsidian — tonal depth through four surface steps, not shadows */
+[data-theme="dark"] { color-scheme: dark;
+  --bg:#0A0E12; --chrome:#0C1116; --surface:#10161D; --surface-2:#131A22; --raise:#18202A; --line:#212A34; --line-soft:#19212A; --line-strong:#2E3946;
+  --text:#EEF1F4; --text-2:#97A3B1; --text-3:#6A7684; --accent:#FFCA00; --accent-fill:#FFCA00; --on-accent:#0A0E12; --accent-soft:rgba(255,202,0,.10); --accent-edge:#FFCA00;
+  --pos:#3DBE8B; --warn:#E3A33B; --info:#83ABF0; --neg:#EF6F68; --neutral:#97A3B1; --s2:#8592A1; --s3:#4A5664; --grid:#1A222B;
+  --sheen: inset 0 1px 0 rgba(255,255,255,.028); --menu-shadow: 0 16px 40px rgba(0,0,0,.45), 0 0 0 1px var(--line-strong);
+  --focus:#EEF1F4; --sponsor:#9DB4CF; --on-sponsor:#0A0E12; --logo:url("file:///C:/Users/luca2/programming/aurum-platform/public/brand/aurum-logo-white.png"); }
+/* Platinum — a private-bank statement: warm neutrals, understated borders */
+[data-theme="light"] { color-scheme: light;
+  --bg:#F2F1EE; --chrome:#FBFAF8; --surface:#FFFFFF; --surface-2:#FAF9F6; --raise:#F4F2EE; --line:#E3E0DA; --line-soft:#EDEBE6; --line-strong:#D2CEC6;
+  --text:#14181D; --text-2:#5A6069; --text-3:#8A8F96; --accent:#7D5F00; --accent-fill:#F8C618; --on-accent:#14181D; --accent-soft:rgba(248,198,24,.16); --accent-edge:#9C7500;
+  --pos:#15803D; --warn:#A6570B; --info:#1D4ED8; --neg:#B42318; --neutral:#5A6069; --s2:#7C828B; --s3:#C9C5BD; --grid:#EEECE7;
+  --sheen: 0 1px 0 rgba(20,24,29,.03); --menu-shadow: 0 16px 40px rgba(20,24,29,.12), 0 0 0 1px var(--line);
+  --focus:#14181D; --sponsor:#1F3A5F; --on-sponsor:#FFFFFF; --logo:url("file:///C:/Users/luca2/programming/aurum-platform/public/brand/aurum-logo-dark.png"); }
+[data-type="a"] { --font-figure:"Manrope Variable", Inter, sans-serif; --figure-weight:300; --figure-track:-0.025em; }
+[data-type="b"] { --font-figure:"IBM Plex Sans", Inter, sans-serif; --figure-weight:300; --figure-track:-0.02em; }
+:root { --font-ui:"Inter Variable", system-ui, sans-serif; --font-serif:"Source Serif 4 Variable", Georgia, serif; }
+
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font:400 13px/1.45 var(--font-ui); font-feature-settings:"cv11","ss01"; -webkit-font-smoothing:antialiased; }
+.num, td.r, .fig { font-variant-numeric: tabular-nums lining-nums; font-feature-settings:"tnum","lnum"; }
+button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+a { color:inherit; text-decoration:none; }
+.ic { flex:none; display:block; }
+.muted { color:var(--text-2); } .faint { color:var(--text-3); }
+:focus-visible, .is-focus { outline:2px solid var(--focus); outline-offset:2px; border-radius:3px; }
+
+/* ── Global header: applications only ── */
+.top { height:52px; display:flex; align-items:center; gap:18px; padding:0 16px 0 18px; background:var(--chrome); border-bottom:1px solid var(--line); position:relative; z-index:5; }
+.logo { width:104px; height:22px; background:var(--logo) left center / contain no-repeat; flex:none; }
+.apps { display:flex; align-self:stretch; gap:2px; margin-left:8px; }
+.apps a { display:flex; align-items:center; padding:0 11px; color:var(--text-2); font-weight:500; position:relative; white-space:nowrap; }
+.apps a.on { color:var(--text); }
+.apps a.on::after { content:""; position:absolute; left:11px; right:11px; bottom:-1px; height:2px; background:var(--text); }
+.iconbtn { width:30px; height:30px; display:grid; place-items:center; border-radius:4px; color:var(--text-2); position:relative; }
+.iconbtn:hover, .iconbtn.is-hover { background:var(--raise); color:var(--text); }
+.badge-dot { position:absolute; top:4px; right:4px; min-width:15px; height:15px; padding:0 4px; border-radius:8px; background:var(--text); color:var(--bg); font-size:9.5px; font-weight:600; display:grid; place-items:center; }
+.sel { display:flex; align-items:center; gap:7px; height:30px; padding:0 9px 0 11px; border:1px solid var(--line); border-radius:4px; color:var(--text); background:var(--surface); white-space:nowrap; }
+.sel .k { color:var(--text-3); }
+.search { flex:1; max-width:440px; display:flex; align-items:center; gap:8px; height:30px; padding:0 8px 0 10px; border:1px solid var(--line); border-radius:4px; background:var(--bg); color:var(--text-3); }
+.search > span:first-of-type { flex:1; } .kbd { font-size:10.5px; padding:1px 5px; border:1px solid var(--line); border-radius:3px; color:var(--text-3); }
+.acct { display:flex; align-items:center; gap:6px; padding:3px 6px 3px 3px; border-radius:16px; }
+.avatar { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-size:10.5px; font-weight:600; background:var(--raise); border:1px solid var(--line-strong); color:var(--text); }
+.spacer { flex:1; }
+
+/* ── Shell ── */
+.shell { display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 52px); }
+.side { background:var(--chrome); border-right:1px solid var(--line); padding:14px 10px; display:flex; flex-direction:column; gap:2px; }
+.side h6 { font:600 11px/1 var(--font-ui); color:var(--text-3); padding:6px 10px 8px; letter-spacing:.01em; }
+.side a { display:flex; align-items:center; gap:10px; height:32px; padding:0 10px; border-radius:4px; color:var(--text-2); font-weight:500; position:relative; }
+.side a.on { color:var(--text); background:var(--raise); }
+.side a.on .hexmark { position:absolute; left:-6px; color:var(--text); }
+.side a .count { margin-left:auto; font-size:11px; color:var(--text-3); }
+.side .foot { margin-top:auto; border-top:1px solid var(--line-soft); padding:12px 10px 2px; font-size:12px; }
+main { padding:14px 16px 20px; display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); gap:12px; align-content:start; }
+@media (max-width:1279px) { .shell{grid-template-columns:56px 1fr} .side h6,.side a span,.side .foot{display:none} .side a{font-size:0;justify-content:center;padding:0} .side a .ic{width:18px;height:18px}
+  .search{max-width:220px} .sel .k{display:none} .apps a{padding:0 8px} main .s4,main .s8{grid-column:span 12} main .s6{grid-column:span 6} }
+@media (max-width:1099px) { .apps a:nth-child(n+4){display:none} .search span:first-of-type{display:none} .search{flex:0;width:34px;padding:0 9px} .search .kbd{display:none} main .s6{grid-column:span 12} td.s:nth-child(2){white-space:normal} }
+.s3 { grid-column:span 3; } .s4 { grid-column:span 4; } .s5 { grid-column:span 5; } .s6 { grid-column:span 6; } .s7 { grid-column:span 7; } .s8 { grid-column:span 8; } .s12 { grid-column:span 12; }
+
+/* ── Panels: layered surface, sheen, refined separators; controls on hover / focus / touch ── */
+.panel { background:var(--surface); border:1px solid var(--line); border-radius:6px; box-shadow:var(--sheen); display:flex; flex-direction:column; min-width:0; position:relative; }
+.ph { height:42px; display:flex; align-items:center; gap:10px; padding:0 8px 0 16px; border-bottom:1px solid var(--line-soft); }
+.ph h3 { font:600 13px/1 var(--font-ui); letter-spacing:-.005em; white-space:nowrap; }
+.ph .sub { color:var(--text-3); font-size:11.5px; white-space:nowrap; }
+.ctl { display:flex; gap:2px; margin-left:auto; opacity:0; transition:opacity .12s; }
+.ctl button { width:26px; height:26px; display:grid; place-items:center; border-radius:4px; color:var(--text-3); }
+.ctl button:hover { background:var(--raise); color:var(--text); }
+.panel:hover .ctl, .panel:focus-within .ctl, .panel.is-hover .ctl { opacity:1; }
+.panel.is-hover { border-color:var(--line-strong); }
+@media (hover:none) { .ctl { opacity:1; } .ctl .d-only { display:none; } }
+.pb { padding:14px 16px 16px; flex:1; display:flex; flex-direction:column; min-height:0; }
+.seg { display:inline-flex; border:1px solid var(--line); border-radius:4px; padding:2px; gap:2px; background:var(--bg); }
+.seg button { padding:2px 8px; border-radius:3px; font-size:11.5px; color:var(--text-3); }
+.seg button.on { background:var(--raise); color:var(--text); font-weight:500; box-shadow:0 0 0 1px var(--line-strong); }
+.chip { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 9px 0 7px; border:1px solid var(--line); border-radius:4px; font-size:11.5px; color:var(--text-2); }
+.chip .sw { width:10px; height:2px; border-radius:1px; }
+.chip.off { opacity:.5; }
+
+/* ── Figures ── */
+.label { font-size:12px; color:var(--text-2); }
+.fig-xl { font:var(--figure-weight) 46px/1.05 var(--font-figure); letter-spacing:var(--figure-track); font-variant-numeric:tabular-nums lining-nums; }
+.fig-l { font:var(--figure-weight) 32px/1.1 var(--font-figure); letter-spacing:var(--figure-track); font-variant-numeric:tabular-nums lining-nums; }
+.fig-m { font:400 20px/1.2 var(--font-figure); letter-spacing:-.01em; font-variant-numeric:tabular-nums lining-nums; }
+.kv { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-top:1px solid var(--line-soft); }
+.kv:first-child { border-top:0; } .kv span:last-child { font-variant-numeric:tabular-nums; font-weight:500; }
+.note { font-size:11.5px; color:var(--text-3); line-height:1.45; }
+
+/* ── Tables ── */
+table { width:100%; border-collapse:collapse; }
+th { font:500 11.5px/1 var(--font-ui); color:var(--text-3); text-align:left; padding:0 10px 9px; white-space:nowrap; }
+td { padding:9px 10px; border-top:1px solid var(--line-soft); white-space:nowrap; vertical-align:middle; }
+th.r, td.r { text-align:right; }
+tr:hover td, tr.is-hover td { background:var(--surface-2); }
+td .t { font-weight:500; } td .s { color:var(--text-2); }
+.rowact { color:var(--text-2); font-weight:500; font-size:12px; padding:3px 6px; border-radius:3px; }
+.rowact:hover, .rowact:focus-visible, tr.is-hover .rowact { color:var(--accent); background:var(--accent-soft); }
+.status { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:500; white-space:nowrap; }
+.status::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+.st-neutral { color:var(--neutral); } .st-warn { color:var(--warn); } .st-info { color:var(--info); } .st-pos { color:var(--pos); } .st-neg { color:var(--neg); }
+.tabs { display:flex; gap:18px; padding:0 16px; border-bottom:1px solid var(--line-soft); }
+.tabs button { height:36px; color:var(--text-2); font-weight:500; position:relative; display:flex; align-items:center; gap:6px; }
+.tabs button .n { font-size:11px; color:var(--text-3); font-variant-numeric:tabular-nums; }
+.tabs button.on { color:var(--text); } .tabs button.on::after { content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--text); }
+
+/* ── Buttons ── */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; height:32px; padding:0 13px; border-radius:4px; font-weight:500; white-space:nowrap; border:1px solid var(--line-strong); background:var(--surface); color:var(--text); }
+.btn.primary { background:var(--accent-fill); border-color:var(--accent-edge); color:var(--on-accent); }
+.btn.sponsor { background:var(--sponsor); border-color:var(--sponsor); color:var(--on-sponsor); }
+.btn.ghost { border-color:transparent; background:transparent; color:var(--text-2); }
+
+/* ── Lists ── */
+.dl { display:grid; grid-template-columns:64px 1fr auto; column-gap:0; align-items:baseline; } .dl > div:not(:nth-child(3n)) { padding-right:14px; }
+.dl > div { padding:10px 0; border-top:1px solid var(--line-soft); }
+.dl > div:nth-child(-n+3) { border-top:0; }
+.when { font-weight:600; font-variant-numeric:tabular-nums; } .when small { display:block; font-weight:400; color:var(--text-3); font-size:11px; }
+.kind { font-size:11px; color:var(--text-3); }
+.alloc { display:grid; grid-template-columns:1fr auto; row-gap:5px; column-gap:12px; }
+.bar { grid-column:1 / -1; height:4px; border-radius:2px; background:var(--line-soft); overflow:hidden; margin-bottom:6px; }
+.bar i { display:block; height:100%; background:var(--s2); border-radius:2px; }
+.bar i.lead { background:var(--accent-fill); box-shadow:inset 0 0 0 1px var(--accent-edge); }
+
+/* ── Menus ── */
+.menu { position:absolute; background:var(--surface); border-radius:6px; box-shadow:var(--menu-shadow); padding:6px; width:260px; z-index:20; font-size:12.5px; }
+.menu h6 { font:600 11px/1 var(--font-ui); color:var(--text-3); padding:8px 10px 6px; }
+.menu .it { display:flex; align-items:center; gap:10px; height:32px; padding:0 10px; border-radius:4px; color:var(--text); }
+.menu .it .ic { color:var(--text-2); } .menu .it.on { background:var(--raise); } .menu .it .tick { margin-left:auto; color:var(--text); }
+.menu hr { border:0; border-top:1px solid var(--line-soft); margin:5px 2px; }
+.menu .kbd { margin-left:auto; }
+</style></head><body><div style="position:relative">
+<header class="top">
+  <div class="logo" role="img" aria-label="Aurum"></div>
+  <nav class="apps" aria-label="Applications"><a href="#" class="on">Home</a><a href="#" class="">Fund</a><a href="#" class="">Corporate</a><a href="#" class="">Data rooms</a><a href="#" class="">Billing</a><a href="#" class="">Compliance</a></nav>
+  <button class="iconbtn" title="More applications: Sales, PMO, Chat Room" aria-label="More applications"><svg class="ic " width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg></button>
+  <div class="sel"><span class="k">Entity</span>All vehicles<svg class="ic faint" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+  <div class="search"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search or run a command</span><span class="kbd">Ctrl K</span></div>
+  <div class="spacer"></div>
+  <div class="sel" data-menu="layout"><span class="k">Layout</span>Operations<svg class="ic faint" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+  <button class="iconbtn" aria-label="Notifications, 6 new"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="badge-dot">6</span></button>
+  <button class="acct" data-menu="account" aria-label="Account"><span class="avatar">LA</span><svg class="ic faint" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+</header><div class="menu" style="right:306px;top:48px"><h6>Layouts</h6><div class="it on"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>Operations<span class="tick"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span></div><div class="it "><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>Executive overview</div><div class="it "><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>Fund review</div><div class="it "><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/></svg>Treasury</div><hr><div class="it"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5v14"/></svg>Add widget…</div><div class="it"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>Save layout as…</div><div class="it"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>Reset to default</div></div><div class="menu" style="right:10px;top:48px;width:280px"><div style="padding:10px 10px 12px;display:flex;gap:10px;align-items:center"><span class="avatar" style="width:32px;height:32px">LA</span><div><div style="font-weight:600">L. Andrade</div><div class="faint" style="font-size:11.5px">Fund operations</div></div></div><hr>
+   <h6>Appearance</h6><div style="padding:2px 8px 8px"><div class="seg" style="width:100%;display:grid;grid-template-columns:repeat(3,1fr)"><button class="on">Light</button><button class="">Dark</button><button>System</button></div></div>
+   <h6>Density</h6><div style="padding:2px 8px 8px"><div class="seg" style="width:100%;display:grid;grid-template-columns:repeat(2,1fr)"><button class="on">Comfortable</button><button>Compact</button></div></div><hr>
+   <div class="it"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>Profile</div><div class="it"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>Security</div><div class="it"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>Sign out</div></div><div class="menu" style="left:520px;top:48px;width:240px"><h6>More applications</h6><div class="it"><span style="width:8px;height:8px;border-radius:2px;background:#C46A1E"></span>Sales</div><div class="it"><span style="width:8px;height:8px;border-radius:2px;background:#8A4A9E"></span>PMO</div><div class="it"><span style="width:8px;height:8px;border-radius:2px;background:#1F8A84"></span>Chat Room</div><p class="note" style="padding:6px 10px 6px">Workspace colours are identifiers only (tenant tokens).</p></div><div style="height:330px;background:var(--bg)"></div></div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:24px 18px">
+   <div><div class="label" style="margin-bottom:8px">At rest</div>
+     <section class="panel " style="height:210px"><div class="ph"><h3>Upcoming obligations</h3>
+       <div class="ctl" style=""><button><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></button><button class=""><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/></svg></button><button><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div></div>
+       <div class="pb" style="padding-top:6px"><div class="dl"><div class="when">1 Dec</div><div><div style="font-weight:500">Capital Call No. 7 receivable</div><div class="kind">Cordillera Infrastructure I</div></div><div class="num" style="font-weight:500">+$4,650,000</div><div class="when">8 Dec</div><div><div style="font-weight:500">Capital Call No. 2</div><div class="kind">Atlântico Venture II</div></div><div class="num" style="font-weight:500">+$6,400,000</div></div></div>
+       </section>
+     <p class="note" style="margin-top:8px">Quiet by default: title and content only.</p></div><div><div class="label" style="margin-bottom:8px">Pointer hover</div>
+     <section class="panel is-hover" style="height:210px"><div class="ph"><h3>Upcoming obligations</h3>
+       <div class="ctl" style="opacity:1"><button><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></button><button class=""><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/></svg></button><button><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div></div>
+       <div class="pb" style="padding-top:6px"><div class="dl"><div class="when">1 Dec</div><div><div style="font-weight:500">Capital Call No. 7 receivable</div><div class="kind">Cordillera Infrastructure I</div></div><div class="num" style="font-weight:500">+$4,650,000</div><div class="when">8 Dec</div><div><div style="font-weight:500">Capital Call No. 2</div><div class="kind">Atlântico Venture II</div></div><div class="num" style="font-weight:500">+$6,400,000</div></div></div>
+       </section>
+     <p class="note" style="margin-top:8px">Controls appear on hover; the row action turns gold.</p></div><div><div class="label" style="margin-bottom:8px">Keyboard focus</div>
+     <section class="panel " style="height:210px"><div class="ph"><h3>Upcoming obligations</h3>
+       <div class="ctl" style="opacity:1"><button><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg></button><button class="is-focus"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/></svg></button><button><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div></div>
+       <div class="pb" style="padding-top:6px"><div class="dl"><div class="when">1 Dec</div><div><div style="font-weight:500">Capital Call No. 7 receivable</div><div class="kind">Cordillera Infrastructure I</div></div><div class="num" style="font-weight:500">+$4,650,000</div><div class="when">8 Dec</div><div><div style="font-weight:500">Capital Call No. 2</div><div class="kind">Atlântico Venture II</div></div><div class="num" style="font-weight:500">+$6,400,000</div></div></div>
+       </section>
+     <p class="note" style="margin-top:8px">Tab reaches the controls; Enter opens; Esc returns focus.</p></div><div><div class="label" style="margin-bottom:8px">Touch: widget menu</div>
+     <section class="panel " style="height:210px"><div class="ph"><h3>Upcoming obligations</h3>
+       <div class="ctl" style="opacity:1"><button><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div></div>
+       <div class="pb" style="padding-top:6px"><div class="dl"><div class="when">1 Dec</div><div><div style="font-weight:500">Capital Call No. 7 receivable</div><div class="kind">Cordillera Infrastructure I</div></div><div class="num" style="font-weight:500">+$4,650,000</div><div class="when">8 Dec</div><div><div style="font-weight:500">Capital Call No. 2</div><div class="kind">Atlântico Venture II</div></div><div class="num" style="font-weight:500">+$6,400,000</div></div></div>
+       <div class="menu" style="right:8px;top:38px;width:210px"><div class="it"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/></svg>Move</div><div class="it"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 9 15"/><path d="M12 3H3v18h18v-9"/><path d="M16 3h5v5"/></svg>Resize</div><div class="it"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/></svg>Full screen</div><div class="it"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg>Collapse</div><div class="it"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>Configure</div><div class="it"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>Remove</div></div></section>
+     <p class="note" style="margin-top:8px">On touch, one “More” button stays visible and opens every control.</p></div>
+  </div><div style="padding:0 18px 22px"><div class="label" style="margin-bottom:8px">Row action — neutral at rest, gold on hover or focus</div><section class="panel"><div style="padding:6px"><table><thead><tr><th>Item</th><th>Entity</th><th class="r">Amount</th><th>Date</th><th>Status</th><th class="r"><span class="sr">Action</span></th></tr></thead><tbody><tr class=""><td><span class="t">Capital Call No. 2</span></td><td class="s">Atlântico Venture II</td><td class="r t">$6,400,000</td><td class="s num">Due 8 Dec 2026</td><td><span class="status st-neutral">Draft</span></td><td class="r"><a href="#" class="rowact">Review</a></td></tr><tr class="is-hover"><td><span class="t">Capital Call No. 3</span></td><td class="s">STX-Anchor Capital Formation</td><td class="r t">$3,650,000</td><td class="s num">Due 9 Dec 2026</td><td><span class="status st-neutral">Draft</span></td><td class="r"><a href="#" class="rowact">Review</a></td></tr><tr class=""><td><span class="t">Distribution bank account change</span></td><td class="s">Ferreira Holdings Ltd.</td><td class="r t">—</td><td class="s num">22 Nov 2026</td><td><span class="status st-warn">Pending review</span></td><td class="r"><a href="#" class="rowact">Review</a></td></tr></tbody></table></div></section></div></body></html>

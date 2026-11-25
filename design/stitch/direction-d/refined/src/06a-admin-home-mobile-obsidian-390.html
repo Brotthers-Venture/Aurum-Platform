@@ -1,0 +1,153 @@
+<!doctype html><html lang="en" data-theme="dark" data-type="a"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Home — mobile</title><link rel="stylesheet" href="file:///C:/Users/luca2/programming/aurum-platform/node_modules/@fontsource-variable/inter/index.css"><link rel="stylesheet" href="file:///C:/Users/luca2/programming/aurum-platform/node_modules/@fontsource-variable/manrope/index.css"><link rel="stylesheet" href="file:///C:/Users/luca2/programming/aurum-platform/node_modules/@fontsource/ibm-plex-sans/300.css"><link rel="stylesheet" href="file:///C:/Users/luca2/programming/aurum-platform/node_modules/@fontsource/ibm-plex-sans/400.css"><link rel="stylesheet" href="file:///C:/Users/luca2/programming/aurum-platform/node_modules/@fontsource-variable/source-serif-4/index.css"><style>
+/* Obsidian — tonal depth through four surface steps, not shadows */
+[data-theme="dark"] { color-scheme: dark;
+  --bg:#0A0E12; --chrome:#0C1116; --surface:#10161D; --surface-2:#131A22; --raise:#18202A; --line:#212A34; --line-soft:#19212A; --line-strong:#2E3946;
+  --text:#EEF1F4; --text-2:#97A3B1; --text-3:#6A7684; --accent:#FFCA00; --accent-fill:#FFCA00; --on-accent:#0A0E12; --accent-soft:rgba(255,202,0,.10); --accent-edge:#FFCA00;
+  --pos:#3DBE8B; --warn:#E3A33B; --info:#83ABF0; --neg:#EF6F68; --neutral:#97A3B1; --s2:#8592A1; --s3:#4A5664; --grid:#1A222B;
+  --sheen: inset 0 1px 0 rgba(255,255,255,.028); --menu-shadow: 0 16px 40px rgba(0,0,0,.45), 0 0 0 1px var(--line-strong);
+  --focus:#EEF1F4; --sponsor:#9DB4CF; --on-sponsor:#0A0E12; --logo:url("file:///C:/Users/luca2/programming/aurum-platform/public/brand/aurum-logo-white.png"); }
+/* Platinum — a private-bank statement: warm neutrals, understated borders */
+[data-theme="light"] { color-scheme: light;
+  --bg:#F2F1EE; --chrome:#FBFAF8; --surface:#FFFFFF; --surface-2:#FAF9F6; --raise:#F4F2EE; --line:#E3E0DA; --line-soft:#EDEBE6; --line-strong:#D2CEC6;
+  --text:#14181D; --text-2:#5A6069; --text-3:#8A8F96; --accent:#7D5F00; --accent-fill:#F8C618; --on-accent:#14181D; --accent-soft:rgba(248,198,24,.16); --accent-edge:#9C7500;
+  --pos:#15803D; --warn:#A6570B; --info:#1D4ED8; --neg:#B42318; --neutral:#5A6069; --s2:#7C828B; --s3:#C9C5BD; --grid:#EEECE7;
+  --sheen: 0 1px 0 rgba(20,24,29,.03); --menu-shadow: 0 16px 40px rgba(20,24,29,.12), 0 0 0 1px var(--line);
+  --focus:#14181D; --sponsor:#1F3A5F; --on-sponsor:#FFFFFF; --logo:url("file:///C:/Users/luca2/programming/aurum-platform/public/brand/aurum-logo-dark.png"); }
+[data-type="a"] { --font-figure:"Manrope Variable", Inter, sans-serif; --figure-weight:300; --figure-track:-0.025em; }
+[data-type="b"] { --font-figure:"IBM Plex Sans", Inter, sans-serif; --figure-weight:300; --figure-track:-0.02em; }
+:root { --font-ui:"Inter Variable", system-ui, sans-serif; --font-serif:"Source Serif 4 Variable", Georgia, serif; }
+
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font:400 13px/1.45 var(--font-ui); font-feature-settings:"cv11","ss01"; -webkit-font-smoothing:antialiased; }
+.num, td.r, .fig { font-variant-numeric: tabular-nums lining-nums; font-feature-settings:"tnum","lnum"; }
+button { font:inherit; color:inherit; background:none; border:0; cursor:pointer; }
+a { color:inherit; text-decoration:none; }
+.ic { flex:none; display:block; }
+.muted { color:var(--text-2); } .faint { color:var(--text-3); }
+:focus-visible, .is-focus { outline:2px solid var(--focus); outline-offset:2px; border-radius:3px; }
+
+/* ── Global header: applications only ── */
+.top { height:52px; display:flex; align-items:center; gap:18px; padding:0 16px 0 18px; background:var(--chrome); border-bottom:1px solid var(--line); position:relative; z-index:5; }
+.logo { width:104px; height:22px; background:var(--logo) left center / contain no-repeat; flex:none; }
+.apps { display:flex; align-self:stretch; gap:2px; margin-left:8px; }
+.apps a { display:flex; align-items:center; padding:0 11px; color:var(--text-2); font-weight:500; position:relative; white-space:nowrap; }
+.apps a.on { color:var(--text); }
+.apps a.on::after { content:""; position:absolute; left:11px; right:11px; bottom:-1px; height:2px; background:var(--text); }
+.iconbtn { width:30px; height:30px; display:grid; place-items:center; border-radius:4px; color:var(--text-2); position:relative; }
+.iconbtn:hover, .iconbtn.is-hover { background:var(--raise); color:var(--text); }
+.badge-dot { position:absolute; top:4px; right:4px; min-width:15px; height:15px; padding:0 4px; border-radius:8px; background:var(--text); color:var(--bg); font-size:9.5px; font-weight:600; display:grid; place-items:center; }
+.sel { display:flex; align-items:center; gap:7px; height:30px; padding:0 9px 0 11px; border:1px solid var(--line); border-radius:4px; color:var(--text); background:var(--surface); white-space:nowrap; }
+.sel .k { color:var(--text-3); }
+.search { flex:1; max-width:440px; display:flex; align-items:center; gap:8px; height:30px; padding:0 8px 0 10px; border:1px solid var(--line); border-radius:4px; background:var(--bg); color:var(--text-3); }
+.search > span:first-of-type { flex:1; } .kbd { font-size:10.5px; padding:1px 5px; border:1px solid var(--line); border-radius:3px; color:var(--text-3); }
+.acct { display:flex; align-items:center; gap:6px; padding:3px 6px 3px 3px; border-radius:16px; }
+.avatar { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-size:10.5px; font-weight:600; background:var(--raise); border:1px solid var(--line-strong); color:var(--text); }
+.spacer { flex:1; }
+
+/* ── Shell ── */
+.shell { display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 52px); }
+.side { background:var(--chrome); border-right:1px solid var(--line); padding:14px 10px; display:flex; flex-direction:column; gap:2px; }
+.side h6 { font:600 11px/1 var(--font-ui); color:var(--text-3); padding:6px 10px 8px; letter-spacing:.01em; }
+.side a { display:flex; align-items:center; gap:10px; height:32px; padding:0 10px; border-radius:4px; color:var(--text-2); font-weight:500; position:relative; }
+.side a.on { color:var(--text); background:var(--raise); }
+.side a.on .hexmark { position:absolute; left:-6px; color:var(--text); }
+.side a .count { margin-left:auto; font-size:11px; color:var(--text-3); }
+.side .foot { margin-top:auto; border-top:1px solid var(--line-soft); padding:12px 10px 2px; font-size:12px; }
+main { padding:14px 16px 20px; display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); gap:12px; align-content:start; }
+@media (max-width:1279px) { .shell{grid-template-columns:56px 1fr} .side h6,.side a span,.side .foot{display:none} .side a{font-size:0;justify-content:center;padding:0} .side a .ic{width:18px;height:18px}
+  .search{max-width:220px} .sel .k{display:none} .apps a{padding:0 8px} main .s4,main .s8{grid-column:span 12} main .s6{grid-column:span 6} }
+@media (max-width:1099px) { .apps a:nth-child(n+4){display:none} .search span:first-of-type{display:none} .search{flex:0;width:34px;padding:0 9px} .search .kbd{display:none} main .s6{grid-column:span 12} td.s:nth-child(2){white-space:normal} }
+.s3 { grid-column:span 3; } .s4 { grid-column:span 4; } .s5 { grid-column:span 5; } .s6 { grid-column:span 6; } .s7 { grid-column:span 7; } .s8 { grid-column:span 8; } .s12 { grid-column:span 12; }
+
+/* ── Panels: layered surface, sheen, refined separators; controls on hover / focus / touch ── */
+.panel { background:var(--surface); border:1px solid var(--line); border-radius:6px; box-shadow:var(--sheen); display:flex; flex-direction:column; min-width:0; position:relative; }
+.ph { height:42px; display:flex; align-items:center; gap:10px; padding:0 8px 0 16px; border-bottom:1px solid var(--line-soft); }
+.ph h3 { font:600 13px/1 var(--font-ui); letter-spacing:-.005em; white-space:nowrap; }
+.ph .sub { color:var(--text-3); font-size:11.5px; white-space:nowrap; }
+.ctl { display:flex; gap:2px; margin-left:auto; opacity:0; transition:opacity .12s; }
+.ctl button { width:26px; height:26px; display:grid; place-items:center; border-radius:4px; color:var(--text-3); }
+.ctl button:hover { background:var(--raise); color:var(--text); }
+.panel:hover .ctl, .panel:focus-within .ctl, .panel.is-hover .ctl { opacity:1; }
+.panel.is-hover { border-color:var(--line-strong); }
+@media (hover:none) { .ctl { opacity:1; } .ctl .d-only { display:none; } }
+.pb { padding:14px 16px 16px; flex:1; display:flex; flex-direction:column; min-height:0; }
+.seg { display:inline-flex; border:1px solid var(--line); border-radius:4px; padding:2px; gap:2px; background:var(--bg); }
+.seg button { padding:2px 8px; border-radius:3px; font-size:11.5px; color:var(--text-3); }
+.seg button.on { background:var(--raise); color:var(--text); font-weight:500; box-shadow:0 0 0 1px var(--line-strong); }
+.chip { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 9px 0 7px; border:1px solid var(--line); border-radius:4px; font-size:11.5px; color:var(--text-2); }
+.chip .sw { width:10px; height:2px; border-radius:1px; }
+.chip.off { opacity:.5; }
+
+/* ── Figures ── */
+.label { font-size:12px; color:var(--text-2); }
+.fig-xl { font:var(--figure-weight) 46px/1.05 var(--font-figure); letter-spacing:var(--figure-track); font-variant-numeric:tabular-nums lining-nums; }
+.fig-l { font:var(--figure-weight) 32px/1.1 var(--font-figure); letter-spacing:var(--figure-track); font-variant-numeric:tabular-nums lining-nums; }
+.fig-m { font:400 20px/1.2 var(--font-figure); letter-spacing:-.01em; font-variant-numeric:tabular-nums lining-nums; }
+.kv { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-top:1px solid var(--line-soft); }
+.kv:first-child { border-top:0; } .kv span:last-child { font-variant-numeric:tabular-nums; font-weight:500; }
+.note { font-size:11.5px; color:var(--text-3); line-height:1.45; }
+
+/* ── Tables ── */
+table { width:100%; border-collapse:collapse; }
+th { font:500 11.5px/1 var(--font-ui); color:var(--text-3); text-align:left; padding:0 10px 9px; white-space:nowrap; }
+td { padding:9px 10px; border-top:1px solid var(--line-soft); white-space:nowrap; vertical-align:middle; }
+th.r, td.r { text-align:right; }
+tr:hover td, tr.is-hover td { background:var(--surface-2); }
+td .t { font-weight:500; } td .s { color:var(--text-2); }
+.rowact { color:var(--text-2); font-weight:500; font-size:12px; padding:3px 6px; border-radius:3px; }
+.rowact:hover, .rowact:focus-visible, tr.is-hover .rowact { color:var(--accent); background:var(--accent-soft); }
+.status { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:500; white-space:nowrap; }
+.status::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+.st-neutral { color:var(--neutral); } .st-warn { color:var(--warn); } .st-info { color:var(--info); } .st-pos { color:var(--pos); } .st-neg { color:var(--neg); }
+.tabs { display:flex; gap:18px; padding:0 16px; border-bottom:1px solid var(--line-soft); }
+.tabs button { height:36px; color:var(--text-2); font-weight:500; position:relative; display:flex; align-items:center; gap:6px; }
+.tabs button .n { font-size:11px; color:var(--text-3); font-variant-numeric:tabular-nums; }
+.tabs button.on { color:var(--text); } .tabs button.on::after { content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--text); }
+
+/* ── Buttons ── */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; height:32px; padding:0 13px; border-radius:4px; font-weight:500; white-space:nowrap; border:1px solid var(--line-strong); background:var(--surface); color:var(--text); }
+.btn.primary { background:var(--accent-fill); border-color:var(--accent-edge); color:var(--on-accent); }
+.btn.sponsor { background:var(--sponsor); border-color:var(--sponsor); color:var(--on-sponsor); }
+.btn.ghost { border-color:transparent; background:transparent; color:var(--text-2); }
+
+/* ── Lists ── */
+.dl { display:grid; grid-template-columns:64px 1fr auto; column-gap:0; align-items:baseline; } .dl > div:not(:nth-child(3n)) { padding-right:14px; }
+.dl > div { padding:10px 0; border-top:1px solid var(--line-soft); }
+.dl > div:nth-child(-n+3) { border-top:0; }
+.when { font-weight:600; font-variant-numeric:tabular-nums; } .when small { display:block; font-weight:400; color:var(--text-3); font-size:11px; }
+.kind { font-size:11px; color:var(--text-3); }
+.alloc { display:grid; grid-template-columns:1fr auto; row-gap:5px; column-gap:12px; }
+.bar { grid-column:1 / -1; height:4px; border-radius:2px; background:var(--line-soft); overflow:hidden; margin-bottom:6px; }
+.bar i { display:block; height:100%; background:var(--s2); border-radius:2px; }
+.bar i.lead { background:var(--accent-fill); box-shadow:inset 0 0 0 1px var(--accent-edge); }
+
+/* ── Menus ── */
+.menu { position:absolute; background:var(--surface); border-radius:6px; box-shadow:var(--menu-shadow); padding:6px; width:260px; z-index:20; font-size:12.5px; }
+.menu h6 { font:600 11px/1 var(--font-ui); color:var(--text-3); padding:8px 10px 6px; }
+.menu .it { display:flex; align-items:center; gap:10px; height:32px; padding:0 10px; border-radius:4px; color:var(--text); }
+.menu .it .ic { color:var(--text-2); } .menu .it.on { background:var(--raise); } .menu .it .tick { margin-left:auto; color:var(--text); }
+.menu hr { border:0; border-top:1px solid var(--line-soft); margin:5px 2px; }
+.menu .kbd { margin-left:auto; }
+.chart .ax { font:500 10.5px var(--font-ui); fill:var(--text-3); font-variant-numeric:tabular-nums; } .chart .ax.on { fill:var(--text); font-weight:600; }
+.chart .tt-h { font:600 11.5px var(--font-ui); fill:var(--text); } .chart .tt { font:400 11px var(--font-ui); fill:var(--text-2); } .chart .tt-v { font:600 11px var(--font-ui); fill:var(--text); font-variant-numeric:tabular-nums; }</style></head><body>
+  <header class="top" style="height:52px;gap:8px;padding:0 10px"><button class="iconbtn" aria-label="Menu"><svg class="ic " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div class="logo" style="width:92px"></div><div class="spacer"></div><button class="iconbtn" aria-label="Search"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button><button class="iconbtn" aria-label="Notifications"><svg class="ic " width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="badge-dot">6</span></button><span class="avatar">LA</span></header>
+  <div style="padding:14px 12px 24px;display:flex;flex-direction:column;gap:12px">
+   <div style="padding:2px 4px"><div class="faint" style="font-size:12px">24 Nov 2026 · Fund operations</div><div style="font:600 18px/1.3 var(--font-ui);margin-top:2px">Home</div></div>
+   <section class="panel"><div class="ph"><h3>Needs your approval</h3><span class="sub">6</span><div class="ctl" style="opacity:1"><button aria-label="Widget menu"><svg class="ic " width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button></div></div>
+    <a href="#" style="display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:11px 16px;border-top:1px solid var(--line-soft)"><span style="font-weight:500">Capital Call No. 2</span><span class="num" style="font-weight:500;text-align:right">$6,400,000</span><span class="muted" style="font-size:12px">Atlântico Venture II</span><span class="status st-neutral" style="justify-self:end">Draft</span></a><a href="#" style="display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:11px 16px;border-top:1px solid var(--line-soft)"><span style="font-weight:500">Capital Call No. 3</span><span class="num" style="font-weight:500;text-align:right">$3,650,000</span><span class="muted" style="font-size:12px">STX-Anchor Capital Formation</span><span class="status st-neutral" style="justify-self:end">Draft</span></a><a href="#" style="display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:11px 16px;border-top:1px solid var(--line-soft)"><span style="font-weight:500">Distribution bank account change</span><span class="num" style="font-weight:500;text-align:right">—</span><span class="muted" style="font-size:12px">Ferreira Holdings Ltd.</span><span class="status st-warn" style="justify-self:end">Pending review</span></a><a href="#" style="display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:11px 16px;border-top:1px solid var(--line-soft)"><span style="font-weight:500">Mailing address change</span><span class="num" style="font-weight:500;text-align:right">—</span><span class="muted" style="font-size:12px">Calloway Family Trust</span><span class="status st-warn" style="justify-self:end">Pending review</span></a>
+    <a href="#" style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;border-top:1px solid var(--line-soft);color:var(--text-2);font-weight:500">Open work queue (11)<svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a></section>
+   <section class="panel"><div class="ph"><h3>Outstanding obligations</h3></div><div class="pb">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:500">Capital Call No. 7</span><span class="muted num" style="font-size:12px">Due 1 Dec 2026</span></div>
+    <div class="muted" style="font-size:12px;margin-top:2px">Cordillera Infrastructure I · 5 of 9 partners outstanding</div>
+    <div class="fig-l" style="margin-top:10px;font-size:28px">$4,650,000</div><div class="faint" style="font-size:12px">outstanding of $12,750,000</div>
+    <div class="bar" style="height:5px;margin:10px 0 4px"><i class="lead" style="width:63.5%"></i></div><div class="faint num" style="font-size:11.5px">63.5% received</div>
+    <div style="display:flex;gap:8px;margin-top:12px"><a class="btn primary" style="flex:1"><svg class="ic " width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></svg>Record receipt</a><a class="btn" style="flex:1">Send reminder</a></div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft);display:grid;grid-template-columns:1fr auto;gap:2px 10px"><span style="font-weight:500">Income distribution</span><span class="num" style="font-weight:500">−R$ 24,500,000</span><span class="muted" style="font-size:12px">FIP Horizonte · 15 Dec 2026</span><span class="status st-neutral" style="justify-self:end">Scheduled</span></div></div></section>
+   <section class="panel"><div class="ph"><h3>Key balances</h3></div><div class="pb" style="padding-top:8px">
+    <div class="label">Net asset value under administration</div><div class="fig-l" style="margin:4px 0 8px">$284,631,481</div>
+    <div class="kv"><span class="muted">Receivable on open calls</span><span>$4,650,000</span></div><div class="kv"><span class="muted">Ledger cash (account 1000)</span><span>$81,000</span></div><div class="kv"><span class="muted">Unfunded commitments</span><span>$314,206,852</span></div>
+    <p class="note" style="margin-top:6px">USD, BRL at indicative 5.40.</p></div></section>
+   <section class="panel"><div class="ph"><h3>Recent activity</h3></div><div class="pb" style="padding-top:2px"><div style="padding:10px 0;"><div><span style="font-weight:500">Beatriz Duarte</span> <span class="muted">uploaded ownership chart for Duarte Participações S.A.</span></div><div class="faint num" style="font-size:11.5px;margin-top:2px">24 Nov 08:42</div></div><div style="padding:10px 0;border-top:1px solid var(--line-soft)"><div><span style="font-weight:500">System</span> <span class="muted">sent onboarding invitation to Kessler Revocable Trust</span></div><div class="faint num" style="font-size:11.5px;margin-top:2px">24 Nov 08:15</div></div><div style="padding:10px 0;border-top:1px solid var(--line-soft)"><div><span style="font-weight:500">Margaret Calloway</span> <span class="muted">completed the tax information step</span></div><div class="faint num" style="font-size:11.5px;margin-top:2px">23 Nov 17:30</div></div></div></section>
+   <section class="panel"><div class="ph"><h3>Analytics</h3><span class="sub">Collapsed on mobile</span></div>
+    <a href="#" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--line-soft)"><span>Capital activity</span><svg class="ic faint" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a><a href="#" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--line-soft)"><span>NAV by vehicle</span><svg class="ic faint" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a><a href="#" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--line-soft)"><span>Upcoming obligations — all</span><svg class="ic faint" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a></section>
+  </div></body></html>
