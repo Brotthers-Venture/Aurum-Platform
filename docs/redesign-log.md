@@ -3,10 +3,13 @@
 Read this and `docs/redesign-brief.md` at the start of every session. Newest entries on top.
 
 ## Status
-- **Phase reached:** 5 complete → **Phase 6: waiting for owner approval.** Do not start implementation before approval.
+- **Phase reached:** Direction D prototypes delivered (`docs/direction-d-prototypes.md`) → **waiting for owner approval.**
+  P1–P5 are rejected as the final direction. Do not start implementation before approval.
 - **Branch:** `redesign`.
-- **Awaiting owner:** approval of prototypes P1–P5 (`docs/redesign-prototypes.md`), `docs/design-system.md` and the
-  new dependencies (`docs/redesign-components.md`).
+- **Awaiting owner:**
+  - Approval of the Direction D frames.
+  - Four decisions: the figure typeface, the Platinum sidebar tint, eyebrow case, and the dependencies.
+  - Details are in `docs/direction-d-prototypes.md`.
 
 ## References
 - Stitch project: `projects/11182280680944937938` ("Aurum Platform"). Design system id `3776221373241039428`
@@ -37,6 +40,24 @@ Read this and `docs/redesign-brief.md` at the start of every session. Newest ent
 _None._
 
 ## Entries
+### 2026-11-25 — Direction D (owner brief `docs/direction-d.md`, supersedes P1–P5)
+- **Setup:**
+  - Verified that Stitch (`get_project`) and 21st.dev (`search`) respond.
+  - Moved `References/` to `design/references/` and git-ignored it before staging anything.
+  - Converted the references to PNG and uploaded them, plus both official logos, to Stitch.
+- **Stitch:**
+  - Created the design system "Aurum Direction D — Obsidian" `assets/8160601109885466765`.
+  - Generated Home, Fund overview, Banking and treasury, and the Investor portal in Obsidian. The first Banking run failed with a network error and was resubmitted.
+  - Ran one fix pass each on Home and Fund (status clipping, axis range, colour tokens, legend and tooltip overlap, an invented "Active" badge, a truncated GP name).
+- **Themes:** `tools/stitch/render-direction-d.mjs` renders one HTML per screen in Obsidian, Platinum and Northbridge by swapping tokens only. That gives identical layouts per theme. The script also places the official logos and enforces no monospace.
+- **Deliverables:** 14 frames in `design/stitch/direction-d/` (all of §18, plus Home at 1920 px). Each was inspected and widths were verified. See `docs/direction-d-prototypes.md`.
+- **Data honesty:**
+  - No "Sample series" was needed; all charts use ledger history or scheduled items.
+  - BRL is converted at indicative 5.40 and labelled.
+  - Ledger cash is shown as it is: $81,000.
+- **Stitch inventions removed:** substitute logos (a stock photo and placeholders), an "Active" badge, the "Interval: 30 days (daily discrete)" note, and rainbow status colours.
+- **Status:** stopped for owner approval. No production code was changed.
+
 ### 2026-11-25 — Phases 3–5
 - **Phase 3:** searched 21st.dev for every item in brief §3. The shortlist and rejections are in `docs/redesign-components.md`.
   Proposed one headless layer (Base UI) plus TanStack Table, Recharts, cmdk, react-day-picker and Inter.

@@ -43,3 +43,6 @@ next-env.d.ts
 # Stitch downloads
 /design/stitch/
 /design/audit/
+
+# Third-party mood references: never commit
+/design/references/
