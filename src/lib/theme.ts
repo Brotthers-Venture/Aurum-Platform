@@ -22,3 +22,27 @@ export function resolveTheme(pref: ThemePref): "light" | "dark" {
 
 /** Inline in <head>. Obsidian (dark) is the default. */
 export const THEME_BOOT = `(function(){try{var p=localStorage.getItem(${JSON.stringify(THEME_KEY)})||"dark";var t=p==="system"?(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"):p;document.documentElement.setAttribute("data-theme",t==="light"?"light":"dark");}catch(e){document.documentElement.setAttribute("data-theme","dark");}})();`;
+
+/* ───────────────────────── ambient motion (ecosystem hub) ───────────────────────── */
+
+/** Each user can switch decorative motion off for themselves; the tenant default lives in the brand. */
+export type MotionPref = "auto" | "off";
+export const MOTION_KEY = "aurum-motion-v1";
+/** Temporary prototype switcher (owner review only) — never written into the tenant brand. */
+export const ECO_PREVIEW_KEY = "aurum-eco-preview-v1";
+/** The first-arrival sequence plays once per browser session. */
+export const ECO_ENTERED_KEY = "aurum-eco-entered";
+
+export function readMotionPref(): MotionPref {
+  try {
+    return window.localStorage.getItem(MOTION_KEY) === "off" ? "off" : "auto";
+  } catch {
+    return "auto";
+  }
+}
+
+/**
+ * Before first paint: mark <html data-eco-enter> when the hub's entrance should play this session — not if the OS asks
+ * for reduced motion, the user switched motion off, or the chosen variation is Off. Fails silently without storage.
+ */
+export const ECO_BOOT = `(function(){try{var d=document.documentElement;if(sessionStorage.getItem(${JSON.stringify(ECO_ENTERED_KEY)}))return;if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;if(localStorage.getItem(${JSON.stringify(MOTION_KEY)})==="off")return;var p=localStorage.getItem(${JSON.stringify(ECO_PREVIEW_KEY)});var b=JSON.parse(localStorage.getItem("aurum-tenant-brand")||"null");var v=p||(b&&b.ambientMotion)||"ambient";if(v==="off")return;d.setAttribute("data-eco-enter","");}catch(e){}})();`;

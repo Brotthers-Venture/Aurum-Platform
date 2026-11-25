@@ -182,10 +182,10 @@ export function HexNav({
 export function DarkCenter({ lines, expanded = true }: { lines: [string, string]; expanded?: boolean }) {
   return (
     <g className="hex-cell" style={{ transform: `scale(${expanded ? 1 : 1.16})` }}>
-      <polygon points={hexPoints(R)} fill="#FBF3DC" />
-      <Band w={FRAME.outer} color="var(--tenant-accent)" />
-      <Band r={R - FRAME.outer - FRAME.gap} w={FRAME.inner} color="var(--tenant-accent)" />
-      <text textAnchor="middle" fill="var(--tenant-ink)">
+      <polygon points={hexPoints(R)} fill="var(--eco-center, #FBF3DC)" />
+      <Band w={FRAME.outer} color="var(--eco-mark, var(--tenant-accent))" />
+      <Band r={R - FRAME.outer - FRAME.gap} w={FRAME.inner} color="var(--eco-mark, var(--tenant-accent))" />
+      <text textAnchor="middle" fill="var(--eco-label, var(--tenant-ink))">
         <tspan x={0} y={-6} fontSize={22} className="font-serif">
           {lines[0]}
         </tspan>
@@ -201,7 +201,7 @@ export function DarkCenter({ lines, expanded = true }: { lines: [string, string]
 export function BrandCenter({ color, secondary, children }: { color: string; secondary: string; children: ReactNode }) {
   return (
     <>
-      <polygon points={hexPoints(R)} fill="#FFFFFF" />
+      <polygon points={hexPoints(R)} fill="var(--eco-logo-plate, #FFFFFF)" />
       <Band w={FRAME.outer} color={color} />
       <Band r={R - FRAME.outer - FRAME.gap} w={FRAME.inner} color={secondary} />
       <foreignObject x={-74} y={-44} width={148} height={88}>
@@ -212,7 +212,7 @@ export function BrandCenter({ color, secondary, children }: { color: string; sec
 }
 
 /** The Aurum hexagon mark as the centre: outer band, gap, inner band, open centre. */
-export function MarkCenter({ expanded = true, color = "var(--tenant-accent)" }: { expanded?: boolean; color?: string }) {
+export function MarkCenter({ expanded = true, color = "var(--eco-mark, var(--tenant-accent))" }: { expanded?: boolean; color?: string }) {
   const k = R / 174; // mark geometry measured on a 174-unit outer radius
   const { brand } = useBrand();
   return (

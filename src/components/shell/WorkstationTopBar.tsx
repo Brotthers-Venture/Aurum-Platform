@@ -73,13 +73,34 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
  * Direction D global header: logo, applications, app switcher, (optional) entity switcher, search and command,
  * notifications and the account. Appearance (Light / Dark / System) lives in the account menu.
  */
-export function WorkstationTopBar({ app, onSearch, entity }: { app: string; onSearch?: () => void; entity?: ReactNode }) {
+export function WorkstationTopBar({
+  app,
+  onSearch,
+  entity,
+  variant = "default",
+  moreExtra,
+  onActivity,
+}: {
+  app: string;
+  onSearch?: () => void;
+  entity?: ReactNode;
+  /** "ecosystem": the hub — no application row (the hexagons are the navigation), transparent over the ambient light */
+  variant?: "default" | "ecosystem";
+  /** extra items for the ⋮ menu (e.g. the temporary prototype switcher) */
+  moreExtra?: ReactNode;
+  /** tells the page a menu or search is in use, so decorative motion stays quiet */
+  onActivity?: (busy: boolean) => void;
+}) {
   const [open, setOpen] = useState<null | "apps" | "bell" | "account" | "more">(null);
   const close = () => setOpen(null);
   const ref = useDismiss(open !== null, close);
   const toggle = (k: NonNullable<typeof open>) => setOpen((o) => (o === k ? null : k));
   const { brand } = useBrand();
-  const { pref, theme, setPref } = useTheme();
+  const { pref, theme, setPref, motion, setMotion } = useTheme();
+  const eco = variant === "ecosystem";
+  useEffect(() => {
+    onActivity?.(open !== null);
+  }, [open, onActivity]);
   const { user } = usePreviewRole();
   const [notes, setNotes] = useState<{ items: InboxItem[]; unread: number }>({ items: [], unread: 0 });
 
@@ -100,11 +121,11 @@ export function WorkstationTopBar({ app, onSearch, entity }: { app: string; onSe
 
   const moreActive = MORE.find((m) => m.id === app);
   return (
-    <header ref={ref} className="relative z-40 flex h-[52px] shrink-0 items-center gap-3 border-b border-d-line bg-d-chrome pl-4 pr-3 text-[13px]">
+    <header ref={ref} className={cx("relative z-40 flex h-[52px] shrink-0 items-center gap-3 pl-4 pr-3 text-[13px]", eco ? "border-b border-transparent bg-transparent" : "border-b border-d-line bg-d-chrome")}>
       <Link href="/admin" aria-label={`${brand.name} home`} className="shrink-0">
         <AurumLogo variant={theme === "dark" ? "white" : "dark"} height={22} />
       </Link>
-      <nav aria-label="Applications" className="ml-3 hidden h-full items-stretch lg:flex">
+      <nav aria-label="Applications" className={cx("ml-3 h-full items-stretch", eco ? "hidden" : "hidden lg:flex")}>
         {APPS.map((a) => (
           <Link
             key={a.id}
@@ -131,7 +152,7 @@ export function WorkstationTopBar({ app, onSearch, entity }: { app: string; onSe
         {open === "apps" && (
           <Menu className="left-0 top-10 w-[240px]">
             <div className={menuHead}>Applications</div>
-            <div className="lg:hidden">
+            <div className={eco ? undefined : "lg:hidden"}>
               {APPS.map((a) => (
                 <Link key={a.id} href={a.href} onClick={close} className={menuItem}>
                   {a.label}
@@ -151,16 +172,35 @@ export function WorkstationTopBar({ app, onSearch, entity }: { app: string; onSe
 
       {entity}
 
-      <button
-        onClick={onSearch}
-        className="ml-1 flex h-8 min-w-0 max-w-[420px] flex-1 items-center gap-2 rounded-[4px] border border-d-line bg-d-bg px-2.5 text-left text-d-text-3 hover:border-d-line-strong"
-        aria-label="Search or run a command"
-      >
-        <Search size={15} className="shrink-0" />
-        <span className="hidden truncate sm:inline">Search or run a command</span>
-        <kbd className="ml-auto hidden shrink-0 whitespace-nowrap rounded-[3px] border border-d-line px-1.5 font-sans text-[10.5px] text-d-text-3 sm:inline">Ctrl K</kbd>
-      </button>
-      <div className="flex-1" />
+      {eco ? (
+        <>
+          <div className="flex-1" />
+          <label className="flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-3.5 text-d-text-3 focus-within:border-d-line-strong">
+            <Search size={15} className="shrink-0" />
+            <input
+              placeholder="Search funds, investors, documents"
+              aria-label="Search funds, investors, documents"
+              onFocus={() => onActivity?.(true)}
+              onBlur={() => onActivity?.(false)}
+              className="min-w-0 flex-1 bg-transparent text-[13px] text-d-text placeholder:text-d-text-3 focus:outline-none focus-visible:outline-none"
+            />
+          </label>
+          <div className="flex-1" />
+        </>
+      ) : (
+        <>
+          <button
+            onClick={onSearch}
+            className="ml-1 flex h-8 min-w-0 max-w-[420px] flex-1 items-center gap-2 rounded-[4px] border border-d-line bg-d-bg px-2.5 text-left text-d-text-3 hover:border-d-line-strong"
+            aria-label="Search or run a command"
+          >
+            <Search size={15} className="shrink-0" />
+            <span className="hidden truncate sm:inline">Search or run a command</span>
+            <kbd className="ml-auto hidden shrink-0 whitespace-nowrap rounded-[3px] border border-d-line px-1.5 font-sans text-[10.5px] text-d-text-3 sm:inline">Ctrl K</kbd>
+          </button>
+          <div className="flex-1" />
+        </>
+      )}
 
       <div className="relative">
         <button onClick={() => toggle("more")} aria-label="More" aria-expanded={open === "more"} className="flex h-8 w-8 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise hover:text-d-text">
@@ -174,6 +214,7 @@ export function WorkstationTopBar({ app, onSearch, entity }: { app: string; onSe
             <Link href="/admin/brand" onClick={close} className={menuItem}>
               <Palette size={15} className="text-d-text-2" /> Brand & white label
             </Link>
+            {moreExtra}
           </Menu>
         )}
       </div>
@@ -227,6 +268,18 @@ export function WorkstationTopBar({ app, onSearch, entity }: { app: string; onSe
                   { v: "light", label: "Light" },
                   { v: "dark", label: "Dark" },
                   { v: "system", label: "System" },
+                ]}
+              />
+            </div>
+            <div className={menuHead}>Motion · just for you</div>
+            <div className="px-2 pb-2">
+              <Segmented<"auto" | "off">
+                label="Ambient motion"
+                value={motion}
+                onChange={setMotion}
+                options={[
+                  { v: "auto", label: "On" },
+                  { v: "off", label: "Off" },
                 ]}
               />
             </div>

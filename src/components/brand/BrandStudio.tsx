@@ -6,7 +6,7 @@ import { cx } from "@/components/ui";
 import { AurumLogo, AurumMark } from "./Logo";
 import { useBrand } from "./BrandProvider";
 import { Backdrop } from "@/components/auth/AuthShell";
-import { AURUM, MODULE_DEFAULTS, PRESETS, SANS, SERIF, contrast, hexOk, moduleName, type Brand, type MarkShape } from "@/lib/brand";
+import { AMBIENT_MOTIONS, AURUM, MODULE_DEFAULTS, PRESETS, SANS, SERIF, contrast, hexOk, moduleName, type Brand, type MarkShape } from "@/lib/brand";
 import type { FirmId } from "@/lib/firm-colors";
 
 /* Brand & white label: one place where a B2B client makes the platform theirs. Every change previews live
@@ -265,6 +265,20 @@ export function BrandStudio() {
                     onChange={(e) => set({ ...d, moduleNames: { ...d.moduleNames, [k]: e.target.value } })}
                     className={field}
                   />
+                </label>
+              ))}
+            </div>
+          </Section>
+
+          <Section title="Ambient motion" sub="The default atmosphere of the ecosystem hub for everyone in your firm. Each user can still switch motion off for themselves, and the device's reduced-motion setting always wins.">
+            <div className="grid gap-2 sm:grid-cols-2">
+              {AMBIENT_MOTIONS.map((m) => (
+                <label key={m.id} className={cx("flex cursor-pointer gap-3 rounded-[10px] border p-3", (d.ambientMotion ?? "ambient") === m.id ? "border-ink-900 bg-stone-25" : "border-stone-200 hover:border-stone-300")}>
+                  <input type="radio" name="ambient-motion" checked={(d.ambientMotion ?? "ambient") === m.id} onChange={() => set({ ...d, ambientMotion: m.id })} className="mt-0.5 accent-[var(--tenant-ink)]" />
+                  <span>
+                    <span className="block text-[13px] font-semibold text-ink-900">{m.label}</span>
+                    <span className="block text-[12px] text-stone-600">{m.about}</span>
+                  </span>
                 </label>
               ))}
             </div>

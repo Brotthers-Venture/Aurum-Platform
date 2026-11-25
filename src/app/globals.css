@@ -325,7 +325,7 @@ main svg g[tabindex]:focus-visible {
   --d-text-2: #97a3b1;
   --d-text-3: #6a7684;
   --d-accent: var(--tenant-accent-on-dark, var(--tenant-accent));
-  --d-accent-fill: var(--tenant-accent);
+  --d-accent-fill: var(--tenant-accent-dark, var(--tenant-accent));
   --d-on-accent: var(--tenant-accent-ink);
   --d-accent-soft: color-mix(in srgb, var(--tenant-accent) 12%, transparent);
   --d-pos: #3dbe8b;
@@ -354,6 +354,7 @@ html[data-theme="light"] .ws {
   --d-text-2: #5a6069;
   --d-text-3: #8a8f96;
   --d-accent: var(--tenant-accent-on-light, #7d5f00);
+  --d-accent-fill: var(--tenant-accent);
   --d-accent-soft: color-mix(in srgb, var(--tenant-accent) 18%, transparent);
   --d-pos: #15803d;
   --d-warn: #a6570b;
@@ -409,4 +410,246 @@ html[data-theme="light"] .ws {
   --color-d-warn: var(--d-warn);
   --color-d-info: var(--d-info);
   --color-d-neg: var(--d-neg);
+}
+
+/* ───────────────────────── Living ecosystem (hub) ─────────────────────────
+   Motion animates only opacity and transform. Light is static gradients of the tenant accent; the breathing
+   is a slow scale/opacity cycle on a composited layer. Decorative layers never take pointer events. */
+.ws {
+  --eco-bg: #070b11;
+  --eco-bg-2: #0b1320;
+  --eco-cell: #10171f;
+  --eco-cell-hover: #18212b;
+  --eco-cell-line: #2b3541;
+  --eco-center: #121a24;
+  --eco-label: var(--d-text);
+  --eco-sub: var(--d-text-3);
+  --eco-sub-accent: var(--d-accent);
+  --eco-mark: var(--d-accent-fill);
+  --eco-lattice: rgba(238, 241, 244, 0.05);
+  --eco-glow: color-mix(in srgb, var(--d-accent-fill) 17%, transparent);
+  --eco-glow-strength: 1;
+  --eco-logo-plate: #ffffff;
+  --eco-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+html[data-theme="light"] .ws {
+  --eco-bg: #f4f1ea;
+  --eco-bg-2: #efe9dd;
+  --eco-cell: #fffdf9;
+  --eco-cell-hover: #fbf3dc;
+  --eco-cell-line: #e2dacb;
+  --eco-center: #fbf3dc;
+  --eco-lattice: rgba(20, 24, 29, 0.06);
+  --eco-glow: color-mix(in srgb, var(--tenant-accent) 34%, transparent);
+}
+.eco-stage {
+  background: radial-gradient(120% 90% at 50% 45%, var(--eco-bg-2) 0%, var(--eco-bg) 62%);
+}
+.eco-layer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+/* Edgeless light: many eased stops so no ring or banding is visible. */
+.eco-light {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(1500px, 150vmax);
+  aspect-ratio: 1.25;
+  translate: -50% -50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 100%, transparent) 0%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 82%, transparent) 14%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 58%, transparent) 30%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 34%, transparent) 46%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 16%, transparent) 62%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 6%, transparent) 78%,
+    transparent 100%
+  );
+  opacity: calc(0.86 * var(--eco-glow-strength));
+  will-change: transform, opacity;
+}
+.eco-halo {
+  width: min(560px, 64vmin);
+  aspect-ratio: 1;
+  --eco-tone: color-mix(in srgb, var(--eco-mark) 22%, transparent);
+}
+.eco-tint {
+  --eco-tone: color-mix(in oklab, var(--eco-accent2, transparent) 30%, transparent);
+  opacity: 0;
+  transition: opacity 600ms var(--eco-ease);
+}
+.eco-tint.on {
+  opacity: 0.9;
+}
+.eco-anim .eco-light.breathe {
+  animation: eco-breathe 12s ease-in-out infinite;
+}
+.eco-anim .eco-halo.breathe {
+  animation: eco-breathe-halo 12s ease-in-out infinite;
+}
+@keyframes eco-breathe {
+  0%,
+  100% {
+    opacity: calc(0.68 * var(--eco-glow-strength));
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: calc(1 * var(--eco-glow-strength));
+    transform: scale(1.05);
+  }
+}
+@keyframes eco-breathe-halo {
+  0%,
+  100% {
+    opacity: calc(0.55 * var(--eco-glow-strength));
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: calc(0.95 * var(--eco-glow-strength));
+    transform: scale(1.03);
+  }
+}
+/* Lattices fade toward the edges. */
+.eco-dots {
+  background-image: radial-gradient(circle at center, var(--eco-lattice) 0.9px, transparent 1.4px);
+  background-size: 26px 26px;
+  background-position: center;
+  mask-image: radial-gradient(ellipse 58% 62% at 50% 50%, #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 85%);
+}
+.eco-hex {
+  mask-image: radial-gradient(ellipse 60% 64% at 50% 50%, #000 0%, rgba(0, 0, 0, 0.5) 50%, transparent 88%);
+}
+.eco-hex-lit {
+  mask-image: radial-gradient(circle 300px at 50% 50%, #000 0%, rgba(0, 0, 0, 0.35) 55%, transparent 100%);
+  opacity: 0.4;
+}
+.eco-anim .eco-hex-lit {
+  animation: eco-lit 12s ease-in-out infinite;
+}
+@keyframes eco-lit {
+  0%,
+  100% {
+    opacity: 0.22;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+/* First arrival (once per session, set before paint by ECO_BOOT). */
+html[data-eco-enter] .eco-enter-light {
+  animation: eco-in-light 900ms var(--eco-ease) both;
+}
+html[data-eco-enter] .eco-enter-center {
+  animation: eco-in-center 650ms var(--eco-ease) 150ms both;
+}
+html[data-eco-enter] .eco-enter-item {
+  animation: eco-in-item 520ms var(--eco-ease) both;
+  animation-delay: calc(320ms + var(--i, 0) * 60ms);
+}
+@keyframes eco-in-light {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes eco-in-center {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+@keyframes eco-in-item {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+/* Pulse: one faint transmission from the centre to an application. */
+.eco-transmit {
+  animation: eco-transmit 2600ms var(--eco-ease) both;
+}
+@keyframes eco-transmit {
+  0% {
+    opacity: 0;
+    transform: translate(0px, 0px) scale(0.6);
+  }
+  18% {
+    opacity: 0.75;
+  }
+  80% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(1);
+  }
+}
+.eco-arrive {
+  animation: eco-arrive 1400ms var(--eco-ease) 2200ms both;
+}
+@keyframes eco-arrive {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  40% {
+    opacity: 0.7;
+  }
+}
+/* Applications: name and own-colour light on hover or keyboard focus; always named on touch screens. */
+.orbit-glow,
+.orbit-label {
+  opacity: 0;
+  transition: opacity 220ms var(--eco-ease);
+}
+.orbit-mark:hover .orbit-glow,
+.orbit-mark:focus-visible .orbit-glow {
+  opacity: 0.55;
+}
+.orbit-mark:hover .orbit-label,
+.orbit-mark:focus-visible .orbit-label {
+  opacity: 1;
+}
+.orbit-mark:focus-visible .orbit-ring {
+  opacity: 1;
+}
+.orbit-ring {
+  opacity: 0;
+}
+@media (hover: none) {
+  .orbit-label {
+    opacity: 1;
+  }
+}
+@media (max-width: 639px) {
+  .eco-hide-sm {
+    display: none;
+  }
+  .ws {
+    --eco-glow-strength: 0.6;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .eco-anim .eco-light.breathe,
+  .eco-anim .eco-halo.breathe,
+  .eco-anim .eco-hex-lit,
+  .eco-transmit,
+  .eco-arrive,
+  html[data-eco-enter] .eco-enter-light,
+  html[data-eco-enter] .eco-enter-center,
+  html[data-eco-enter] .eco-enter-item {
+    animation: none !important;
+  }
+}
+/* Pause decorative motion while the tab is hidden. */
+.eco-paused * {
+  animation-play-state: paused !important;
+}
+@media (hover: none) {
+  .eco-expanded .orbit-label {
+    opacity: 0;
+  }
 }

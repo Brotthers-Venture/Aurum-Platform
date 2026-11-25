@@ -11,6 +11,13 @@ import type { FirmId } from "./firm-colors";
 export type MarkShape = "hexagon" | "circle" | "square" | "diamond" | "arch";
 export type SerifFont = "source-serif" | "georgia" | "times" | "palatino";
 export type SansFont = "hanken" | "helvetica" | "system" | "verdana";
+export type AmbientMotion = "off" | "ambient" | "architectural" | "pulse";
+export const AMBIENT_MOTIONS: { id: AmbientMotion; label: string; about: string }[] = [
+  { id: "off", label: "Off", about: "Static illumination and composition, no animation." },
+  { id: "ambient", label: "Ambient", about: "Soft breathing light behind the ecosystem." },
+  { id: "architectural", label: "Architectural", about: "A fine hexagonal lattice with restrained light at its centre." },
+  { id: "pulse", label: "Pulse", about: "Ambient light with an occasional, quiet transmission to one application." },
+];
 export type LoginBackdrop = "gold" | "ink" | "stone" | "image";
 
 export type Brand = {
@@ -32,10 +39,14 @@ export type Brand = {
     metal: string; // secondary highlight (rules, progress, eyebrows)
     canvas: string; // page background
     surface: string; // cards and panels
+    /** the accent on dark surfaces when the logo uses a different value there (Aurum: #FFCA00) */
+    accentDark?: string;
   };
   modules: Record<FirmId, string>;
   /** What the tenant calls each firm workspace (falls back to MODULE_DEFAULTS). */
   moduleNames?: Partial<Record<FirmId, string>>;
+  /** default motion on the ecosystem hub; each user can still switch motion off for themselves */
+  ambientMotion?: AmbientMotion;
   fonts: { serif: SerifFont; sans: SansFont };
   login: { eyebrow: string; headline: string; text: string; backdrop: LoginBackdrop; image?: string };
   legal: { footer: string; privacyUrl: string; termsUrl: string };
@@ -65,7 +76,7 @@ export const AURUM: Brand = {
   logo: "/brand/aurum-logo-dark.png",
   logoLight: "/brand/aurum-logo-white.png",
   mark: "hexagon",
-  colors: { ink: "#0F2340", accent: "#F8C618", accentInk: "#0F2340", metal: "#B8975A", canvas: "#F1EDE4", surface: "#FFFFFF" },
+  colors: { ink: "#0F2340", accent: "#F8C618", accentInk: "#0F2340", metal: "#B8975A", canvas: "#F1EDE4", surface: "#FFFFFF", accentDark: "#FFCA00" },
   modules: { sales: "#C46A1E", pmo: "#8A4A9E", communication: "#1F8A84", dataroom: "#3558C0", billing: "#4F8A2B", compliance: "#9B2F3F" },
   fonts: { serif: "source-serif", sans: "hanken" },
   login: {
@@ -189,7 +200,8 @@ export function brandVars(b: Brand): Record<string, string> {
     "--tenant-canvas": c.canvas,
     "--tenant-surface": c.surface,
     // Direction D: brand text and lines on the Obsidian and Platinum surfaces, AA-checked
-    "--tenant-accent-on-dark": readableOn(c.accent, "#10161D"),
+    "--tenant-accent-dark": c.accentDark ?? c.accent,
+    "--tenant-accent-on-dark": readableOn(c.accentDark ?? c.accent, "#10161D"),
     "--tenant-accent-on-light": readableOn(c.accent, "#FFFFFF"),
     "--color-ink-950": mix(c.ink, 82, "black"),
     "--color-ink-900": c.ink,

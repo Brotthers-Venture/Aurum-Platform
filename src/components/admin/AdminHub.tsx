@@ -8,7 +8,9 @@ import { GpLogo } from "@/components/brand/GpLogo";
 import { markPath } from "@/components/brand/Logo";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { moduleName } from "@/lib/brand";
-import { GoldField } from "@/components/admin/GoldField";
+import { AmbientBackdrop, usePageHidden, useTransmission } from "@/components/admin/ecosystem/Ambient";
+import type { AmbientMotion } from "@/lib/brand";
+import { cx } from "@/components/ui";
 import { firmById, firmModules } from "@/lib/firm";
 import { formations } from "@/lib/formation";
 import { solutions } from "@/lib/solutions";
@@ -48,7 +50,8 @@ type Node = {
   href?: string;
 };
 
-const CREAM = "#FBF3DC";
+/** Theme token for the light hover fill of Aurum-level cells (also used as a sentinel below). */
+const CREAM = "var(--eco-cell-hover)";
 const DWELL_MS = 420;
 const MOVE_PX = 6;
 
@@ -64,7 +67,7 @@ const gpModules: { id: string; label: [string, string?]; path: string }[] = [
   { id: "portal", label: ["Portal &", "Brand"], path: "portal" },
 ];
 
-export function AdminHub() {
+export function AdminHub({ variation = "ambient", animate = false, quiet = false }: { variation?: AmbientMotion; animate?: boolean; quiet?: boolean }) {
   const router = useRouter();
   const { brand } = useBrand();
   const [level, setLevel] = useState<Level>({ kind: "root" });
@@ -76,6 +79,7 @@ export function AdminHub() {
   const leave = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hoverNode = useRef<Node | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const hidden = usePageHidden();
 
   const clearDwell = () => {
     if (dwell.current) clearTimeout(dwell.current);
@@ -113,9 +117,10 @@ export function AdminHub() {
   let nodes: Node[] = [];
   let center: ReactNode;
   let centerFrom: Pt | null = null;
-  let accent = "#FBF3DC"; // Aurum levels: cream; GP levels use the GP's own colour
-  let outlineColor = "var(--tenant-accent)";
-  let bandOn = "var(--tenant-accent)"; // frame colour on hover
+  let accent = CREAM; // Aurum levels: the theme's light cell; GP levels use the GP's own colour
+  let outlineColor = "var(--eco-mark)";
+  let bandOn = "var(--eco-mark)"; // frame colour on hover
+  let tint: string | undefined; // the background light leans toward the selected application
   let ringShown = true;
 
   if (level.kind === "root") {
@@ -151,8 +156,9 @@ export function AdminHub() {
     const m = firmById(level.id)!;
     centerFrom = level.from;
     accent = m.color;
-    outlineColor = CREAM;
-    bandOn = CREAM;
+    outlineColor = "var(--eco-cell-hover)";
+    bandOn = "var(--eco-cell-hover)";
+    tint = m.color;
     nodes = m.ring.map((r, i) => ({
       id: r.id,
       slot: m.id === "communication" ? solutions[i].slot : ringOrder[i],
@@ -170,6 +176,7 @@ export function AdminHub() {
     accent = gp.brand.primary;
     outlineColor = gp.brand.secondary;
     bandOn = gp.brand.secondary;
+    tint = gp.brand.secondary;
     const subs: Record<string, string> = {
       funds: `${t.funds} VEHICLE${t.funds === 1 ? "" : "S"}`,
       investors: `${t.investors} INVESTORS`,
@@ -196,10 +203,10 @@ export function AdminHub() {
     level.kind === "root"
       ? []
       : level.kind === "module"
-        ? [{ label: "Aurum", target: "root" }, { label: firmById(level.id)!.name }]
+        ? [{ label: brand.name, target: "root" }, { label: firmById(level.id)!.name }]
         : level.kind === "fund"
-          ? [{ label: "Aurum", target: "root" }, { label: "Fund Solution" }]
-          : [{ label: "Aurum", target: "root" }, { label: "Fund Solution", target: "fund" }, { label: gpById(level.gpId)!.shortName }];
+          ? [{ label: brand.name, target: "root" }, { label: "Fund Solution" }]
+          : [{ label: brand.name, target: "root" }, { label: "Fund Solution", target: "fund" }, { label: gpById(level.gpId)!.shortName }];
   const crumbTo = (t: "root" | "fund") => (t === "root" ? toRoot() : go({ kind: "fund", from: "ne" }));
 
   const step = Math.sqrt(3) * R + 10;
@@ -228,7 +235,8 @@ export function AdminHub() {
     return {
       id: here ? "aurum" : m.id,
       color: here ? "var(--tenant-accent)" : m.color,
-      label: here ? "Aurum solutions" : `${moduleName(brand, m.id)}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`,
+      name: here ? brand.name : moduleName(brand, m.id),
+      label: here ? `${brand.name} solutions` : `${moduleName(brand, m.id)}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`,
       href: here ? "/admin" : m.href,
       badge: here ? 0 : m.badge,
       x: Math.round(orbitR * Math.cos(a) * 100) / 100,
@@ -244,6 +252,9 @@ export function AdminHub() {
   });
   const orbitGo = (o: (typeof orbit)[number]) => (o.id === "aurum" ? toRoot() : router.push(o.href));
 
+  // Pulse: quiet while anything is open, hovered or in use.
+  const transmission = useTransmission(variation === "pulse" && animate && !hidden, orbit.length, quiet || level.kind !== "root" || active !== null || !orbitShown);
+
   const levelKey = level.kind === "gp" ? `gp-${level.gpId}` : level.kind;
   const animateRing = level.kind !== "root";
 
@@ -251,7 +262,7 @@ export function AdminHub() {
 
   return (
     <main
-      className="relative isolate flex flex-1 flex-col items-center justify-center overflow-hidden px-8 py-10"
+      className={cx("relative isolate flex flex-1 flex-col items-center justify-center overflow-hidden px-4 py-8 sm:px-8 sm:py-10", hidden && "eco-paused")}
       onMouseEnter={() => leave.current && clearTimeout(leave.current)}
       onMouseLeave={() => {
         clearDwell();
@@ -262,18 +273,18 @@ export function AdminHub() {
         }, 900);
       }}
     >
-      <GoldField className="pointer-events-none absolute inset-0 -z-10 h-full w-full [mask-image:radial-gradient(ellipse_75%_70%_at_50%_50%,#000_45%,transparent_100%)]" />
+      <AmbientBackdrop variation={variation} animate={animate && !hidden} accent2={tint} />
       {crumbs.length > 0 && (
-        <nav className="absolute left-8 top-8 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-stone-500" aria-label="Breadcrumb">
+        <nav className="absolute left-8 top-6 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-d-text-3" aria-label="Breadcrumb">
           {crumbs.map((c, i) => (
             <span key={c.label} className="flex items-center gap-1.5">
-              {i > 0 && <ChevronRight size={12} className="text-stone-300" />}
+              {i > 0 && <ChevronRight size={12} className="text-d-text-3" />}
               {c.target ? (
-                <button onClick={() => crumbTo(c.target!)} className="uppercase hover:text-ink-900">
+                <button onClick={() => crumbTo(c.target!)} className="uppercase hover:text-d-text">
                   {c.label}
                 </button>
               ) : (
-                <span className="text-ink-900">{c.label}</span>
+                <span className="text-d-text">{c.label}</span>
               )}
             </span>
           ))}
@@ -282,9 +293,9 @@ export function AdminHub() {
 
       <svg
         viewBox={`${-size / 2} ${-h / 2} ${size} ${h}`}
-        className="h-auto w-full max-w-[640px] select-none overflow-visible"
+        className={cx("h-auto w-full max-w-[640px] select-none overflow-visible", (revealed || level.kind !== "root") && "eco-expanded")}
         role="group"
-        aria-label="Aurum navigation"
+        aria-label={`${brand.name} navigation`}
         ref={svgRef}
         onPointerMove={onMove}
       >
@@ -321,8 +332,8 @@ export function AdminHub() {
                 onClick={() => activate(n)}
                 onKeyDown={(e) => e.key === "Enter" && activate(n)}
               >
-                <polygon points={hexPoints(R)} fill={on ? (n.accent ?? accent) : "#FFFFFF"} style={{ transition: "fill 220ms" }} />
-                <Band w={FRAME.outer} color={on ? (n.band ?? bandOn) : n.outline ? outlineColor : "#E3DCCD"} style={{ transition: "fill 220ms" }} />
+                <polygon points={hexPoints(R)} fill={on ? (n.accent ?? accent) : "var(--eco-cell)"} style={{ transition: "fill 220ms" }} />
+                <Band w={FRAME.outer} color={on ? (n.band ?? bandOn) : n.outline ? outlineColor : "var(--eco-cell-line)"} style={{ transition: "fill 220ms" }} />
                 <Band
                   r={R - FRAME.outer - FRAME.gap}
                   w={FRAME.inner}
@@ -334,7 +345,7 @@ export function AdminHub() {
                     <div className="flex h-full w-full items-center justify-center">{n.art(on)}</div>
                   </foreignObject>
                 )}
-                <text textAnchor="middle" fill={on && (n.accent ?? accent) !== CREAM ? "#FFFFFF" : "var(--tenant-ink)"} style={{ transition: "fill 200ms" }}>
+                <text textAnchor="middle" fill={on && (n.accent ?? accent) !== CREAM ? "#FFFFFF" : "var(--eco-label)"} style={{ transition: "fill 200ms" }}>
                   {!n.art && (
                     <tspan x={0} y={n.label[1] ? -4 : 6} fontSize={16} fontWeight={600} letterSpacing="-0.01em">
                       {n.label[0]}
@@ -355,10 +366,10 @@ export function AdminHub() {
                       n.subTone === "accent"
                         ? on && (n.accent ?? accent) !== CREAM
                           ? outlineColor
-                          : (n.subColor ?? "#8A6A00")
+                          : (n.subColor ?? "var(--eco-sub-accent)")
                         : on && (n.accent ?? accent) !== CREAM
                           ? "rgba(255,255,255,0.65)"
-                          : "#A39B8A"
+                          : "var(--eco-sub)"
                     }
                   >
                     {n.sub}
@@ -373,17 +384,40 @@ export function AdminHub() {
             style={centerFrom ? ({ "--fx": `${centerFrom.x}px`, "--fy": `${centerFrom.y}px`, cursor: "pointer" } as CSSProperties) : { cursor: "pointer" }}
             role="button"
             tabIndex={0}
-            aria-label={level.kind === "root" ? "Aurum — show solutions" : "Back"}
+            aria-label={level.kind === "root" ? `${brand.name} — show solutions` : "Back"}
             aria-expanded={level.kind === "root" ? revealed : undefined}
-            onMouseEnter={() => level.kind === "root" && setRevealed(true)}
+            onPointerEnter={(e) => e.pointerType === "mouse" && level.kind === "root" && setRevealed(true)}
             onClick={() => (level.kind === "root" ? setRevealed((r) => !r) : back())}
             onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (level.kind === "root" ? setRevealed((r) => !r) : back())}
           >
-            {center}
+            <g className="eco-enter-center">{center}</g>
           </g>
         </g>
 
-        {orbit.map((o) => (
+        <defs>
+          {orbit.map((o) => (
+            <radialGradient key={o.id} id={`orbit-glow-${o.id}`}>
+              <stop offset="0%" stopColor={o.color} stopOpacity="0.45" />
+              <stop offset="55%" stopColor={o.color} stopOpacity="0.12" />
+              <stop offset="100%" stopColor={o.color} stopOpacity="0" />
+            </radialGradient>
+          ))}
+          <radialGradient id="eco-tx">
+            <stop offset="0%" stopColor="var(--eco-mark)" stopOpacity="0.9" />
+            <stop offset="45%" stopColor="var(--eco-mark)" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="var(--eco-mark)" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {transmission && orbitShown && (
+          <g key={transmission.key} aria-hidden style={{ pointerEvents: "none" }}>
+            <g className="eco-transmit" style={{ "--tx": `${orbit[transmission.i].x * 0.86}px`, "--ty": `${orbit[transmission.i].y * 0.86}px` } as CSSProperties}>
+              <circle r={16} fill="url(#eco-tx)" />
+            </g>
+          </g>
+        )}
+
+        {orbit.map((o, oi) => (
           <g
             key={o.id === "aurum" ? `aurum-${o.x}-${o.y}` : o.id}
             className="orbit-mark"
@@ -408,18 +442,26 @@ export function AdminHub() {
             onKeyDown={(e) => e.key === "Enter" && orbitGo(o)}
           >
             <title>{o.label}</title>
-            <circle r={34} fill="transparent" />
-            <g className="orbit-inner">
-              <path d={markPath(brand.mark)} transform="scale(0.14368)" fill={o.color} fillRule="evenodd" />
-            </g>
+            <g className="eco-enter-item" style={{ "--i": oi } as CSSProperties}>
+              <circle className="orbit-glow" r={58} fill={`url(#orbit-glow-${o.id})`} style={{ pointerEvents: "none" }} />
+              {transmission?.i === oi && <circle key={transmission.key} className="eco-arrive" r={52} fill={`url(#orbit-glow-${o.id})`} style={{ pointerEvents: "none" }} />}
+              <circle r={34} fill="transparent" />
+              <polygon className="orbit-ring" points={hexPoints(36)} fill="none" stroke="var(--eco-label)" strokeWidth={1.5} />
+              <g className="orbit-inner">
+                <path d={markPath(brand.mark)} transform="scale(0.14368)" fill={o.color} fillRule="evenodd" />
+              </g>
+              <text className="orbit-label" textAnchor="middle" y={52} fontSize={12} fontWeight={600} fill="var(--eco-label)" style={{ pointerEvents: "none" }}>
+                {o.name}
+              </text>
             {o.badge > 0 && (
               <g transform="translate(21 -24)">
-                <circle r={10} fill={o.color} stroke="var(--tenant-canvas)" strokeWidth={2.5} />
+                <circle r={10} fill={o.color} stroke="var(--eco-bg)" strokeWidth={2.5} />
                 <text textAnchor="middle" y={3.6} fontSize={10.5} fontWeight={700} fill="#FFFFFF">
                   {o.badge}
                 </text>
               </g>
             )}
+            </g>
           </g>
         ))}
       </svg>

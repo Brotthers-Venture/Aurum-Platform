@@ -42,6 +42,53 @@ Read this and `docs/redesign-brief.md` at the start of every session. Newest ent
 _None._
 
 ## Entries
+### 2026-11-25 — Living ecosystem (docs/aurum-living-ecosystem.md, sections 1–21)
+- **Corporate Chat:** approved by the owner. Small fixes in `10c021c`:
+  - mobile summary header
+  - "Into a change request" for bank details (demo: BNK-5)
+  - `{tenant}` token in demo text
+  - full titles on hover
+- **Inspection (section 16):** the hub was AdminHub with HexNav geometry, plus GoldField. GoldField was a canvas with a continuous requestAnimationFrame loop and cursor-driven dots, which conflicts with section 16 (no canvas, no animation loops). It was removed and replaced by CSS/SVG layers.
+- **Built:**
+  - `components/admin/ecosystem/{Ambient,EcosystemPage}.tsx`
+  - the `.eco-*` CSS in `globals.css`
+  - `AdminHub` refined; HexNav centres now use tokens
+- **Variations:** Ambient, Architectural, Pulse and Off, in Obsidian and Platinum.
+- **Motion:**
+  - Only opacity and transform animate; breathing runs on a 12 s cycle.
+  - The entrance plays once per session (ECO_BOOT before paint, sessionStorage).
+  - Pulse sends at most one transmission every 20–40 s and is suppressed while the user interacts. Missed transmissions are dropped, not queued.
+  - Animations pause when the tab is hidden.
+  - Reduced motion and the user's Off setting win.
+- **Settings:**
+  - Brand studio → "Ambient motion" (tenant default, stored in Brand).
+  - Account menu → "Motion · just for you" (user setting).
+  - The temporary prototype switcher in ⋮ is stored separately and never written into the brand.
+- **Brand:** `colors.accentDark` (Aurum #FFCA00 on dark; #F8C618 on light).
+- **Hub top bar:** WorkstationTopBar `variant="ecosystem"`, without the application row because the hexagons are the navigation.
+- **Fixed on the way:**
+  - A tap on the centre on touch screens opened and closed in the same gesture (an existing bug).
+  - Orbit labels collided with opened cells on phones.
+  - "Aurum" literals in the hub's breadcrumb and aria labels now use the tenant name.
+- **21st.dev (section 23):** looked at:
+  - Dot Matrix (#43820)
+  - BG Patterns (#2171)
+  - Background Pattern, with a hexagon option (#34299)
+  - Flickering Grid (#1485, Magic UI)
+
+  Nothing was installed: the dots and hex lattice were rebuilt in CSS and SVG.
+- **Checks:**
+  - tsc, eslint and build are clean.
+  - All key routes return 200.
+  - Corporate Chat: 22/22.
+  - Motion: 16/16 (entrance once, hidden pause, user Off, switcher without reload, brand untouched, reduced motion, Pulse fires when idle and not during 60 s of interaction, keyboard focus label, decorative layers ignore the pointer).
+- **Screenshots:** `design/stitch/direction-d/ecosystem/` (20, git-ignored; `tools/stitch/shoot-ecosystem.mjs`).
+- **Limitations:**
+  - The frozen stills can't show motion; review it live.
+  - The 21st.dev candidates were described, not installed.
+  - The mobile entrance uses the same timing as desktop.
+- **Waiting:** the owner picks a variation. Then: set it as the default, remove the switcher, continue with Data rooms (modules section 5).
+
 ### 2026-11-25 — Direction D modules: §0, §1, Corporate Chat (§3–4)
 **§0 Backup.**
 - Pushed `redesign` with the module brief and the refined prototype HTML sources (`9189bc8`).
