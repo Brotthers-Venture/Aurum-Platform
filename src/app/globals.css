@@ -43,6 +43,15 @@
   --color-info: #374253;
   --color-info-bg: #efebe2;
 
+  /* gains, declines and status lines used by the fund workspace */
+  --color-up: #1f8a84;
+  --color-up-ink: #1f6f6a;
+  --color-up-bg: #eaf4f2;
+  --color-up-line: #bfdcd8;
+  --color-down: #b5542a;
+  --color-attn-line: #d9cba8;
+  --color-neg-line: #e8c2b3;
+
   --text-2xs: 0.6875rem;
 
   /* cream surface for floating chrome (sidebar) */
@@ -652,4 +661,68 @@ html[data-eco-enter] .eco-enter-item {
   .eco-expanded .orbit-label {
     opacity: 0;
   }
+}
+
+/* ───────────────────────── Direction D bridge ─────────────────────────
+   Pages built on the earlier cream palette (stone / ink / gold / white) adopt the workstation themes by placing
+   `.ws .ws-bridge` on their container: the old names are re-pointed at the Obsidian / Platinum tokens, so every
+   component follows the theme switch without being rewritten. Ink becomes the primary text colour and white the
+   surface — dark fills with white text invert cleanly in Obsidian. */
+.ws-bridge {
+  --color-white: var(--d-surface);
+  --color-stone-25: var(--d-surface-2);
+  --color-stone-50: var(--d-bg);
+  --color-stone-100: var(--d-raise);
+  --color-stone-200: var(--d-line);
+  --color-stone-300: var(--d-line-strong);
+  --color-stone-400: var(--d-text-3);
+  --color-stone-500: var(--d-text-3);
+  --color-stone-600: var(--d-text-2);
+  --color-stone-700: var(--d-text-2);
+  --color-ink-950: var(--d-text);
+  --color-ink-900: var(--d-text);
+  --color-ink-800: var(--d-text);
+  --color-ink-700: var(--d-text-2);
+  --color-ink-600: var(--d-text-2);
+  --color-gold-50: var(--d-accent-soft);
+  --color-gold-100: color-mix(in srgb, var(--d-accent-fill) 22%, transparent);
+  --color-gold-400: color-mix(in srgb, var(--d-accent-fill) 55%, var(--d-surface));
+  --color-gold-500: var(--d-accent);
+  --color-gold-700: var(--d-accent);
+  --color-cream: var(--d-chrome);
+  --color-champagne: var(--d-raise);
+  --color-positive: var(--d-text);
+  --color-positive-bg: var(--d-raise);
+  --color-caution: var(--d-warn);
+  --color-caution-bg: color-mix(in srgb, var(--d-warn) 14%, transparent);
+  --color-negative: var(--d-neg);
+  --color-negative-bg: color-mix(in srgb, var(--d-neg) 14%, transparent);
+  --color-info: var(--d-text-2);
+  --color-info-bg: var(--d-raise);
+  --color-up: var(--d-pos);
+  --color-up-ink: var(--d-pos);
+  --color-up-bg: color-mix(in srgb, var(--d-pos) 14%, transparent);
+  --color-up-line: color-mix(in srgb, var(--d-pos) 40%, transparent);
+  --color-down: var(--d-neg);
+  --color-attn-line: color-mix(in srgb, var(--d-accent-fill) 45%, transparent);
+  --color-neg-line: color-mix(in srgb, var(--d-neg) 40%, transparent);
+  --brand: var(--d-accent);
+  --brand-2: color-mix(in srgb, var(--d-accent-fill) 55%, var(--d-surface));
+  --brand-ink: var(--d-text);
+  --brand-soft: var(--d-accent-soft);
+  --tenant-ink: var(--d-text);
+  --tenant-canvas: var(--d-bg);
+  --tenant-surface: var(--d-surface);
+  --shadow-card: var(--d-sheen);
+  --shadow-lift: var(--d-pop);
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-serif: "Manrope Variable", "Inter Variable", sans-serif;
+  font-family: var(--font-sans);
+}
+.ws-bridge ::selection {
+  background: var(--d-accent-soft);
+  color: var(--d-text);
+}
+.ws-bridge :focus-visible {
+  outline-color: var(--d-focus);
 }

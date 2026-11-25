@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 const C_CONTRIB = "var(--tenant-ink)";
-const C_DIST = "#1F8A84";
+const C_DIST = "var(--color-up)";
 
 export function FlowsChart({ flows: quarterlyFlows, note }: { flows: { q: string; contributions: number; distributions: number }[]; note: string }) {
   const [hover, setHover] = useState<number | null>(null);
@@ -50,8 +50,8 @@ export function FlowsChart({ flows: quarterlyFlows, note }: { flows: { q: string
         <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" onMouseLeave={() => setHover(null)}>
           {ticks.map((t) => (
             <g key={t}>
-              <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke={t === 0 ? "#D1C8B5" : "#EFEFEA"} />
-              <text x={pad.l - 10} y={y(t) + 4} textAnchor="end" fontSize={11} fill="#6F6A61" className="num">
+              <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke={t === 0 ? "var(--color-stone-300)" : "var(--color-stone-100)"} />
+              <text x={pad.l - 10} y={y(t) + 4} textAnchor="end" fontSize={11} fill="var(--color-stone-500)" className="num">
                 {t}
               </text>
             </g>
@@ -60,10 +60,10 @@ export function FlowsChart({ flows: quarterlyFlows, note }: { flows: { q: string
             const cx = pad.l + band * i + band / 2;
             return (
               <g key={d.q} onMouseEnter={() => setHover(i)}>
-                <rect x={pad.l + band * i} y={pad.t} width={band} height={ih} fill={hover === i ? "#F7F7F4" : "transparent"} />
+                <rect x={pad.l + band * i} y={pad.t} width={band} height={ih} fill={hover === i ? "var(--color-stone-25)" : "transparent"} />
                 {bar(cx - bw - 1, d.contributions, C_CONTRIB)}
                 {bar(cx + 1, d.distributions, C_DIST)}
-                <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill={hover === i ? "var(--tenant-ink)" : "#6F6A61"}>
+                <text x={cx} y={H - 8} textAnchor="middle" fontSize={11} fill={hover === i ? "var(--tenant-ink)" : "var(--color-stone-500)"}>
                   {d.q}
                 </text>
               </g>

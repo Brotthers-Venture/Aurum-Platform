@@ -6,17 +6,17 @@ import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
  * Brand palette only: ink, gold, then neutrals. Identity never rests on colour alone —
  * every chart has a legend, direct end labels and a table view.
  */
-export const SERIES = ["#0F2340", "#B08D4E", "#A39B8A", "#5B6B82"] as const;
+export const SERIES = ["var(--color-ink-900)", "var(--color-gold-500)", "var(--color-stone-400)", "var(--color-ink-600)"] as const;
 
 /**
  * Fixed meanings across every chart and report:
  * capital in = navy, cash returned to investors = deep turquoise, unrealized value = brass.
  * (Validated: turquoise is distinct from navy and brass for all colour-vision types.)
  */
-export const MEANING = { capitalIn: "#0F2340", returned: "#1F8A84", value: "#B08D4E" } as const;
-const GRID = "#ECE6DA";
-const AXIS = "#D1C8B5";
-const TICK = "#6F6A61";
+export const MEANING = { capitalIn: "var(--color-ink-900)", returned: "var(--color-up)", value: "var(--color-gold-500)" } as const;
+const GRID = "var(--color-stone-100)";
+const AXIS = "var(--color-stone-300)";
+const TICK = "var(--color-stone-500)";
 
 export type Fmt = (v: number) => string;
 
@@ -113,7 +113,7 @@ export function Columns({ categories, series, fmt, height = 240 }: { categories:
             const x0 = pad.l + band * i + (band - (bw + gap) * series.length + gap) / 2;
             return (
               <g key={c}>
-                {hover === i && <rect x={pad.l + band * i} y={pad.t} width={band} height={ih} fill="#F4F3EE" />}
+                {hover === i && <rect x={pad.l + band * i} y={pad.t} width={band} height={ih} fill="var(--color-stone-25)" />}
                 {series.map((s, k) => {
                   const v = s.values[i] ?? 0;
                   const top = y(Math.max(0, v));
@@ -216,14 +216,14 @@ export function Lines({ categories, series, fmt, height = 240, area = true }: { 
             <g key={s.name}>
               <path d={path(s.values)} fill="none" stroke={s.color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
               <circle cx={x(n - 1)} cy={y(s.values[n - 1] ?? 0)} r={3.5} fill={s.color} stroke="#fff" strokeWidth={2} />
-              <text x={x(n - 1) + 9} y={(endY.get(k) ?? 0) + 3.5} fontSize={10.5} fill="#3F3F3A" className="num">
+              <text x={x(n - 1) + 9} y={(endY.get(k) ?? 0) + 3.5} fontSize={10.5} fill="var(--color-stone-700)" className="num">
                 {fmt(s.values[n - 1] ?? 0)}
               </text>
             </g>
           ))}
           {hover !== null && (
             <g>
-              <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={pad.t + ih} stroke="#0F2340" strokeOpacity={0.25} strokeDasharray="3 3" />
+              <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={pad.t + ih} stroke="var(--color-ink-900)" strokeOpacity={0.25} strokeDasharray="3 3" />
               {series.map((s) => (
                 <circle key={s.name} cx={x(hover)} cy={y(s.values[hover] ?? 0)} r={4} fill={s.color} stroke="#fff" strokeWidth={2} />
               ))}

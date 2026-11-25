@@ -23,7 +23,7 @@ import {
   Users,
 } from "lucide-react";
 import { cx } from "@/components/ui";
-import { AurumLogo, AurumMark } from "@/components/brand/Logo";
+import { AurumMark } from "@/components/brand/Logo";
 import { totalUnread } from "@/lib/comms";
 import { FIRM } from "@/lib/firm-colors";
 import { onboarding } from "@/lib/data";
@@ -77,73 +77,61 @@ const groups = [
 export function FundSidebar() {
   const path = usePathname();
   return (
-    <div className="shrink-0 p-3 pr-0">
-      <nav className="flex h-full w-[236px] flex-col rounded-[18px] border border-stone-200 bg-cream text-ink-900 shadow-card">
-        <Link href="/admin" aria-label="Home" className="block px-5 pb-4 pt-5">
-          <AurumLogo variant="dark" height={40} priority />
+    <nav aria-label="Fund Solution" className="hidden w-[232px] shrink-0 flex-col border-r border-d-line bg-d-chrome text-[13px] md:flex">
+      <div className="px-3 pb-2 pt-3">
+        <button type="button" className="flex w-full items-center justify-between rounded-[6px] border border-d-line bg-d-surface px-2.5 py-2 text-left hover:border-d-line-strong">
+          <span className="min-w-0">
+            <span className="block text-[11px] text-d-text-3">Fund Solution</span>
+            <span className="block truncate font-medium text-d-text">All vehicles</span>
+          </span>
+          <ChevronsUpDown size={14} strokeWidth={1.8} className="text-d-text-3" />
+        </button>
+      </div>
+      <div className="scroll-quiet flex-1 overflow-y-auto px-2 pb-3">
+        {groups.map((g, gi) => (
+          <div key={gi} className={gi > 0 ? "mt-4" : "mt-1"}>
+            {g.label && <div className="px-2.5 pb-1 text-[11px] font-medium text-d-text-3">{g.label}</div>}
+            <ul>
+              {g.items.map((it) => {
+                const active = "exact" in it && it.exact ? path === it.href : path.startsWith(it.href);
+                const Icon = it.icon;
+                return (
+                  <li key={it.href} className="relative">
+                    {active && <span aria-hidden className="absolute -left-2 top-1.5 bottom-1.5 w-[2px] rounded-full bg-d-accent-fill" />}
+                    <Link
+                      href={it.href}
+                      aria-current={active ? "page" : undefined}
+                      className={cx(
+                        "flex h-[30px] items-center gap-2.5 rounded-[5px] px-2.5 transition-colors",
+                        active ? "bg-d-raise font-medium text-d-text" : "text-d-text-2 hover:bg-d-raise hover:text-d-text",
+                      )}
+                    >
+                      <Icon size={15} strokeWidth={1.7} className={active ? "text-d-text" : "text-d-text-3"} />
+                      <span className="flex-1 truncate">{it.label}</span>
+                      {"badge" in it && it.badge ? <span className="tnum text-[11.5px] text-d-text-3">{it.badge}</span> : null}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-d-line p-2">
+        <Link
+          href="/admin/communication"
+          className="flex h-[30px] items-center gap-2.5 rounded-[5px] px-2.5 text-d-text-2 transition-colors hover:bg-d-raise hover:text-d-text"
+        >
+          <AurumMark size={15} color={COMM} className="shrink-0" />
+          <span className="flex-1 truncate">
+            <ModuleName id="communication" />
+          </span>
+          {unread > 0 && <span className="tnum text-[11.5px] font-medium text-d-text">{unread}</span>}
         </Link>
-        <div className="px-3">
-          <button className="flex w-full items-center justify-between rounded-[10px] border border-stone-200 bg-white px-3 py-2 text-left hover:border-stone-300">
-            <span>
-              <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-gold-700">Fund Solution</span>
-              <span className="block text-[13px] font-semibold text-ink-900">All vehicles</span>
-            </span>
-            <ChevronsUpDown size={14} strokeWidth={1.8} className="text-stone-400" />
-          </button>
-        </div>
-        <div className="scroll-quiet flex-1 overflow-y-auto px-3 py-4">
-          {groups.map((g, gi) => (
-            <div key={gi} className={gi > 0 ? "mt-5" : ""}>
-              {g.label && <div className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-400">{g.label}</div>}
-              <ul className="space-y-0.5">
-                {g.items.map((it) => {
-                  const active = "exact" in it && it.exact ? path === it.href : path.startsWith(it.href);
-                  const Icon = it.icon;
-                  return (
-                    <li key={it.href}>
-                      <Link
-                        href={it.href}
-                        className={cx(
-                          "flex items-center gap-2.5 rounded-[10px] px-2.5 py-[8px] text-[13px] transition-colors",
-                          active ? "bg-champagne font-semibold text-ink-900 shadow-[inset_0_0_0_1px_rgba(184,151,90,0.45)]" : "text-stone-600 hover:bg-stone-100 hover:text-ink-900",
-                        )}
-                      >
-                        <Icon size={15} strokeWidth={active ? 2 : 1.6} />
-                        <span className="flex-1">{it.label}</span>
-                        {"badge" in it && it.badge ? (
-                          <span className={cx("num rounded-[6px] px-1.5 py-px text-[10px] font-semibold", active ? "bg-champagne text-ink-900" : "bg-champagne text-ink-900")}>{it.badge}</span>
-                        ) : null}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
-        </div>
-        <div className="border-t border-stone-200 p-3">
-          <Link
-            href="/admin/communication"
-            className={cx(
-              "mb-1 flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[13px] font-semibold transition-colors",
-              path.startsWith("/admin/communication") ? "bg-white text-ink-900 shadow-card" : "text-ink-900 hover:bg-white",
-            )}
-          >
-            <AurumMark size={16} color={COMM} className="shrink-0" />
-            <span className="flex-1">
-              <ModuleName id="communication" />
-            </span>
-            {unread > 0 && (
-              <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white" style={{ background: COMM }}>
-                {unread}
-              </span>
-            )}
-          </Link>
-          <Link href="/admin" className="flex items-center gap-2 rounded-[10px] px-2.5 py-2 text-[12px] font-medium text-stone-500 hover:bg-stone-100 hover:text-ink-900">
-            <ArrowLeft size={14} strokeWidth={1.8} /> <TenantName /> Platform
-          </Link>
-        </div>
-      </nav>
-    </div>
+        <Link href="/admin" className="flex h-[30px] items-center gap-2.5 rounded-[5px] px-2.5 text-d-text-3 hover:bg-d-raise hover:text-d-text">
+          <ArrowLeft size={14} strokeWidth={1.8} /> <TenantName /> ecosystem
+        </Link>
+      </div>
+    </nav>
   );
 }
