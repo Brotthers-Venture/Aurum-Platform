@@ -69,34 +69,68 @@ export const HEXAS: Hexa[] = [
   { id: "sales", firm: "sales", name: "Sales", color: FIRM.sales, href: "/admin/sales", base: "/admin/sales", badge: badgeOf("sales"), pages: fromRing("sales") },
 ];
 
-/** Which hexagons each role opens. Settings (brand, access) are for administrators only. */
-export const ROLE_HEXAS: Record<RoleId, HexaId[] | "all"> = {
-  platform_admin: "all",
-  fund_services_head: "all",
-  fund_accountant: ["fund", "billing", "communication", "dataroom"],
-  compliance_officer: ["compliance", "fund", "corporate", "communication", "dataroom"],
-  relationship_manager: ["sales", "fund", "corporate", "communication", "dataroom", "pmo"],
-  auditor: ["fund", "dataroom"],
-  gp_principal: ["communication", "dataroom"],
-  gp_staff: ["communication", "dataroom"],
-  investor_signatory: [],
-  investor_viewer: [],
-};
+/* ───────────────────────── access ─────────────────────────
+   Everyone (except investors, who use their portal) always has Corporate Chat, the PMO and one solution.
+   Every other hexagon is granted person by person by the main administrator (the platform administrator),
+   who sees everything. Grants live in this browser until P4 moves them to the database. */
 
-export function hexasFor(role: RoleId) {
-  const allow = ROLE_HEXAS[role];
+export const ALWAYS: HexaId[] = ["fund", "communication", "pmo"];
+export const GRANTABLE: HexaId[] = ["corporate", "dataroom", "billing", "compliance", "sales"];
+export const MAIN_ADMIN: RoleId = "platform_admin";
+
+/** Grants already approved (sample). Keyed by the person's email. */
+const SEED_GRANTS: Record<string, HexaId[]> = {
+  "luiza@aurumasset.us": ["corporate", "dataroom", "billing", "compliance", "sales"],
+  "rafael@aurumasset.us": ["billing", "dataroom"],
+  "juliana@aurumasset.us": ["sales", "corporate", "dataroom"],
+  "carla@aurumasset.us": ["compliance", "corporate", "dataroom"],
+  "audit@gt.com": ["dataroom"],
+  "mhale@cordillera-infra.com": ["dataroom"],
+  "ana@atlanticocapital.com.br": ["dataroom"],
+  "sklein@cordillera-infra.com": [],
+};
+export const GRANTS_KEY = "aurum-hexa-grants-v1";
+export const GRANTS_EVENT = "aurum-hexa-grants";
+
+export function readGrants(): Record<string, HexaId[]> {
+  if (typeof window === "undefined") return SEED_GRANTS;
+  try {
+    const raw = window.localStorage.getItem(GRANTS_KEY);
+    return raw ? { ...SEED_GRANTS, ...(JSON.parse(raw) as Record<string, HexaId[]>) } : SEED_GRANTS;
+  } catch {
+    return SEED_GRANTS;
+  }
+}
+export function writeGrant(email: string, list: HexaId[]) {
+  try {
+    const cur = JSON.parse(window.localStorage.getItem(GRANTS_KEY) ?? "{}") as Record<string, HexaId[]>;
+    cur[email] = list;
+    window.localStorage.setItem(GRANTS_KEY, JSON.stringify(cur));
+    window.dispatchEvent(new Event(GRANTS_EVENT));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/** The hexagons a person may open: always Chat, PMO and their solution, plus what the administrator granted. */
+export function allowedFor(role: RoleId, email: string | undefined, grants: Record<string, HexaId[]> = SEED_GRANTS): HexaId[] | "all" {
+  if (role === MAIN_ADMIN) return "all";
+  if (role === "investor_signatory" || role === "investor_viewer") return [];
+  return [...ALWAYS, ...((email && grants[email]) || [])];
+}
+
+export function hexasFrom(allow: HexaId[] | "all") {
   return allow === "all" ? HEXAS : HEXAS.filter((h) => allow.includes(h.id));
 }
-export const canSettings = (role: RoleId) => role === "platform_admin" || role === "fund_services_head";
+export const canSettings = (role: RoleId) => role === MAIN_ADMIN || role === "fund_services_head";
+
+/** Whether a hexagon may be shown: solutions still in development are for the main administrator only. */
+export function allows(allow: HexaId[] | "all", id: string, live = true) {
+  if (allow === "all") return true;
+  return live && (allow as string[]).includes(id);
+}
 
 /** The hexagon a path belongs to (longest base wins). */
 export function hexaOf(path: string) {
   return [...HEXAS].sort((a, b) => b.base.length - a.base.length).find((h) => path === h.base || path.startsWith(`${h.base}/`) || path.startsWith(`${h.base}?`));
-}
-
-/** Whether a role may open a hexagon on the ecosystem page. Solutions still in development are shown to administrators only. */
-export function canOpen(role: RoleId, id: string, live = true) {
-  const allow = ROLE_HEXAS[role];
-  if (allow === "all") return true;
-  return live && (allow as string[]).includes(id);
 }

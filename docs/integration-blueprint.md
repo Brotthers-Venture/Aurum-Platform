@@ -166,7 +166,7 @@ A **capital call** issued raises `call.issued`, opens a call matter, and adds ex
 2. **KYC rule:** while a screening case is open, a subscription can be **neither approved nor countersigned**.
 3. **KYC refresh** starts **30 days** before expiry.
 4. **Four eyes on screening:** first review by the **Compliance Officer**, second approval by the **Head of Fund Services**; never the same person.
-5. **Access per role:** the current table in `src/lib/hexa.ts` is a test setting, to be replaced by per-person grants in P4.
+5. **Access:** everyone (except investors, who use their portal) always opens **Corporate Chat, PMO and one solution**. Every other hexagon is granted **person by person by the main administrator** (Platform administrator), on Access & permissions → Hexagon access; each grant is logged. Grants move to the database in P4.
 
 ## 7. Progress
 

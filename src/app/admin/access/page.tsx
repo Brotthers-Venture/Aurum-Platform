@@ -3,6 +3,7 @@ import { TenantName } from "@/components/brand/TenantName";
 import type { Metadata } from "next";
 import { ArrowLeft, Check, UserPlus } from "lucide-react";
 import { AppShell } from "@/components/shell/AppShell";
+import { HexaAccess } from "@/components/admin/HexaAccess";
 import { Avatar, Button, Panel, Status, cx } from "@/components/ui";
 import { Tabs } from "@/components/Tabs";
 import { auditLog, controls, permissionGroups, roleById, roles, users } from "@/lib/access";
@@ -198,6 +199,7 @@ export default function AccessPage() {
         </div>
         <Tabs
           tabs={[
+            { id: "hexagons", label: "Hexagon access", content: <HexaAccess /> },
             { id: "users", label: "Users", count: users.length, content: usersTab },
             { id: "roles", label: "Roles", count: roles.length, content: rolesTab },
             { id: "matrix", label: "Permission matrix", content: matrix },

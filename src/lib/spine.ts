@@ -5,7 +5,7 @@
  */
 import { recordAudit } from "./audit-local";
 
-export type RefKind = "subscription" | "investor" | "screening" | "call" | "room" | "plan" | "formation" | "deal" | "bank";
+export type RefKind = "subscription" | "investor" | "screening" | "call" | "room" | "plan" | "formation" | "deal" | "bank" | "person";
 export type Ref = { kind: RefKind; id: string };
 export const refKey = (r: Ref) => `${r.kind}:${r.id}`;
 export const parseRef = (k: string): Ref | null => {

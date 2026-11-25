@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Bell, Check, ChevronDown, EllipsisVertical, Hexagon, LayoutGrid, LogOut, Palette, Search, ShieldCheck, UserCog } from "lucide-react";
+import { Bell, Check, ChevronDown, EllipsisVertical, LogOut, Palette, Search, ShieldCheck, UserCog } from "lucide-react";
 import { cx } from "@/components/ui";
 import { AurumLogo } from "@/components/brand/Logo";
 import { useBrand } from "@/components/brand/BrandProvider";
@@ -12,9 +12,7 @@ import { moduleName, withTenant } from "@/lib/brand";
 import { loadChat, visibleInbox, type InboxItem } from "@/lib/chat-store";
 import { personName } from "@/lib/chat";
 import type { ThemePref } from "@/lib/theme";
-import { hexasFor } from "@/lib/hexa";
 import { roles } from "@/lib/access";
-import { HexGlyph } from "./HexaRoom";
 
 /** Close a popover on outside click or Escape. */
 function useDismiss(open: boolean, close: () => void) {
@@ -63,14 +61,14 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
  * notifications and the account. Appearance (Light / Dark / System) lives in the account menu.
  */
 export function WorkstationTopBar({
-  app,
   onSearch,
   entity,
   variant = "default",
   moreExtra,
   onActivity,
 }: {
-  app: string;
+  /** the current application (kept for callers; the Hexa Room shows where you are) */
+  app?: string;
   onSearch?: () => void;
   entity?: ReactNode;
   /** "ecosystem": the hub — no application row (the hexagons are the navigation), transparent over the ambient light */
@@ -80,7 +78,7 @@ export function WorkstationTopBar({
   /** tells the page a menu or search is in use, so decorative motion stays quiet */
   onActivity?: (busy: boolean) => void;
 }) {
-  const [open, setOpen] = useState<null | "apps" | "bell" | "account" | "more">(null);
+  const [open, setOpen] = useState<null | "bell" | "account" | "more">(null);
   const close = () => setOpen(null);
   const ref = useDismiss(open !== null, close);
   const toggle = (k: NonNullable<typeof open>) => setOpen((o) => (o === k ? null : k));
@@ -91,7 +89,6 @@ export function WorkstationTopBar({
     onActivity?.(open !== null);
   }, [open, onActivity]);
   const { user, role, setRole } = usePreviewRole();
-  const hexas = hexasFor(role);
   const [notes, setNotes] = useState<{ items: InboxItem[]; unread: number }>({ items: [], unread: 0 });
 
   useEffect(() => {
@@ -114,27 +111,6 @@ export function WorkstationTopBar({
       <Link href="/admin" aria-label={`${brand.name} home`} className="shrink-0">
         <AurumLogo variant={theme === "dark" ? "white" : "dark"} height={32} />
       </Link>
-      <div className="relative">
-        <button onClick={() => toggle("apps")} aria-label="More applications" aria-expanded={open === "apps"} className="flex h-8 w-8 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise hover:text-d-text">
-          <LayoutGrid size={16} />
-        </button>
-        {open === "apps" && (
-          <Menu className="left-0 top-10 w-[260px]">
-            <div className={menuHead}>Your hexagons</div>
-            {hexas.map((h) => (
-              <Link key={h.id} href={h.href} onClick={close} className={cx(menuItem, h.id === app && "bg-d-raise")}>
-                <HexGlyph color={h.color} size={15} active={h.id === app} />
-                {h.firm ? moduleName(brand, h.firm) : h.name}
-              </Link>
-            ))}
-            <div className="mx-1 my-1 h-px bg-d-line-soft" />
-            <Link href="/admin" onClick={close} className={menuItem}>
-              <Hexagon size={15} className="text-d-text-2" /> Ecosystem
-            </Link>
-          </Menu>
-        )}
-      </div>
-
       {entity}
 
       <div className="flex-1" />

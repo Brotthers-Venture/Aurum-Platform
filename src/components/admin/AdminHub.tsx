@@ -14,8 +14,8 @@ import { cx } from "@/components/ui";
 import { firmById, firmModules } from "@/lib/firm";
 import { formations } from "@/lib/formation";
 import { solutions } from "@/lib/solutions";
-import { canOpen } from "@/lib/hexa";
-import { usePreviewRole } from "@/components/admin/PreviewRole";
+import { allows } from "@/lib/hexa";
+import { useHexas } from "@/components/shell/useHexas";
 import { gps, gpById, type GpClient } from "@/lib/gps";
 import { gpTotals } from "@/lib/gpData";
 import { INDICATIVE_BRL_USD } from "@/lib/data";
@@ -72,7 +72,7 @@ const gpModules: { id: string; label: [string, string?]; path: string }[] = [
 export function AdminHub({ variation = "ambient", animate = false, quiet = false }: { variation?: AmbientMotion; animate?: boolean; quiet?: boolean }) {
   const router = useRouter();
   const { brand } = useBrand();
-  const { role } = usePreviewRole();
+  const { allow } = useHexas();
   const [level, setLevel] = useState<Level>({ kind: "root" });
   const [revealed, setRevealed] = useState(false);
   const [active, setActive] = useState<string | null>(null);
@@ -129,7 +129,7 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
   if (level.kind === "root") {
     ringShown = revealed;
     nodes = solutions
-      .filter((s) => canOpen(role, s.id, s.live))
+      .filter((s) => allows(allow, s.id, s.live))
       .map((s) => ({
         id: s.id,
         slot: s.slot,
@@ -235,7 +235,7 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
   const orbitShown = level.kind === "root" || level.kind === "module";
   const orbitR = level.kind === "root" && !revealed ? ORBIT_IN : ORBIT_OUT;
   const orbit = firmModules.flatMap((m, i) => {
-    if (!canOpen(role, m.id)) return []; // hexagons this person cannot open are not shown; the others keep their places
+    if (!allows(allow, m.id)) return []; // hexagons this person cannot open are not shown; the others keep their places
     const a = ((-90 + 60 * i) * Math.PI) / 180;
     const here = level.kind === "module" && level.id === m.id;
     return [

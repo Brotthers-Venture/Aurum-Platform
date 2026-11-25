@@ -6,9 +6,9 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Hexagon } from "lucide-react";
 import { cx } from "@/components/ui";
 import { useBrand } from "@/components/brand/BrandProvider";
-import { usePreviewRole } from "@/components/admin/PreviewRole";
 import { moduleName } from "@/lib/brand";
-import { hexaOf, hexasFor, type Hexa, type HexaPage } from "@/lib/hexa";
+import { hexaOf, type Hexa, type HexaPage } from "@/lib/hexa";
+import { useHexas } from "./useHexas";
 
 const KEY = "aurum-hexa-collapsed";
 
@@ -38,8 +38,7 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
   const path = usePathname();
   const params = useSearchParams();
   const { brand } = useBrand();
-  const { role } = usePreviewRole();
-  const list = hexasFor(role);
+  const { list } = useHexas();
   const here = hexaOf(path);
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [open, setOpen] = useState<Set<string>>(() => new Set(here ? [here.id] : []));
