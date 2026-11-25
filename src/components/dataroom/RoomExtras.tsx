@@ -5,7 +5,7 @@ import { ArrowLeft, Check, ChevronDown, ChevronRight, Copy, ExternalLink, Image 
 import { cx } from "@/components/ui";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { contrast } from "@/lib/brand";
-import { pageCount, type PageView, type Room, type RoomDoc, type RoomSettings, type ShareLink } from "@/lib/dataroom";
+import { pageCount, pageText, type PageView, type Room, type RoomDoc, type RoomSettings, type ShareLink } from "@/lib/dataroom";
 import {
   ENTRY_TONES,
   addVersion,
@@ -18,6 +18,7 @@ import {
   type RoomBrandOverride,
 } from "@/lib/dataroom-extras";
 import { Pill, field, fieldLabel } from "@/components/firm/kit";
+import { COVERS, roomCover } from "@/lib/covers";
 
 /* Document analytics (time per page by version), share links, and per-room branding with a live preview. */
 
@@ -172,16 +173,23 @@ export function DocAnalytics({ room, doc, pv: allPv, onBack, flash }: { room: Ro
                 </div>
                 {hover !== null && (
                   <div
-                    className="pointer-events-none absolute top-2 z-10 w-[190px] rounded-[8px] border border-stone-200 bg-white p-3 text-[12px] shadow-lift"
-                    style={{ left: `clamp(0px, calc(${((hover + 0.5) / pages) * 100}% - 95px), calc(100% - 190px))` }}
+                    className="pointer-events-none absolute top-2 z-10 w-[210px] rounded-[8px] border border-stone-200 bg-white p-3 text-[12px] shadow-lift"
+                    style={{ left: `clamp(0px, calc(${((hover + 0.5) / pages) * 100}% - 105px), calc(100% - 210px))` }}
                   >
                     <div className="font-semibold text-ink-900">Page {hover + 1}</div>
-                    <div className="mt-2 h-[54px] rounded-[4px] border border-stone-200 bg-stone-25 p-2">
-                      <div className="h-1.5 w-2/3 rounded bg-stone-200" />
-                      <div className="mt-1.5 h-1 w-full rounded bg-stone-100" />
-                      <div className="mt-1 h-1 w-5/6 rounded bg-stone-100" />
-                      <div className="mt-1 h-1 w-3/4 rounded bg-stone-100" />
-                    </div>
+                    {(() => {
+                      const pt = pageText(doc.name, hover + 1);
+                      return (
+                        <div className="ws ws-light ws-bridge mt-2 h-[112px] overflow-hidden rounded-[4px] border border-black/10 bg-white px-3 py-2.5 text-[#14181D]">
+                          <div className="truncate text-[8.5px] font-semibold">{pt.heading}</div>
+                          {pt.body.slice(0, 3).map((line, i) => (
+                            <p key={i} className="mt-1 line-clamp-3 text-[6.5px] leading-[1.35] text-[#5A6069]">
+                              {line}
+                            </p>
+                          ))}
+                        </div>
+                      );
+                    })()}
                     <ul className="mt-2 space-y-1">
                       {shown.map((ver, k) => (
                         <li key={ver} className="flex items-center gap-2">
@@ -436,7 +444,7 @@ function readImage(f: File, maxBytes: number, flash: (t: string) => void, done: 
   r.readAsDataURL(f);
 }
 
-export function RoomBranding({ room, docs, previewHref, flash }: { room: Room; docs: RoomDoc[]; previewHref?: string; flash: (t: string) => void }) {
+export function RoomBranding({ room, docs, previewHref, flash, onSaved }: { room: Room; docs: RoomDoc[]; previewHref?: string; flash: (t: string) => void; onSaved?: (banner?: string) => void }) {
   const base = useMemo(() => defaultRoomBrand(room.id, room.name), [room.id, room.name]);
   const [saved, setSaved] = useState<RoomBrandOverride | null>(() => (typeof window === "undefined" ? null : (loadRoomBrands()[room.id] ?? null)));
   const [d, setD] = useState<RoomBrandOverride>(() => saved ?? base);
@@ -448,6 +456,8 @@ export function RoomBranding({ room, docs, previewHref, flash }: { room: Room; d
   const tone = ENTRY_TONES.find((t) => t.id === d.entry) ?? ENTRY_TONES[1];
   const folders = [...new Set(docs.map((x) => x.folder))].slice(0, 4);
   const set = (p: Partial<RoomBrandOverride>) => setD((x) => ({ ...x, ...p }));
+  const cover = roomCover(room);
+  const bannerImg = d.banner ?? cover;
 
   const mark = (light?: boolean) =>
     d.logo ? (
@@ -524,6 +534,18 @@ export function RoomBranding({ room, docs, previewHref, flash }: { room: Room; d
                 </button>
               )}
             </div>
+            <div className="mt-2 text-[11px] text-stone-500">Or choose from the library</div>
+            <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+              {COVERS.map((c) => {
+                const on = (d.banner ?? cover) === c.src;
+                return (
+                  <button key={c.id} onClick={() => set({ banner: c.src })} title={c.label} aria-pressed={on} className={cx("relative h-10 overflow-hidden rounded-[6px] ring-offset-1", on ? "ring-2 ring-ink-900" : "ring-1 ring-stone-200 hover:ring-stone-400")}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={c.src} alt={c.label} className="h-full w-full object-cover" />
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -571,6 +593,7 @@ export function RoomBranding({ room, docs, previewHref, flash }: { room: Room; d
             onClick={() => {
               saveRoomBrand(room.id, d);
               setSaved(d);
+              onSaved?.(d.banner);
               flash("Branding saved — visitors see it on their next visit");
             }}
             className="inline-flex h-8 items-center rounded-[8px] bg-ink-900 px-3.5 text-[12.5px] font-semibold text-white enabled:hover:opacity-90 disabled:opacity-40"
@@ -581,6 +604,7 @@ export function RoomBranding({ room, docs, previewHref, flash }: { room: Room; d
             onClick={() => {
               saveRoomBrand(room.id, null);
               setSaved(null);
+              onSaved?.(undefined);
               setD(base);
               flash("Back to the sponsor's brand");
             }}
@@ -624,10 +648,9 @@ export function RoomBranding({ room, docs, previewHref, flash }: { room: Room; d
             {tab === "room" && (
               <div className="h-[380px]">
                 <div className="relative h-[110px] overflow-hidden" style={{ background: d.primary }}>
-                  {d.banner && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={d.banner} alt="" className="absolute inset-0 h-full w-full object-cover opacity-70" />
-                  )}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={bannerImg} alt="" className="absolute inset-0 h-full w-full object-cover opacity-80" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                   <span className="absolute inset-x-0 top-0 h-[3px]" style={{ background: d.secondary }} />
                   <div className="relative flex h-full flex-col justify-between p-4">
                     {mark(true)}
@@ -683,10 +706,8 @@ export function RoomBranding({ room, docs, previewHref, flash }: { room: Room; d
             {tab === "entry" && (
               <div className="grid h-[380px] grid-cols-[42%_1fr]">
                 <div className="relative overflow-hidden" style={{ background: d.primary }}>
-                  {d.banner && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={d.banner} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
-                  )}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={bannerImg} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
                   <div className="relative flex h-full flex-col justify-between p-5">
                     {mark(true)}
                     <div>

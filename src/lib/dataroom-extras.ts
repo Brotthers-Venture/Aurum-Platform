@@ -87,12 +87,14 @@ export type RoomTemplate = {
   name: string;
   purpose: "Fundraising" | "Offering" | "Due diligence" | "Audit" | "M&A" | "Operational due diligence";
   about: string;
+  cover: string;
   folders: { name: string; items: string[] }[];
 };
 
 export const ROOM_TEMPLATES: RoomTemplate[] = [
   {
     id: "fund-raise",
+    cover: "dawn-silk",
     name: "Fund raise",
     purpose: "Fundraising",
     about: "Limited partner due diligence for a new fund: offering documents, track record, team and terms.",
@@ -105,6 +107,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
   },
   {
     id: "real-estate",
+    cover: "skyline-dusk",
     name: "Real estate transaction",
     purpose: "Due diligence",
     about: "Acquisition or disposal of a property or portfolio, from rent roll to title.",
@@ -117,6 +120,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
   },
   {
     id: "ma-sell",
+    cover: "glass-fold",
     name: "M&A sell-side",
     purpose: "M&A",
     about: "Buyer diligence on a company: corporate records, finance, commercial, people and legal.",
@@ -130,6 +134,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
   },
   {
     id: "fund-of-funds",
+    cover: "market-glow",
     name: "Fund of funds",
     purpose: "Fundraising",
     about: "A multi-manager vehicle: underlying managers, allocation policy and look-through reporting.",
@@ -142,6 +147,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
   },
   {
     id: "formation-kyc",
+    cover: "facade-grid",
     name: "Corporate formation and KYC",
     purpose: "Operational due diligence",
     about: "Collect identity, ownership and corporate documents for a new entity or client onboarding.",
@@ -153,6 +159,7 @@ export const ROOM_TEMPLATES: RoomTemplate[] = [
   },
   {
     id: "investor-reporting",
+    cover: "light-streaks",
     name: "Annual investor reporting",
     purpose: "Audit",
     about: "Year-end package for investors and auditors: statements, valuations and tax documents.",

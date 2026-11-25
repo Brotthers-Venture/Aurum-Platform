@@ -24,7 +24,8 @@ import {
 } from "@/lib/dataroom";
 import { QuestionCard, RoomConsole } from "@/components/dataroom/RoomConsole";
 import { localAnswerDrafts, localQuestions } from "@/lib/dataroom-local";
-import { ROOM_TEMPLATES, type RoomTemplate } from "@/lib/dataroom-extras";
+import { ROOM_TEMPLATES, loadRoomBrands, type RoomTemplate } from "@/lib/dataroom-extras";
+import { coverSrc, roomCover } from "@/lib/covers";
 import { ActionButton, Card, GhostButton, Kpi, ModuleHeader, ModuleTabs, Pill, Toast, field, fieldLabel, fmtShort, td, th, useTab, useToast } from "./kit";
 
 const C = FIRM.dataroom;
@@ -67,6 +68,12 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
       );
   }, []);
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [banners, setBanners] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const all = loadRoomBrands();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBanners(Object.fromEntries(Object.entries(all).flatMap(([k, b]) => (b.banner ? [[k, b.banner]] : []))));
+  }, [roomId]);
   const [creating, setCreating] = useState(initial === "new");
   const [toast, flash] = useToast();
   const room = rooms.find((r) => r.id === roomId);
@@ -152,8 +159,13 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
                   <button
                     key={r.id}
                     onClick={() => setRoomId(r.id)}
-                    className="rounded-[16px] border border-stone-200/80 bg-white p-5 text-left shadow-card transition-shadow hover:shadow-lift"
+                    className="group overflow-hidden rounded-[12px] border border-stone-200/80 bg-white text-left shadow-card transition-shadow hover:shadow-lift"
                   >
+                    <div className="relative h-[112px] overflow-hidden bg-stone-100">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={banners[r.id] ?? roomCover(r)} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+                    </div>
+                    <div className="p-5">
                     <div className="flex items-center justify-between">
                       <span className="text-[10.5px] font-bold uppercase tracking-[0.14em]" style={{ color: C }}>
                         {r.purpose}
@@ -188,6 +200,7 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
                         </span>
                       )}
                       <span className="ml-auto">until {fmtShort(r.expires)}</span>
+                    </div>
                     </div>
                   </button>
                 );
@@ -380,17 +393,12 @@ function NewRoom({ onClose, onSave }: { onClose: () => void; onSave: (r: Room, t
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {ROOM_TEMPLATES.map((t) => (
               <div key={t.id} className="flex flex-col rounded-[10px] border border-stone-200 bg-white hover:border-stone-300">
-                {/* the index itself is the picture: folders drawn as hairlines */}
-                <div className="h-[104px] overflow-hidden border-b border-stone-100 bg-stone-25 px-4 pt-3">
-                  {t.folders.slice(0, 4).map((fo, i) => (
-                    <div key={fo.name} className="flex items-center gap-2 py-[3px] text-[11px] text-stone-500">
-                      <span className="num w-3 text-stone-400">{i + 1}</span>
-                      <FolderClosed size={11} strokeWidth={1.6} className="text-stone-400" />
-                      <span className="truncate">{fo.name}</span>
-                      <span className="ml-auto h-px flex-1 bg-stone-200" />
-                      <span className="num text-stone-400">{fo.items.length}</span>
-                    </div>
-                  ))}
+                <div className="relative h-[128px] overflow-hidden rounded-t-[10px] bg-stone-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={coverSrc(t.cover)} alt="" className="h-full w-full object-cover" />
+                  <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-[5px] bg-black/45 px-1.5 py-0.5 text-[10.5px] font-medium text-white backdrop-blur-[2px]">
+                    <FolderClosed size={11} strokeWidth={1.8} /> {t.folders.length} folders · {t.folders.reduce((n, x) => n + x.items.length, 0)} documents
+                  </span>
                 </div>
                 <div className="flex flex-1 flex-col p-4">
                   <div className="text-[14px] font-semibold text-ink-900">{t.name}</div>

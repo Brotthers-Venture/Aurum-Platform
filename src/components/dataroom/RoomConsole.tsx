@@ -41,6 +41,8 @@ import {
 import { localPageViews } from "@/lib/dataroom-local";
 import { ActionButton, GhostButton, Pill, field, fmtDate, fmtShort } from "@/components/firm/kit";
 import { DocAnalytics, LinksPanel, RoomBranding } from "./RoomExtras";
+import { loadRoomBrands } from "@/lib/dataroom-extras";
+import { roomCover } from "@/lib/covers";
 
 /* The room console: a numbered index with a details rail, a party-by-party engagement read-out,
    a reference-numbered Q&A queue, one permissions grid for every audience, and an exportable audit trail. */
@@ -104,6 +106,7 @@ export function RoomConsole({
   const [section, setSection] = useState<Section>("index");
   const [editing, setEditing] = useState(false);
   const [analytics, setAnalytics] = useState<RoomDoc | null>(null);
+  const [banner, setBanner] = useState(() => (typeof window === "undefined" ? roomCover(room) : (loadRoomBrands()[room.id]?.banner ?? roomCover(room))));
   const act = useActivity(room, docs);
   const go = (x: Section) => {
     setAnalytics(null);
@@ -122,18 +125,26 @@ export function RoomConsole({
   ];
   return (
     <div className="-mx-8 -mt-4 min-h-[calc(100vh-64px)] border-t border-stone-200">
-      {/* room header */}
-      <div className="border-b border-stone-200 bg-white px-8 pt-4">
-        <div className="flex items-center gap-3">
-          <button onClick={onBack} className="flex items-center gap-1 text-[12px] font-medium text-stone-500 hover:text-ink-900">
-            <ArrowLeft size={13} /> All rooms
-          </button>
-          <span className="text-stone-300">/</span>
-          <span className="text-[12px] text-stone-500">
-            {room.purpose} · {room.client}
-          </span>
+      {/* room header: the room's banner, then title, figures and tabs */}
+      <div className="relative h-[148px] overflow-hidden bg-stone-100">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={banner} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-black/5" />
+        <div className="relative flex h-full flex-col justify-between px-8 py-4 text-white">
+          <div className="flex items-center gap-3 text-[12px]">
+            <button onClick={onBack} className="flex items-center gap-1 font-medium text-white/85 hover:text-white">
+              <ArrowLeft size={13} /> All rooms
+            </button>
+            <span className="text-white/40">/</span>
+            <span className="text-white/80">
+              {room.purpose} · {room.client}
+            </span>
+          </div>
+          <div className="text-[12px] text-white/80">Updated {fmtShort(room.created)} · owner {room.owner}</div>
         </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-3">
+      </div>
+      <div className="border-b border-stone-200 bg-white px-8 pt-4">
+        <div className="flex flex-wrap items-center gap-3">
           {editing ? (
             <input
               autoFocus
@@ -201,7 +212,7 @@ export function RoomConsole({
           <Index room={room} docs={docs} links={links} settings={settings} questions={questions} act={act} onUpload={onUpload} flash={flash} go={go} onAnalytics={setAnalytics} />
         )}
         {section === "links" && <LinksPanel links={links} settings={settings} preview={previewUrl} onSave={onSaveLink} onEdit={() => go("permissions")} flash={flash} />}
-        {section === "branding" && <RoomBranding room={room} docs={docs} previewHref={links.find((l) => !l.revoked) ? previewUrl(links.find((l) => !l.revoked)!, settings) : undefined} flash={flash} />}
+        {section === "branding" && <RoomBranding room={room} docs={docs} onSaved={(b) => setBanner(b ?? roomCover(room))} previewHref={links.find((l) => !l.revoked) ? previewUrl(links.find((l) => !l.revoked)!, settings) : undefined} flash={flash} />}
         {section === "engagement" && <Engagement docs={docs} questions={questions} act={act} />}
         {section === "qa" && <QaQueue settings={settings} onSettings={onSettings} questions={questions} onDraft={onDraft} onRelease={onRelease} flash={flash} />}
         {section === "permissions" && <PermissionGrid room={room} docs={docs} links={links} settings={settings} onSave={onSaveLink} flash={flash} />}

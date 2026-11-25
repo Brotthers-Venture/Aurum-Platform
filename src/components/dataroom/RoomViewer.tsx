@@ -24,11 +24,11 @@ import { cx } from "@/components/ui";
 import { AurumMark } from "@/components/brand/Logo";
 import { TenantName } from "@/components/brand/TenantName";
 import { GpLogo } from "@/components/brand/GpLogo";
-import { FundCover } from "@/components/fund/FundCard";
 import { gpById } from "@/lib/gps";
 import { pageCount, pageText, type FolderAccess, type Question, type Room, type RoomBrand, type RoomDoc, type RoomSettings, type ShareLink } from "@/lib/dataroom";
 import { addLocalQuestion, trackPage } from "@/lib/dataroom-local";
 import { ENTRY_TONES, loadRoomBrands } from "@/lib/dataroom-extras";
+import { roomCover } from "@/lib/covers";
 
 type Step = "email" | "verify" | "password" | "questions" | "nda" | "room";
 
@@ -204,8 +204,15 @@ function Shell({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={brand.banner} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
             ) : (
-              <FundCover id={room.id} primary={brand.primary} secondary={brand.secondary} className="absolute inset-0 h-full w-full opacity-45" />
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={roomCover(room)} alt="" className="absolute inset-0 h-full w-full object-cover" />
             ))}
+          {settings.showCover && (
+            <div
+              className="absolute inset-0"
+              style={{ background: `linear-gradient(to top, ${brand.primary} 0%, ${brand.primary}EB 38%, ${brand.primary}66 70%, ${brand.primary}1A 100%)` }}
+            />
+          )}
           <div className="relative flex h-full flex-col px-10 py-9 lg:px-14">
             {settings.showLogo ? <BrandMark brand={brand} light /> : <span />}
             <div className="mt-16 lg:mt-auto">
@@ -662,6 +669,15 @@ function RoomInside({
         <main className="relative flex min-w-0 flex-1 flex-col">
           {!doc ? (
             <div className="flex-1 overflow-y-auto">
+              <div className="relative h-[180px] overflow-hidden" style={{ background: brand.primary }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={brand.banner ?? roomCover(room)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+                <div className="absolute bottom-4 left-8 text-white">
+                  <div className="text-[20px] font-semibold tracking-[-0.01em]">{room.name}</div>
+                  <div className="text-[12px] text-white/80">Updated {new Date(room.created).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
+                </div>
+              </div>
               <div className="mx-auto max-w-[760px] px-8 py-10">
                 <div className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: brand.primary }}>
                   {room.purpose}
