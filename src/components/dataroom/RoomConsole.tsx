@@ -40,13 +40,14 @@ import {
 } from "@/lib/dataroom";
 import { localPageViews } from "@/lib/dataroom-local";
 import { ActionButton, GhostButton, Pill, field, fmtDate, fmtShort } from "@/components/firm/kit";
+import { DocAnalytics, LinksPanel, RoomBranding } from "./RoomExtras";
 
 /* The room console: a numbered index with a details rail, a party-by-party engagement read-out,
    a reference-numbered Q&A queue, one permissions grid for every audience, and an exportable audit trail. */
 
 const C = FIRM.dataroom;
-type Section = "index" | "engagement" | "qa" | "permissions" | "audit" | "setup";
-const size = (b: number) => (b >= 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : `${Math.round(b / 1000)} KB`);
+type Section = "index" | "links" | "engagement" | "qa" | "permissions" | "branding" | "audit" | "setup";
+const size = (b: number) => (b === 0 ? "Awaiting file" : b >= 1_000_000 ? `${(b / 1_000_000).toFixed(1)} MB` : `${Math.round(b / 1000)} KB`);
 const dur = (s: number) => (s >= 3600 ? `${(s / 3600).toFixed(1)} h` : s >= 60 ? `${Math.round(s / 60)} min` : s ? `${Math.round(s)} s` : "—");
 const NOW = Date.parse("2026-11-24T22:00:00Z");
 const ago = (iso: string) => {
@@ -102,15 +103,22 @@ export function RoomConsole({
 }) {
   const [section, setSection] = useState<Section>("index");
   const [editing, setEditing] = useState(false);
+  const [analytics, setAnalytics] = useState<RoomDoc | null>(null);
   const act = useActivity(room, docs);
+  const go = (x: Section) => {
+    setAnalytics(null);
+    setSection(x);
+  };
   const openQs = questions.filter((q) => q.status !== "Answered").length;
   const tabs: [Section, string, number?][] = [
-    ["index", "Index"],
-    ["engagement", "Engagement"],
+    ["index", "Documents"],
+    ["links", "Links"],
+    ["engagement", "Analytics"],
     ["qa", "Q&A", openQs],
     ["permissions", "Permissions"],
+    ["branding", "Branding"],
     ["audit", "Audit trail"],
-    ["setup", "Setup"],
+    ["setup", "Settings"],
   ];
   return (
     <div className="-mx-8 -mt-4 min-h-[calc(100vh-64px)] border-t border-stone-200">
@@ -157,8 +165,8 @@ export function RoomConsole({
             <span>
               <b className="num font-semibold text-ink-900">{links.filter((l) => !l.revoked).length}</b> audiences
             </span>
-            <ActionButton color={C} onClick={() => setSection("permissions")}>
-              <Link2 size={14} /> Invite
+            <ActionButton color={C} onClick={() => go("links")}>
+              <Link2 size={14} /> Share
             </ActionButton>
           </div>
         </div>
@@ -166,12 +174,12 @@ export function RoomConsole({
           {tabs.map(([id, label, n]) => (
             <button
               key={id}
-              onClick={() => setSection(id)}
+              onClick={() => go(id)}
               className={cx(
                 "-mb-px flex items-center gap-1.5 border-b-2 pb-2.5 text-[13px] font-semibold",
-                section === id ? "text-ink-900" : "border-transparent text-stone-500 hover:text-ink-900",
+                section === id && !analytics ? "text-ink-900" : "border-transparent text-stone-500 hover:text-ink-900",
               )}
-              style={section === id ? { borderColor: C } : undefined}
+              style={section === id && !analytics ? { borderColor: C } : undefined}
             >
               {label}
               {n ? (
@@ -185,14 +193,22 @@ export function RoomConsole({
       </div>
 
       <div className="bg-stone-50">
+        {analytics ? (
+          <DocAnalytics room={room} doc={analytics} pv={act.pv} onBack={() => setAnalytics(null)} flash={flash} />
+        ) : (
+          <>
         {section === "index" && (
-          <Index room={room} docs={docs} links={links} settings={settings} questions={questions} act={act} onUpload={onUpload} flash={flash} go={setSection} />
+          <Index room={room} docs={docs} links={links} settings={settings} questions={questions} act={act} onUpload={onUpload} flash={flash} go={go} onAnalytics={setAnalytics} />
         )}
+        {section === "links" && <LinksPanel links={links} settings={settings} preview={previewUrl} onSave={onSaveLink} onEdit={() => go("permissions")} flash={flash} />}
+        {section === "branding" && <RoomBranding room={room} docs={docs} previewHref={links.find((l) => !l.revoked) ? previewUrl(links.find((l) => !l.revoked)!, settings) : undefined} flash={flash} />}
         {section === "engagement" && <Engagement docs={docs} questions={questions} act={act} />}
         {section === "qa" && <QaQueue settings={settings} onSettings={onSettings} questions={questions} onDraft={onDraft} onRelease={onRelease} flash={flash} />}
         {section === "permissions" && <PermissionGrid room={room} docs={docs} links={links} settings={settings} onSave={onSaveLink} flash={flash} />}
         {section === "audit" && <AuditTrail room={room} docs={docs} act={act} />}
         {section === "setup" && <Setup settings={settings} onChange={onSettings} />}
+          </>
+        )}
       </div>
     </div>
   );
@@ -262,6 +278,7 @@ function Index({
   onUpload,
   flash,
   go,
+  onAnalytics,
 }: {
   room: Room;
   docs: RoomDoc[];
@@ -272,6 +289,7 @@ function Index({
   onUpload: (folder: string, files: File[]) => void;
   flash: (t: string) => void;
   go: (s: Section) => void;
+  onAnalytics: (d: RoomDoc) => void;
 }) {
   const folders = [...new Set(docs.map((d) => d.folder))];
   const [folder, setFolder] = useState<string | null>(null);
@@ -409,7 +427,7 @@ function Index({
                 return (
                   <Fragment key={d.id}>
                     {newFolder && (
-                      <tr className="border-b border-stone-100 bg-[#F7F8FB]">
+                      <tr className="border-b border-stone-100 bg-stone-25">
                         <td colSpan={settings.indexNumbers ? 6 : 5} className="px-4 py-1.5 text-[11.5px] font-semibold text-stone-600">
                           {settings.indexNumbers && <span className="num mr-2 text-stone-400">{num(d.folder)}</span>}
                           {bare(d.folder)}
@@ -418,7 +436,7 @@ function Index({
                     )}
                     <tr
                       onClick={() => setDocId(d.id)}
-                      className={cx("cursor-pointer border-b border-stone-100 last:border-0", docId === d.id ? "bg-[#EEF2FB]" : "hover:bg-stone-50")}
+                      className={cx("cursor-pointer border-b border-stone-100 last:border-0", docId === d.id ? "bg-stone-100" : "hover:bg-stone-50")}
                     >
                       {settings.indexNumbers && <td className="num px-4 py-2 text-stone-500">{d.index}</td>}
                       <td className="px-3 py-2">
@@ -449,7 +467,7 @@ function Index({
       {/* rail */}
       <aside className="border-l border-stone-200 bg-white">
         {doc ? (
-          <DocDetails doc={doc} links={links} act={act} onClose={() => setDocId(null)} />
+          <DocDetails doc={doc} links={links} act={act} onClose={() => setDocId(null)} onAnalytics={() => onAnalytics(doc)} />
         ) : (
           <Checklist docs={docs} links={links} settings={settings} questions={questions} go={go} />
         )}
@@ -458,7 +476,7 @@ function Index({
   );
 }
 
-function DocDetails({ doc, links, act, onClose }: { doc: RoomDoc; links: ShareLink[]; act: Act; onClose: () => void }) {
+function DocDetails({ doc, links, act, onClose, onAnalytics }: { doc: RoomDoc; links: ShareLink[]; act: Act; onClose: () => void; onAnalytics: () => void }) {
   const pages = pageCount(doc.name);
   const pv = act.pv.filter((v) => v.docId === doc.id);
   const per = Array.from({ length: pages }, (_, i) => pv.filter((v) => v.page === i + 1).reduce((s, v) => s + v.seconds, 0));
@@ -494,7 +512,7 @@ function DocDetails({ doc, links, act, onClose }: { doc: RoomDoc; links: ShareLi
             key={i}
             title={`Page ${i + 1}: ${dur(s)}`}
             className="flex-1 rounded-t-[2px]"
-            style={{ height: `${Math.max(6, (s / max) * 100)}%`, background: s ? C : "#E7E5E0", opacity: s ? 0.35 + 0.65 * (s / max) : 1 }}
+            style={{ height: `${Math.max(6, (s / max) * 100)}%`, background: s ? C : "var(--color-stone-100)", opacity: s ? 0.35 + 0.65 * (s / max) : 1 }}
           />
         ))}
       </div>
@@ -502,6 +520,9 @@ function DocDetails({ doc, links, act, onClose }: { doc: RoomDoc; links: ShareLi
         <span>p.1</span>
         <span>p.{pages}</span>
       </div>
+      <button onClick={onAnalytics} className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-stone-200 bg-white py-1.5 text-[12px] font-semibold text-ink-900 hover:border-stone-300">
+        Full analytics and versions <ChevronRight size={13} />
+      </button>
 
       <div className="mt-5 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">Readers</div>
       <ul className="mt-2 space-y-2">
@@ -561,7 +582,7 @@ function Checklist({ docs, links, settings, questions, go }: { docs: RoomDoc[]; 
       </div>
       <div className="mt-2 flex gap-1">
         {items.map(([ok], i) => (
-          <span key={i} className="h-1.5 flex-1 rounded-full" style={{ background: ok ? C : "#E7E5E0" }} />
+          <span key={i} className="h-1.5 flex-1 rounded-full" style={{ background: ok ? C : "var(--color-stone-100)" }} />
         ))}
       </div>
       <ul className="mt-4 space-y-1">
@@ -644,7 +665,7 @@ function Engagement({ docs, questions, act }: { docs: RoomDoc[]; questions: Ques
                       <td className="px-4 py-2.5 text-stone-500">{ago(p.last)}</td>
                     </tr>
                     {open === p.firm && (
-                      <tr className="border-b border-stone-100 bg-[#FAFAF8]">
+                      <tr className="border-b border-stone-100 bg-stone-25">
                         <td colSpan={8} className="px-10 py-3">
                           <div className="grid grid-cols-2 gap-6 text-[12px]">
                             <div>
@@ -716,7 +737,7 @@ function Engagement({ docs, questions, act }: { docs: RoomDoc[]; questions: Ques
                         key={f}
                         title={`${p.firm} · ${bare(f)}: ${dur(s)}`}
                         className="num flex h-9 items-center justify-center rounded-[4px] text-[11px] font-semibold"
-                        style={{ background: s ? `rgba(53,88,192,${0.1 + 0.85 * t})` : "#F4F3F0", color: t > 0.45 ? "#fff" : "#3B4A66" }}
+                        style={{ background: s ? `rgba(53,88,192,${0.1 + 0.85 * t})` : "var(--color-stone-100)", color: t > 0.45 ? "#fff" : "var(--color-stone-600)" }}
                       >
                         {s ? dur(s) : ""}
                       </div>
@@ -803,7 +824,7 @@ function QaQueue({
                 <Fragment key={q.id}>
                   <tr
                     onClick={() => setSel((s) => (s === q.id ? null : q.id))}
-                    className={cx("cursor-pointer border-b border-stone-100", sel === q.id ? "bg-[#EEF2FB]" : "hover:bg-stone-50")}
+                    className={cx("cursor-pointer border-b border-stone-100", sel === q.id ? "bg-stone-100" : "hover:bg-stone-50")}
                   >
                     <td className="num px-4 py-2.5 font-semibold text-stone-600">{ref(q)}</td>
                     <td className="max-w-[520px] px-3 py-2.5 text-ink-900">{q.text}</td>
@@ -820,7 +841,7 @@ function QaQueue({
                     </td>
                   </tr>
                   {sel === q.id && (
-                    <tr className="border-b border-stone-100 bg-[#FAFAF8]">
+                    <tr className="border-b border-stone-100 bg-stone-25">
                       <td />
                       <td colSpan={5} className="py-3 pr-4">
                         <QuestionCard
@@ -928,10 +949,10 @@ export function QuestionCard({
 
 const LEVELS: FolderAccess[] = ["none", "view", "download", "upload"];
 const LEVEL: Record<FolderAccess, { label: string; bg: string; fg: string }> = {
-  none: { label: "No access", bg: "#F4F3F0", fg: "#8A8F99" },
-  view: { label: "View", bg: "#E6ECFA", fg: "#2D4CA8" },
-  download: { label: "Download", bg: "#C9D6F5", fg: "#1F3A8A" },
-  upload: { label: "Contribute", bg: "#3558C0", fg: "#FFFFFF" },
+  none: { label: "No access", bg: "var(--color-stone-100)", fg: "var(--color-stone-400)" },
+  view: { label: "View", bg: `color-mix(in srgb, ${C} 16%, transparent)`, fg: C },
+  download: { label: "Download", bg: `color-mix(in srgb, ${C} 34%, transparent)`, fg: "var(--color-ink-900)" },
+  upload: { label: "Contribute", bg: C, fg: "#FFFFFF" },
 };
 
 function PermissionGrid({
@@ -1010,7 +1031,7 @@ function PermissionGrid({
         <div className="flex shrink-0 items-center gap-3 text-[11px] text-stone-500">
           {LEVELS.map((l) => (
             <span key={l} className="flex items-center gap-1.5">
-              <span className="h-3 w-3 rounded-[3px]" style={{ background: LEVEL[l].bg, outline: l === "none" ? "1px solid #E1DED7" : undefined }} />
+              <span className="h-3 w-3 rounded-[3px]" style={{ background: LEVEL[l].bg, outline: l === "none" ? "1px solid var(--color-stone-300)" : undefined }} />
               {LEVEL[l].label}
             </span>
           ))}
@@ -1044,7 +1065,7 @@ function PermissionGrid({
             </button>
           </div>
 
-          <div className="bg-[#F7F8FB] px-4 py-1.5 text-[10.5px] font-bold uppercase tracking-[0.1em] text-stone-500">Folders</div>
+          <div className="bg-stone-25 px-4 py-1.5 text-[10.5px] font-bold uppercase tracking-[0.1em] text-stone-500">Folders</div>
           {folders.map((f) => (
             <div key={f} className="grid border-t border-stone-100" style={{ gridTemplateColumns: W }}>
               <div className="flex items-center gap-2 px-4 py-1.5 text-ink-900">
@@ -1070,7 +1091,7 @@ function PermissionGrid({
             </div>
           ))}
 
-          <div className="border-t border-stone-200 bg-[#F7F8FB] px-4 py-1.5 text-[10.5px] font-bold uppercase tracking-[0.1em] text-stone-500">Controls</div>
+          <div className="border-t border-stone-200 bg-stone-25 px-4 py-1.5 text-[10.5px] font-bold uppercase tracking-[0.1em] text-stone-500">Controls</div>
           {controls.map((k) => (
             <div key={k.label} className="grid border-t border-stone-100" style={{ gridTemplateColumns: W }}>
               <div className="px-4 py-2 text-ink-900">{k.label}</div>

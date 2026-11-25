@@ -28,6 +28,7 @@ import { FundCover } from "@/components/fund/FundCard";
 import { gpById } from "@/lib/gps";
 import { pageCount, pageText, type FolderAccess, type Question, type Room, type RoomBrand, type RoomDoc, type RoomSettings, type ShareLink } from "@/lib/dataroom";
 import { addLocalQuestion, trackPage } from "@/lib/dataroom-local";
+import { ENTRY_TONES, loadRoomBrands } from "@/lib/dataroom-extras";
 
 type Step = "email" | "verify" | "password" | "questions" | "nda" | "room";
 
@@ -40,6 +41,8 @@ const codeFor = (email: string) => {
 const stamp = () => new Date().toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/New_York" });
 
 function BrandMark({ brand, light }: { brand: RoomBrand; light?: boolean }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  if (brand.logo) return <img src={brand.logo} alt={brand.wordmark} className="h-[26px] w-auto max-w-[180px] object-contain" />;
   const gp = brand.gpId ? gpById(brand.gpId) : undefined;
   if (gp) return <GpLogo gp={gp} height={26} tone={light ? "dark" : "light"} compact />;
   if (brand.wordmark === "Aurum")
@@ -77,7 +80,7 @@ export function RoomViewer({
   room,
   link,
   docs,
-  brand,
+  brand: baseBrand,
   ip,
   preview,
   settings,
@@ -90,6 +93,12 @@ export function RoomViewer({
   preview: boolean;
   settings: RoomSettings;
 }) {
+  const [override, setOverride] = useState<RoomBrand | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setOverride(loadRoomBrands()[room.id] ?? null);
+  }, [room.id]);
+  const brand: RoomBrand = override ? { ...baseBrand, ...override, gpId: override.logo ? undefined : baseBrand.gpId } : baseBrand;
   const steps: Step[] = useMemo(
     () => [
       "email",
@@ -190,7 +199,13 @@ function Shell({
       <div className="grid flex-1 lg:grid-cols-[minmax(380px,44%)_1fr]">
         {/* sponsor panel */}
         <aside className="relative overflow-hidden text-white" style={{ background: brand.primary }}>
-          {settings.showCover && <FundCover id={room.id} primary={brand.primary} secondary={brand.secondary} className="absolute inset-0 h-full w-full opacity-45" />}
+          {settings.showCover &&
+            (brand.banner ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={brand.banner} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55" />
+            ) : (
+              <FundCover id={room.id} primary={brand.primary} secondary={brand.secondary} className="absolute inset-0 h-full w-full opacity-45" />
+            ))}
           <div className="relative flex h-full flex-col px-10 py-9 lg:px-14">
             {settings.showLogo ? <BrandMark brand={brand} light /> : <span />}
             <div className="mt-16 lg:mt-auto">
@@ -227,7 +242,10 @@ function Shell({
           </div>
         </aside>
         {/* steps */}
-        <main className="flex flex-col">
+        <main
+          className={cx("flex flex-col", brand.entry && (brand.entry === "slate" || brand.entry === "dark" ? "ws ws-bridge" : "ws ws-light ws-bridge"))}
+          style={brand.entry ? { background: ENTRY_TONES.find((t) => t.id === brand.entry)?.bg } : undefined}
+        >
           <div className="flex flex-1 items-center justify-center px-6 py-12">
             <div className="w-full max-w-[420px]">{children}</div>
           </div>
@@ -649,7 +667,7 @@ function RoomInside({
                   {room.purpose}
                 </div>
                 <h1 className="mt-1 text-[28px] font-semibold tracking-[-0.015em] text-ink-900">{room.name}</h1>
-                <p className="mt-3 text-[15px] leading-relaxed text-stone-600">{link.welcome}</p>
+                <p className="mt-3 text-[15px] leading-relaxed text-stone-600">{link.welcome || brand.welcome}</p>
                 <div className="mt-6 flex flex-wrap gap-2 text-[12px] text-stone-600">
                   <Chip>{visible.length} documents</Chip>
                   <Chip>{folders.length} folders</Chip>

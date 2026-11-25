@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Droplets, Eye, FileSignature, Plus, Printer, X } from "lucide-react";
+import { ArrowLeft, Download, Droplets, Eye, FileSignature, FolderClosed, Plus, Printer, X } from "lucide-react";
 import { cx } from "@/components/ui";
 import { FIRM } from "@/lib/firm-colors";
 import { solutions } from "@/lib/solutions";
@@ -24,6 +24,7 @@ import {
 } from "@/lib/dataroom";
 import { QuestionCard, RoomConsole } from "@/components/dataroom/RoomConsole";
 import { localAnswerDrafts, localQuestions } from "@/lib/dataroom-local";
+import { ROOM_TEMPLATES, type RoomTemplate } from "@/lib/dataroom-extras";
 import { ActionButton, Card, GhostButton, Kpi, ModuleHeader, ModuleTabs, Pill, Toast, field, fieldLabel, fmtShort, td, th, useTab, useToast } from "./kit";
 
 const C = FIRM.dataroom;
@@ -328,8 +329,15 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
       {creating && (
         <NewRoom
           onClose={() => setCreating(false)}
-          onSave={(r) => {
+          onSave={(r, t) => {
             setRooms((all) => [r, ...all]);
+            if (t)
+              setDocs((all) => [
+                ...all,
+                ...t.folders.flatMap((f, fi) =>
+                  f.items.map((it, ii) => ({ id: `doc${Date.now()}${fi}${ii}`, roomId: r.id, folder: `${fi + 1} ${f.name}`, index: `${fi + 1}.${ii + 1}`, name: it, size: 0, views: 0 })),
+                ),
+              ]);
             setCreating(false);
             setTab("rooms");
             setRoomId(r.id);
@@ -342,7 +350,9 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
   );
 }
 
-function NewRoom({ onClose, onSave }: { onClose: () => void; onSave: (r: Room) => void }) {
+function NewRoom({ onClose, onSave }: { onClose: () => void; onSave: (r: Room, t?: RoomTemplate) => void }) {
+  const [template, setTemplate] = useState<RoomTemplate | null | undefined>(undefined);
+  const [peek, setPeek] = useState<string | null>(null);
   const [f, setF] = useState({
     name: "",
     purpose: "Fundraising" as RoomPurpose,
@@ -354,6 +364,75 @@ function NewRoom({ onClose, onSave }: { onClose: () => void; onSave: (r: Room) =
   });
   const set = (k: "name" | "purpose" | "client" | "solution" | "expires") => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setF((x) => ({ ...x, [k]: e.target.value }));
+  if (template === undefined)
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/30 p-6" role="dialog" aria-modal aria-label="Choose a starting point">
+        <div className="max-h-[88vh] w-full max-w-[980px] overflow-y-auto rounded-[14px] bg-white p-6 shadow-lift">
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-[17px] font-semibold text-ink-900">New data room</h2>
+              <p className="mt-0.5 text-[12.5px] text-stone-500">Start from an index built for the deal, or from an empty room.</p>
+            </div>
+            <button type="button" onClick={onClose} className="rounded-[8px] p-1.5 text-stone-400 hover:bg-stone-100" aria-label="Close">
+              <X size={16} />
+            </button>
+          </div>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {ROOM_TEMPLATES.map((t) => (
+              <div key={t.id} className="flex flex-col rounded-[10px] border border-stone-200 bg-white hover:border-stone-300">
+                {/* the index itself is the picture: folders drawn as hairlines */}
+                <div className="h-[104px] overflow-hidden border-b border-stone-100 bg-stone-25 px-4 pt-3">
+                  {t.folders.slice(0, 4).map((fo, i) => (
+                    <div key={fo.name} className="flex items-center gap-2 py-[3px] text-[11px] text-stone-500">
+                      <span className="num w-3 text-stone-400">{i + 1}</span>
+                      <FolderClosed size={11} strokeWidth={1.6} className="text-stone-400" />
+                      <span className="truncate">{fo.name}</span>
+                      <span className="ml-auto h-px flex-1 bg-stone-200" />
+                      <span className="num text-stone-400">{fo.items.length}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-1 flex-col p-4">
+                  <div className="text-[14px] font-semibold text-ink-900">{t.name}</div>
+                  <p className="mt-1 flex-1 text-[12px] leading-relaxed text-stone-500">{t.about}</p>
+                  {peek === t.id && (
+                    <ol className="mt-3 space-y-2 border-t border-stone-100 pt-3 text-[12px]">
+                      {t.folders.map((fo, i) => (
+                        <li key={fo.name}>
+                          <div className="font-medium text-ink-900">
+                            {i + 1} {fo.name}
+                          </div>
+                          <div className="text-[11.5px] text-stone-500">{fo.items.join(" · ")}</div>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => setPeek(peek === t.id ? null : t.id)} className="h-8 rounded-[8px] border border-stone-200 text-[12.5px] font-medium text-ink-900 hover:border-stone-300">
+                      {peek === t.id ? "Hide index" : "View index"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTemplate(t);
+                        setF((x) => ({ ...x, purpose: t.purpose }));
+                      }}
+                      className="h-8 rounded-[8px] bg-ink-900 text-[12.5px] font-semibold text-white hover:opacity-90"
+                    >
+                      Use template
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button type="button" onClick={() => setTemplate(null)} className="mt-4 text-[12.5px] font-medium text-stone-600 underline-offset-2 hover:text-ink-900 hover:underline">
+            Start with an empty room
+          </button>
+        </div>
+      </div>
+    );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/30 p-6" role="dialog" aria-modal aria-label="New data room">
       <form
@@ -371,12 +450,18 @@ function NewRoom({ onClose, onSave }: { onClose: () => void; onSave: (r: Room) =
             watermark: f.watermark,
             expires: f.expires,
             created: "2026-11-24",
-          });
+          }, template ?? undefined);
         }}
         className="w-full max-w-[520px] space-y-4 rounded-[18px] bg-white p-6 shadow-lift"
       >
         <div className="flex items-start justify-between">
-          <h2 className="text-[17px] font-semibold text-ink-900">New data room</h2>
+          <div>
+            <button type="button" onClick={() => setTemplate(undefined)} className="flex items-center gap-1 text-[12px] font-medium text-stone-500 hover:text-ink-900">
+              <ArrowLeft size={13} /> Starting points
+            </button>
+            <h2 className="mt-1 text-[17px] font-semibold text-ink-900">New data room{template ? ` · ${template.name}` : ""}</h2>
+            {template && <p className="text-[12px] text-stone-500">{template.folders.length} folders and {template.folders.reduce((n, x) => n + x.items.length, 0)} document slots will be created.</p>}
+          </div>
           <button type="button" onClick={onClose} className="rounded-[8px] p-1.5 text-stone-400 hover:bg-stone-100" aria-label="Close">
             <X size={16} />
           </button>

@@ -171,7 +171,18 @@ export type ShareLink = {
   revoked?: boolean;
 };
 
-export type RoomBrand = { gpId?: string; primary: string; secondary: string; wordmark: string; tagline: string };
+export type RoomBrand = {
+  gpId?: string;
+  primary: string;
+  secondary: string;
+  wordmark: string;
+  tagline: string;
+  /** per-room overrides set in the console's Branding tab */
+  logo?: string;
+  banner?: string;
+  entry?: "light" | "warm" | "slate" | "dark";
+  welcome?: string;
+};
 export const roomBrand: Record<string, RoomBrand> = {
   "rm-cascade": { primary: "#2F4A3A", secondary: "#C9B37E", wordmark: "Cascade Ridge", tagline: "Real Estate Partners" },
   "rm-stx": { gpId: "strlex", primary: "#191E31", secondary: "#8A93AD", wordmark: "Strlex Capital", tagline: "Capital Group" },
