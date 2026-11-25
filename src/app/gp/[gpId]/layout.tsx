@@ -30,7 +30,7 @@ async function BrandedShell({ children, params }: { children: ReactNode; params:
   const client = commClients.find((c) => c.gpId === gp.id);
   const lead = client && commPeople.find((p) => p.org === client.id && p.clientRole === "admin");
   return (
-    <div className="min-h-screen" style={brandStyle(gp.brand)}>
+    <div className="ws ws-light ws-bridge ws-portal min-h-dvh bg-d-bg" style={brandStyle(gp.brand)}>
       <BrandedHeader
         gp={gp}
         nav={[

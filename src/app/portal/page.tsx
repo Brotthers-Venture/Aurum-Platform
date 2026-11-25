@@ -16,7 +16,7 @@ export default async function PortalChooser() {
   const inv = investorById(PORTAL_INVESTOR_ID)!;
   const list = gpsForInvestor(inv.id, inv.name);
   return (
-    <div className="min-h-screen">
+    <div className="ws ws-light ws-bridge ws-portal min-h-dvh bg-d-bg">
       <header className="border-b border-stone-200 bg-white">
         <div className="mx-auto flex h-16 max-w-[880px] items-center justify-between px-8">
           <AurumLogo variant="dark" height={34} priority />

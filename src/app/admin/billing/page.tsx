@@ -10,7 +10,7 @@ const tabs: BillingTab[] = ["overview", "invoices", "new", "payments", "subscrip
 
 export default function BillingPage({ searchParams }: { searchParams: Promise<{ tab?: string; filter?: string }> }) {
   return (
-    <div className="min-h-screen">
+    <div className="ws ws-bridge min-h-dvh bg-d-bg">
       <AdminTopBar context="Billing" />
       <Suspense fallback={<div className="min-h-[70vh]" />}>
         <Billing searchParams={searchParams} />

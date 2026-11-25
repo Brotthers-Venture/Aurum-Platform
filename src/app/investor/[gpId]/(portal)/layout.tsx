@@ -24,7 +24,7 @@ async function Shell({ children, params }: { children: ReactNode; params: Promis
   if (!gp) notFound();
   const base = `/investor/${gp.id}`;
   return (
-    <div className="min-h-screen" style={brandStyle(gp.brand)}>
+    <div className="ws ws-light ws-bridge ws-portal min-h-dvh bg-d-bg" style={brandStyle(gp.brand)}>
       <BrandedHeader
         gp={gp}
         nav={[

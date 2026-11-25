@@ -350,7 +350,8 @@ main svg g[tabindex]:focus-visible {
   font-family: "Inter Variable", system-ui, sans-serif;
   font-feature-settings: "cv11", "ss01";
 }
-html[data-theme="light"] .ws {
+html[data-theme="light"] .ws,
+.ws.ws-light {
   --d-bg: #f2f1ee;
   --d-chrome: #fbfaf8;
   --d-surface: #ffffff;
@@ -725,4 +726,8 @@ html[data-eco-enter] .eco-enter-item {
 }
 .ws-bridge :focus-visible {
   outline-color: var(--d-focus);
+}
+/* Client portals are always Platinum (sponsor logos are drawn for light backgrounds) and keep Source Serif for headings and the sponsor's own --brand colours (set inline). */
+.ws-portal {
+  --font-serif: "Source Serif 4 Variable", Georgia, serif;
 }
