@@ -1,5 +1,9 @@
 "use client";
 
+import { ModuleName } from "@/components/brand/ModuleName";
+import { useBrand } from "@/components/brand/BrandProvider";
+import { moduleName } from "@/lib/brand";
+import { postPlanRequest } from "@/lib/chat-store";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, CalendarRange, ChevronDown, ChevronRight, Copy, Download, FileText, MessageSquare, Paperclip, Plus, Printer, Send, Table2, X } from "lucide-react";
 import { cx } from "@/components/ui";
@@ -706,6 +710,7 @@ function Gantt({
 /* ───────────────────────── requests ───────────────────────── */
 
 function Requests({ plan, only, flash }: { plan: Plan; only: string; flash: (t: string) => void }) {
+  const { brand } = useBrand();
   const parties = plan.parties.filter((p) => p.id !== "aurum" && (only === "all" || only === p.id));
   return (
     <div className="space-y-5">
@@ -741,11 +746,14 @@ function Requests({ plan, only, flash }: { plan: Plan; only: string; flash: (t: 
                 </button>
                 <button
                   disabled={!open.length}
-                  onClick={() => flash(`Request sent to ${p.name} in Chat Room`)}
+                  onClick={() => {
+                    const m = postPlanRequest(plan.id, plan.name, text);
+                    flash(`Request to ${p.name} posted in ${moduleName(brand, "communication")} · ${m.ref}`);
+                  }}
                   className="flex h-9 items-center gap-1.5 rounded-[10px] px-3 text-[12.5px] font-semibold text-white disabled:opacity-40"
                   style={{ background: FIRM.communication }}
                 >
-                  <Send size={13} /> Send in Chat Room
+                  <Send size={13} /> Send to <ModuleName id="communication" />
                 </button>
               </div>
             </div>

@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import "@fontsource-variable/hanken-grotesk";
 import "@fontsource-variable/source-serif-4";
 import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/manrope";
 import "./globals.css";
 import { BrandProvider } from "@/components/brand/BrandProvider";
+import { ThemeProvider } from "@/components/shell/ThemeProvider";
 import { BRAND_BOOT } from "@/lib/brand";
+import { THEME_BOOT } from "@/lib/theme";
 
 export const metadata: Metadata = {
   title: {
@@ -23,10 +27,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: BRAND_BOOT }} />
+        <script dangerouslySetInnerHTML={{ __html: BRAND_BOOT + THEME_BOOT }} />
       </head>
       <body className="min-h-screen antialiased">
-        <BrandProvider>{children}</BrandProvider>
+        <BrandProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </BrandProvider>
       </body>
     </html>
   );

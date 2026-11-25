@@ -34,6 +34,8 @@ export type Brand = {
     surface: string; // cards and panels
   };
   modules: Record<FirmId, string>;
+  /** What the tenant calls each firm workspace (falls back to MODULE_DEFAULTS). */
+  moduleNames?: Partial<Record<FirmId, string>>;
   fonts: { serif: SerifFont; sans: SansFont };
   login: { eyebrow: string; headline: string; text: string; backdrop: LoginBackdrop; image?: string };
   legal: { footer: string; privacyUrl: string; termsUrl: string };
@@ -126,6 +128,17 @@ export const PRESETS: Brand[] = [
   },
 ];
 
+/** Default workspace names. A tenant can rename any of them in Brand & white label. */
+export const MODULE_DEFAULTS: Record<FirmId, string> = {
+  sales: "Sales",
+  pmo: "PMO",
+  communication: "Corporate Chat",
+  dataroom: "Data rooms",
+  billing: "Billing",
+  compliance: "Compliance",
+};
+export const moduleName = (b: Pick<Brand, "moduleNames">, id: FirmId) => b.moduleNames?.[id]?.trim() || MODULE_DEFAULTS[id];
+
 /* ───────────────────────── colour helpers ───────────────────────── */
 
 export function hexOk(v: string) {
@@ -146,6 +159,22 @@ export function textOn(bg: string, ink: string) {
   return contrast(bg, "#FFFFFF") >= contrast(bg, ink) ? "#FFFFFF" : ink;
 }
 
+function mixHex(a: string, b: string, t: number) {
+  const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const [x, y] = [p(a), p(b)];
+  return "#" + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, "0")).join("").toUpperCase();
+}
+/** The brand colour itself if it reads on this background, else the nearest shade (towards black or white) that meets the ratio. */
+export function readableOn(color: string, bg: string, min = 4.5) {
+  if (!hexOk(color) || !hexOk(bg)) return color;
+  const toward = contrast(bg, "#000000") > contrast(bg, "#FFFFFF") ? "#000000" : "#FFFFFF";
+  for (let t = 0; t <= 1.0001; t += 0.04) {
+    const c = mixHex(color, toward, Math.min(t, 1));
+    if (contrast(c, bg) >= min) return c;
+  }
+  return toward;
+}
+
 /** The CSS variables a brand sets on the page. Tailwind's ink, gold and stone scales are rebuilt from them. */
 export function brandVars(b: Brand): Record<string, string> {
   const c = b.colors;
@@ -157,6 +186,9 @@ export function brandVars(b: Brand): Record<string, string> {
     "--tenant-metal": c.metal,
     "--tenant-canvas": c.canvas,
     "--tenant-surface": c.surface,
+    // Direction D: brand text and lines on the Obsidian and Platinum surfaces, AA-checked
+    "--tenant-accent-on-dark": readableOn(c.accent, "#10161D"),
+    "--tenant-accent-on-light": readableOn(c.accent, "#FFFFFF"),
     "--color-ink-950": mix(c.ink, 82, "black"),
     "--color-ink-900": c.ink,
     "--color-ink-800": mix(c.ink, 88, "white"),
@@ -190,6 +222,7 @@ export function loadBrand(): Brand {
       ...b,
       colors: { ...AURUM.colors, ...b.colors },
       modules: { ...AURUM.modules, ...b.modules },
+      moduleNames: { ...b.moduleNames },
       fonts: { ...AURUM.fonts, ...b.fonts },
       login: { ...AURUM.login, ...b.login },
       legal: { ...AURUM.legal, ...b.legal },

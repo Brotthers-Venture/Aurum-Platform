@@ -18,7 +18,7 @@ export function BrandedHeader({
   right,
 }: {
   gp: GpClient;
-  nav: { href: string; label: string; exact?: boolean; mark?: string }[];
+  nav: { href: string; label: ReactNode; exact?: boolean; mark?: string }[];
   userName: string;
   userTitle: string;
   right?: ReactNode;

@@ -147,7 +147,10 @@ a { color:inherit; text-decoration:none; }
 .search > span:first-of-type { flex:1; } .kbd { font-size:10.5px; padding:1px 5px; border:1px solid var(--line); border-radius:3px; color:var(--text-3); }
 .acct { display:flex; align-items:center; gap:6px; padding:3px 6px 3px 3px; border-radius:16px; }
 .avatar { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-size:10.5px; font-weight:600; background:var(--raise); border:1px solid var(--line-strong); color:var(--text); }
-.spacer { flex:1; }
+.spacer { flex:1; } .h-more, .h-chip { display:none; } .h-chip { flex:none!important; font-size:11px; color:var(--text-2); border:1px solid var(--line); border-radius:3px; padding:1px 6px; }
+@media (max-width:1439px) { .h-layout { display:none!important; } .h-more { display:grid; } main .wq, main .navv { grid-column:span 12; } }
+.search { min-width:240px; white-space:nowrap; overflow:hidden; }
+@media (max-width:1359px) { .h-entity { display:none!important; } .h-chip { display:inline-block; } }
 
 /* ── Shell ── */
 .shell { display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 52px); }
@@ -158,6 +161,7 @@ a { color:inherit; text-decoration:none; }
 .side a.on .hexmark { position:absolute; left:-6px; color:var(--text); }
 .side a .count { margin-left:auto; font-size:11px; color:var(--text-3); }
 .side .foot { margin-top:auto; border-top:1px solid var(--line-soft); padding:12px 10px 2px; font-size:12px; }
+.fit { align-self:start; }
 main { padding:14px 16px 20px; display:grid; grid-template-columns:repeat(12, minmax(0,1fr)); gap:12px; align-content:start; }
 @media (max-width:1279px) { .shell{grid-template-columns:56px 1fr} .side h6,.side a span,.side .foot{display:none} .side a{font-size:0;justify-content:center;padding:0} .side a .ic{width:18px;height:18px}
   .search{max-width:220px} .sel .k{display:none} .apps a{padding:0 8px} main .s4,main .s8{grid-column:span 12} main .s6{grid-column:span 6} }
@@ -199,8 +203,9 @@ td { padding:9px 10px; border-top:1px solid var(--line-soft); white-space:nowrap
 th.r, td.r { text-align:right; }
 tr:hover td, tr.is-hover td { background:var(--surface-2); }
 td .t { font-weight:500; } td .s { color:var(--text-2); }
-.rowact { color:var(--text-2); font-weight:500; font-size:12px; padding:3px 6px; border-radius:3px; }
+.rowact { opacity:0; color:var(--text-2); font-weight:500; font-size:12px; padding:3px 6px; border-radius:3px; }
 .rowact:hover, .rowact:focus-visible, tr.is-hover .rowact { color:var(--accent); background:var(--accent-soft); }
+tr:hover .rowact, tr:focus-within .rowact, tr.is-hover .rowact { opacity:1; } tbody tr { cursor:pointer; } @media (hover:none) { .rowact { opacity:1; } }
 .status { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:500; white-space:nowrap; }
 .status::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
 .st-neutral { color:var(--neutral); } .st-warn { color:var(--warn); } .st-info { color:var(--info); } .st-pos { color:var(--pos); } .st-neg { color:var(--neg); }
@@ -221,6 +226,7 @@ td .t { font-weight:500; } td .s { color:var(--text-2); }
 .dl > div:nth-child(-n+3) { border-top:0; }
 .when { font-weight:600; font-variant-numeric:tabular-nums; } .when small { display:block; font-weight:400; color:var(--text-3); font-size:11px; }
 .kind { font-size:11px; color:var(--text-3); }
+.act { display:flex; flex-direction:column; gap:10px; } .act-i { display:flex; justify-content:space-between; gap:14px; align-items:baseline; border-left:2px solid; padding:2px 0 2px 12px; }
 .alloc { display:grid; grid-template-columns:1fr auto; row-gap:5px; column-gap:12px; }
 .bar { grid-column:1 / -1; height:4px; border-radius:2px; background:var(--line-soft); overflow:hidden; margin-bottom:6px; }
 .bar i { display:block; height:100%; background:var(--s2); border-radius:2px; }
@@ -279,10 +285,10 @@ const header = ({ app = "Home", entity = "All vehicles", layout = "Operations" }
   <div class="logo" role="img" aria-label="Aurum"></div>
   <nav class="apps" aria-label="Applications">${["Home", "Fund", "Corporate", "Data rooms", "Billing", "Compliance"].map((a) => `<a href="#" class="${a === app ? "on" : ""}">${a}</a>`).join("")}</nav>
   <button class="iconbtn" title="More applications: Sales, PMO, Chat Room" aria-label="More applications">${ic("apps")}</button>
-  <div class="sel"><span class="k">Entity</span>${entity}${ic("down", 14, "faint")}</div>
-  <div class="search">${ic("search", 15)}<span>Search or run a command</span><span class="kbd">Ctrl K</span></div>
+  <div class="sel h-entity"><span class="k">Entity</span>${entity}${ic("down", 14, "faint")}</div>
+  <div class="search">${ic("search", 15)}<span class="h-chip">${entity}</span><span>Search or run a command</span><span class="kbd">Ctrl K</span></div>
   <div class="spacer"></div>
-  <div class="sel" data-menu="layout"><span class="k">Layout</span>${layout}${ic("down", 14, "faint")}</div>
+  <button class="iconbtn h-more" aria-label="More: layout, add widget">${ic("more", 17)}</button><div class="sel h-layout" data-menu="layout"><span class="k">Layout</span>${layout}${ic("down", 14, "faint")}</div>
   <button class="iconbtn" aria-label="Notifications, 6 new">${ic("bell", 17)}<span class="badge-dot">6</span></button>
   <button class="acct" data-menu="account" aria-label="Account"><span class="avatar">LA</span>${ic("down", 14, "faint")}</button>
 </header>`;
@@ -313,8 +319,8 @@ const obligations = [
 const obligationList = `<div class="dl">${obligations
   .map((o) => `<div class="when">${day(o.d)}<small>${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][new Date(o.d + "T12:00:00Z").getUTCDay()]}</small></div><div><div class="t" style="font-weight:500">${o.what}</div><div class="kind">${o.who}</div></div><div style="text-align:right"><div class="num" style="font-weight:500">${o.amt}</div><span class="status st-${o.kind[1]}" style="font-size:11px">${o.kind[0]}</span></div>`)
   .join("")}</div>`;
-const activityList = (k = 4) => `<div class="dl" style="grid-template-columns:auto 1fr auto">${D.activity.slice(0, k)
-  .map((a) => `<div><span style="display:block;width:6px;height:6px;border-radius:50%;margin-top:6px;background:${a.actor === "System" ? "var(--text-3)" : "var(--s2)"}"></span></div><div><span class="t" style="font-weight:500">${a.actor}</span> <span class="muted">${a.text}</span></div><div class="faint num" style="font-size:11.5px">${day(a.at)} ${time(a.at)}</div>`)
+const activityList = (k = 4) => `<div class="act">${D.activity.slice(0, k)
+  .map((a) => `<div class="act-i" style="border-left-color:${a.actor === "System" ? "var(--line-strong)" : "var(--s2)"}"><div><span class="t" style="font-weight:500">${a.actor}</span> <span class="muted">${a.text}</span></div><div class="faint num" style="font-size:11.5px;white-space:nowrap">${day(a.at)} ${time(a.at)}</div></div>`)
   .join("")}</div>`;
 
 /* ───────────────────────── 1. Home (1920) ───────────────────────── */
@@ -335,10 +341,10 @@ function home({ theme, type = "a", menus = false }) {
   <main>
     ${panel("s4", "Assets under administration", aua)}
     ${panel("s8", "Capital activity", act, { tools: seg, hover: menus })}
-    ${panel("s8", "Work queue", wq, { sub: "Approvals, due dates, exceptions and tasks" })}
-    ${panel("s4", "NAV by vehicle", nav, { sub: "USD" })}
-    ${panel("s6", "Upcoming obligations", `<div class="pb" style="padding-top:6px">${obligationList}</div>`, { sub: "Next 30 days" })}
-    ${panel("s6", "Recent activity", `<div class="pb" style="padding-top:6px">${activityList()}</div>`)}
+    ${panel("s8 wq", "Work queue", wq, { sub: "Approvals, due dates, exceptions and tasks" })}
+    ${panel("s4 navv", "NAV by vehicle", nav, { sub: "USD" })}
+    ${panel("s6 fit", "Upcoming obligations", `<div class="pb" style="padding-top:6px">${obligationList}</div>`, { sub: "Next 30 days" })}
+    ${panel("s6 fit", "Recent activity", `<div class="pb" style="padding-top:10px">${activityList(6)}</div>`)}
   </main></div>`;
   return page("Home", body, { theme, type, extraCss: CHART_CSS + ".sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}" });
 }
@@ -519,6 +525,7 @@ const { chromium } = require("playwright-core");
 const JOBS = [
   ["01-home-obsidian-1920", () => home({ theme: "dark" }), 1920],
   ["02-home-platinum-1920", () => home({ theme: "light" }), 1920],
+  ["11-home-obsidian-1280", () => home({ theme: "dark" }), 1280],
   ["03-investor-portal-obsidian-1440", () => portal("dark"), 1440],
   ["04-investor-portal-platinum-1440", () => portal("light"), 1440],
   ["05a-investor-portal-mobile-platinum-390", () => portal("light"), 390],

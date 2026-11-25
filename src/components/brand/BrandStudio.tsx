@@ -6,7 +6,7 @@ import { cx } from "@/components/ui";
 import { AurumLogo, AurumMark } from "./Logo";
 import { useBrand } from "./BrandProvider";
 import { Backdrop } from "@/components/auth/AuthShell";
-import { AURUM, PRESETS, SANS, SERIF, contrast, hexOk, type Brand, type MarkShape } from "@/lib/brand";
+import { AURUM, MODULE_DEFAULTS, PRESETS, SANS, SERIF, contrast, hexOk, moduleName, type Brand, type MarkShape } from "@/lib/brand";
 import type { FirmId } from "@/lib/firm-colors";
 
 /* Brand & white label: one place where a B2B client makes the platform theirs. Every change previews live
@@ -14,7 +14,6 @@ import type { FirmId } from "@/lib/firm-colors";
 
 const field = "h-10 w-full rounded-[8px] border border-stone-300 bg-white px-3 text-[13px] text-ink-900 focus:border-ink-900 focus:outline-none";
 const lab = "mb-1.5 block text-[11.5px] font-semibold text-stone-600";
-const MODULE_NAMES: Record<FirmId, string> = { sales: "Sales", pmo: "PMO", communication: "Chat Room", dataroom: "Data rooms", billing: "Billing", compliance: "Compliance" };
 const SHAPES: MarkShape[] = ["hexagon", "circle", "square", "diamond", "arch"];
 
 function Section({ title, sub, children }: { title: string; sub?: string; children: ReactNode }) {
@@ -245,11 +244,28 @@ export function BrandStudio() {
               {(Object.keys(d.modules) as FirmId[]).map((k) => (
                 <Swatch
                   key={k}
-                  label={MODULE_NAMES[k]}
+                  label={moduleName(d, k)}
                   value={d.modules[k]}
                   onChange={(v) => set({ ...d, modules: { ...d.modules, [k]: v } })}
                   note={<Contrast a="#FFFFFF" b={d.modules[k]} min={3} />}
                 />
+              ))}
+            </div>
+          </Section>
+
+          <Section title="Module names" sub="What your team calls each firm workspace. Shown in navigation, notifications and menus. Leave blank to use the default.">
+            <div className="grid gap-4 sm:grid-cols-3">
+              {(Object.keys(MODULE_DEFAULTS) as FirmId[]).map((k) => (
+                <label key={k} className="block">
+                  <span className={lab}>{MODULE_DEFAULTS[k]}</span>
+                  <input
+                    value={d.moduleNames?.[k] ?? ""}
+                    placeholder={MODULE_DEFAULTS[k]}
+                    maxLength={28}
+                    onChange={(e) => set({ ...d, moduleNames: { ...d.moduleNames, [k]: e.target.value } })}
+                    className={field}
+                  />
+                </label>
               ))}
             </div>
           </Section>
@@ -391,7 +407,7 @@ export function BrandStudio() {
                 {(Object.keys(d.modules) as FirmId[]).map((k) => (
                   <span key={k} className="flex flex-col items-center gap-1 text-[9.5px] text-stone-500">
                     <AurumMark size={18} shape={d.mark} color={d.modules[k]} />
-                    {MODULE_NAMES[k]}
+                    {moduleName(d, k)}
                   </span>
                 ))}
               </div>

@@ -23,7 +23,7 @@ import {
   type RoomUser,
 } from "@/lib/dataroom";
 import { QuestionCard, RoomConsole } from "@/components/dataroom/RoomConsole";
-import { localQuestions } from "@/lib/dataroom-local";
+import { localAnswerDrafts, localQuestions } from "@/lib/dataroom-local";
 import { ActionButton, Card, GhostButton, Kpi, ModuleHeader, ModuleTabs, Pill, Toast, field, fieldLabel, fmtShort, td, th, useTab, useToast } from "./kit";
 
 const C = FIRM.dataroom;
@@ -53,8 +53,17 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
   // Questions asked from a preview visit in this browser (until the database is connected).
   useEffect(() => {
     const local = localQuestions();
+    const drafts = localAnswerDrafts();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (local.length) setQs((all) => [...all, ...local.filter((l) => !all.some((a) => a.id === l.id))]);
+    // Draft answers converted from Corporate Chat still go through review and release here.
+    if (drafts.length)
+      setQs((all) =>
+        all.map((x) => {
+          const d = drafts.find((y) => y.questionId === x.id);
+          return d && x.status !== "Answered" ? { ...x, draft: d.text, status: "Draft" } : x;
+        }),
+      );
   }, []);
   const [roomId, setRoomId] = useState<string | null>(null);
   const [creating, setCreating] = useState(initial === "new");

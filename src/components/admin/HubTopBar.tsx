@@ -10,6 +10,7 @@ import { solutions } from "@/lib/solutions";
 import { firmModules } from "@/lib/firm";
 import { usePreviewRole } from "./PreviewRole";
 import { useBrand } from "@/components/brand/BrandProvider";
+import { ModuleName } from "@/components/brand/ModuleName";
 
 /** Close a popover on outside click or Escape. */
 function useDismiss(open: boolean, close: () => void) {
@@ -125,7 +126,7 @@ export function HubTopBar({ context, logo = true }: { context?: string; logo?: b
                 {firmModules.map((m) => (
                   <Link key={m.id} href={m.href} onClick={close} className="relative flex flex-col items-center gap-1.5 rounded-[14px] px-1 py-3 text-center hover:bg-stone-100">
                     <AurumMark size={26} color={m.color} />
-                    <span className="text-[12px] leading-tight text-ink-900">{m.id === "pmo" ? "PMO" : m.name}</span>
+                    <span className="text-[12px] leading-tight text-ink-900"><ModuleName id={m.id} /></span>
                     {m.badge > 0 && (
                       <span
                         className="absolute right-5 top-2 flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold text-white"

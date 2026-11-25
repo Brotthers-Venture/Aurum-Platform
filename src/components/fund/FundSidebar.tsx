@@ -1,5 +1,6 @@
 "use client";
 
+import { ModuleName } from "@/components/brand/ModuleName";
 import { TenantName } from "@/components/brand/TenantName";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -129,7 +130,9 @@ export function FundSidebar() {
             )}
           >
             <AurumMark size={16} color={COMM} className="shrink-0" />
-            <span className="flex-1">Chat Room</span>
+            <span className="flex-1">
+              <ModuleName id="communication" />
+            </span>
             {unread > 0 && (
               <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white" style={{ background: COMM }}>
                 {unread}

@@ -11,7 +11,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ gpId: string }> }) {
   const { gpId } = await params;
   const gp = gpById(gpId);
-  return { title: { absolute: gp ? `${gp.shortName} — Chat Room` : "Chat Room" } };
+  return { title: { absolute: gp ? `${gp.shortName} — Corporate Chat` : "Corporate Chat" } };
 }
 
 export default function GpMessagesPage({ params }: { params: Promise<{ gpId: string }> }) {

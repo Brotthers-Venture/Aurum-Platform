@@ -58,7 +58,7 @@ export const firmModules: FirmModule[] = [
   },
   {
     id: "communication",
-    name: "Chat Room",
+    name: "Corporate Chat",
     color: FIRM.communication,
     href: "/admin/communication",
     badge: unread,

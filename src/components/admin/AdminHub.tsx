@@ -7,6 +7,7 @@ import { Band, BrandCenter, FRAME, DarkCenter, MarkCenter, R, hexPoints, offset,
 import { GpLogo } from "@/components/brand/GpLogo";
 import { markPath } from "@/components/brand/Logo";
 import { useBrand } from "@/components/brand/BrandProvider";
+import { moduleName } from "@/lib/brand";
 import { GoldField } from "@/components/admin/GoldField";
 import { firmById, firmModules } from "@/lib/firm";
 import { formations } from "@/lib/formation";
@@ -227,7 +228,7 @@ export function AdminHub() {
     return {
       id: here ? "aurum" : m.id,
       color: here ? "var(--tenant-accent)" : m.color,
-      label: here ? "Aurum solutions" : `${m.name}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`,
+      label: here ? "Aurum solutions" : `${moduleName(brand, m.id)}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`,
       href: here ? "/admin" : m.href,
       badge: here ? 0 : m.badge,
       x: Math.round(orbitR * Math.cos(a) * 100) / 100,

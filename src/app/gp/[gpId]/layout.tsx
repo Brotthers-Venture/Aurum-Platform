@@ -1,3 +1,4 @@
+import { ModuleName } from "@/components/brand/ModuleName";
 import { Suspense, type ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { BrandedHeader } from "@/components/gp/BrandedHeader";
@@ -37,7 +38,7 @@ async function BrandedShell({ children, params }: { children: ReactNode; params:
           { href: `${base}/investors`, label: "Investors" },
           { href: `${base}/activity`, label: "Capital activity" },
           { href: `${base}/reports`, label: "Reports" },
-          { href: `${base}/messages`, label: "Chat Room", mark: FIRM.communication },
+          { href: `${base}/messages`, label: <ModuleName id="communication" />, mark: FIRM.communication },
         ]}
         userName={principal?.name ?? lead?.name ?? gp.shortName}
         userTitle={`${gp.shortName} · ${lead && !principal ? lead.title : "GP principal"}`}

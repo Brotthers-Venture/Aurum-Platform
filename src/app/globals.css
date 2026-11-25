@@ -306,3 +306,107 @@ main svg g[tabindex]:focus-visible {
     display: block !important;
   }
 }
+
+/* ───────────────────────── Direction D — workstation tokens ─────────────────────────
+   Obsidian (dark) and Platinum (light) are default presets. The theme is set on <html data-theme>
+   (see lib/theme.ts). Brand colours always come from the tenant: --tenant-accent (fill),
+   --tenant-accent-on-dark / --tenant-accent-on-light (AA text shades derived in brandVars()).
+   Applied inside any `.ws` container, so pages migrate one at a time without affecting the rest. */
+.ws {
+  --d-bg: #0a0e12;
+  --d-chrome: #0c1116;
+  --d-surface: #10161d;
+  --d-surface-2: #131a22;
+  --d-raise: #18202a;
+  --d-line: #212a34;
+  --d-line-soft: #19212a;
+  --d-line-strong: #2e3946;
+  --d-text: #eef1f4;
+  --d-text-2: #97a3b1;
+  --d-text-3: #6a7684;
+  --d-accent: var(--tenant-accent-on-dark, var(--tenant-accent));
+  --d-accent-fill: var(--tenant-accent);
+  --d-on-accent: var(--tenant-accent-ink);
+  --d-accent-soft: color-mix(in srgb, var(--tenant-accent) 12%, transparent);
+  --d-pos: #3dbe8b;
+  --d-warn: #e3a33b;
+  --d-info: #83abf0;
+  --d-neg: #ef6f68;
+  --d-focus: #eef1f4;
+  --d-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.028);
+  --d-pop: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--d-line-strong);
+  color-scheme: dark;
+  background: var(--d-bg);
+  color: var(--d-text);
+  font-family: "Inter Variable", system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01";
+}
+html[data-theme="light"] .ws {
+  --d-bg: #f2f1ee;
+  --d-chrome: #fbfaf8;
+  --d-surface: #ffffff;
+  --d-surface-2: #faf9f6;
+  --d-raise: #f4f2ee;
+  --d-line: #e3e0da;
+  --d-line-soft: #edebe6;
+  --d-line-strong: #d2cec6;
+  --d-text: #14181d;
+  --d-text-2: #5a6069;
+  --d-text-3: #8a8f96;
+  --d-accent: var(--tenant-accent-on-light, #7d5f00);
+  --d-accent-soft: color-mix(in srgb, var(--tenant-accent) 18%, transparent);
+  --d-pos: #15803d;
+  --d-warn: #a6570b;
+  --d-info: #1d4ed8;
+  --d-neg: #b42318;
+  --d-focus: #14181d;
+  --d-sheen: 0 1px 0 rgba(20, 24, 29, 0.03);
+  --d-pop: 0 16px 40px rgba(20, 24, 29, 0.12), 0 0 0 1px var(--d-line);
+  color-scheme: light;
+}
+.ws :focus-visible {
+  outline: 2px solid var(--d-focus);
+  outline-offset: 1px;
+  border-radius: 3px;
+}
+.ws .fig {
+  font-family: "Manrope Variable", "Inter Variable", sans-serif;
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ws .tnum {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ws ::selection {
+  background: var(--d-accent-soft);
+  color: var(--d-text);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ws * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
+
+@theme inline {
+  --color-d-bg: var(--d-bg);
+  --color-d-chrome: var(--d-chrome);
+  --color-d-surface: var(--d-surface);
+  --color-d-surface-2: var(--d-surface-2);
+  --color-d-raise: var(--d-raise);
+  --color-d-line: var(--d-line);
+  --color-d-line-soft: var(--d-line-soft);
+  --color-d-line-strong: var(--d-line-strong);
+  --color-d-text: var(--d-text);
+  --color-d-text-2: var(--d-text-2);
+  --color-d-text-3: var(--d-text-3);
+  --color-d-accent: var(--d-accent);
+  --color-d-accent-fill: var(--d-accent-fill);
+  --color-d-on-accent: var(--d-on-accent);
+  --color-d-accent-soft: var(--d-accent-soft);
+  --color-d-pos: var(--d-pos);
+  --color-d-warn: var(--d-warn);
+  --color-d-info: var(--d-info);
+  --color-d-neg: var(--d-neg);
+}

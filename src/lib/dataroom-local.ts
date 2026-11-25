@@ -40,3 +40,12 @@ export function trackPage(docId: string, viewer: string, firm: string, page: num
 export function addLocalQuestion(q: Question) {
   write(QA, [...read<Question>(QA), q]);
 }
+
+/* Draft answers written elsewhere (e.g. converted from a Corporate Chat message). They arrive as drafts so the
+   Q&A owner still reviews and releases them — nothing is published to visitors from chat directly. */
+const AN = "aurum-vdr-answer-drafts";
+export type LocalDraft = { questionId: string; text: string; by: string; at: string };
+export const localAnswerDrafts = () => read<LocalDraft>(AN);
+export function draftLocalAnswer(questionId: string, text: string, by: string) {
+  write(AN, [...read<LocalDraft>(AN).filter((d) => d.questionId !== questionId), { questionId, text, by, at: new Date().toISOString() }]);
+}

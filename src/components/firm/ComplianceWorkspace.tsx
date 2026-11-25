@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { localAudit } from "@/lib/audit-local";
+import type { AuditEvent } from "@/lib/access";
 import { cx } from "@/components/ui";
 import { FIRM } from "@/lib/firm-colors";
 import { auditLog } from "@/lib/access";
@@ -26,6 +28,13 @@ const ME = "Managing Partner";
 export function ComplianceWorkspace({ tab: initial }: { tab: ComplianceTab }) {
   const [tab, setTab] = useTab<ComplianceTab>(initial);
   const [deadlines, setDeadlines] = useState<Deadline[]>(seedDeadlines);
+  // Changes made in this browser (e.g. Corporate Chat status and approval changes) join the append-only log.
+  const [audit, setAudit] = useState<AuditEvent[]>(auditLog);
+  useEffect(() => {
+    const local = localAudit();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (local.length) setAudit([...local].reverse().concat(auditLog));
+  }, []);
   const [alerts, setAlerts] = useState<Alert[]>(seedAlerts);
   const [reviews, setReviews] = useState(seedReviews);
   const [toast, flash] = useToast();
@@ -290,7 +299,7 @@ export function ComplianceWorkspace({ tab: initial }: { tab: ComplianceTab }) {
                 </tr>
               </thead>
               <tbody>
-                {auditLog.map((e, i) => (
+                {audit.map((e, i) => (
                   <tr key={i} className="border-b border-stone-100">
                     <td className={cx(td, "whitespace-nowrap text-stone-600")}>{e.at.replace("T", " ").slice(0, 16)}</td>
                     <td className={cx(td, "font-medium text-ink-900")}>{e.user}</td>
