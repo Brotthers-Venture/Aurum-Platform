@@ -7,7 +7,7 @@ import { ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Hexagon } from 
 import { cx } from "@/components/ui";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { moduleName } from "@/lib/brand";
-import { hexaOf, type Hexa, type HexaPage } from "@/lib/hexa";
+import { hexaHref, hexaOf, type Hexa, type HexaPage } from "@/lib/hexa";
 import { useHexas } from "./useHexas";
 
 const KEY = "aurum-hexa-collapsed";
@@ -38,7 +38,7 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
   const path = usePathname();
   const params = useSearchParams();
   const { brand } = useBrand();
-  const { list } = useHexas();
+  const { list, member } = useHexas();
   const here = hexaOf(path);
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [open, setOpen] = useState<Set<string>>(() => new Set(here ? [here.id] : []));
@@ -90,14 +90,14 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
             return (
               <Link
                 key={h.id}
-                href={h.href}
+                href={hexaHref(h, member)}
                 title={name(h)}
                 aria-label={name(h)}
                 aria-current={active ? "page" : undefined}
                 className={cx("relative flex h-10 w-10 items-center justify-center rounded-[8px] transition-colors", active ? "bg-d-raise" : "hover:bg-d-raise")}
               >
                 <HexGlyph color={h.color} size={20} active={active} />
-                {!!h.badge && !active && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full" style={{ background: h.color }} />}
+                {!!h.badge && !active && member.party === "employee" && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full" style={{ background: h.color }} />}
               </Link>
             );
           })}
@@ -119,7 +119,9 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
       </div>
 
       <div className="scroll-quiet flex-1 overflow-y-auto px-2 pb-3">
-        {list.map((h) => {
+        {list.map((h0) => {
+          const outsider = member.party !== "employee";
+          const h = outsider ? { ...h0, badge: undefined, pages: h0.id === "pmo" || h0.id === "communication" ? [] : h0.pages } : h0;
           const active = here?.id === h.id;
           const expanded = h.pages.length > 0 && open.has(h.id);
           let lastGroup: string | undefined;
@@ -127,7 +129,7 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
             <div key={h.id} className="mb-0.5">
               <div className={cx("group relative flex h-9 items-center rounded-[7px] transition-colors", active ? "bg-d-raise" : "hover:bg-d-raise")}>
                 {active && <span aria-hidden className="absolute -left-2 bottom-2 top-2 w-[2px] rounded-full" style={{ background: h.color }} />}
-                <Link href={h.href} aria-current={active ? "page" : undefined} className="flex min-w-0 flex-1 items-center gap-2.5 pl-2.5 pr-1">
+                <Link href={hexaHref(h, member)} aria-current={active ? "page" : undefined} className="flex min-w-0 flex-1 items-center gap-2.5 pl-2.5 pr-1">
                   <HexGlyph color={h.color} size={17} active={active} />
                   <span className={cx("truncate", active ? "font-semibold text-d-text" : "font-medium text-d-text-2 group-hover:text-d-text")}>{name(h)}</span>
                 </Link>

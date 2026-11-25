@@ -12,6 +12,7 @@ import { PlanSheet } from "./PlanSheet";
 import { folderPath, loadPlans, planFolders, plans as seedPlans, savePlans, type Plan, type PlanFolder } from "@/lib/plans";
 import { PlanTree } from "./PlanTree";
 import { solutionById } from "@/lib/solutions";
+import { usePreviewRole } from "@/components/admin/PreviewRole";
 
 /* A board-based PMO: every list is a board of groups and items, every column has a type, status
    columns are coloured labels you click to change, and each board can be seen as a table,
@@ -189,7 +190,12 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
   useEffect(() => {
     if (loaded) savePlans(planData);
   }, [planData, loaded]);
-  const plan = planData.plans.find((p) => p.id === planId);
+  // General partners and tenants see only the plans they are a party to — never the firm's internal boards.
+  const { member } = usePreviewRole();
+  const external = member.party !== "employee";
+  const orgKey = member.orgName.split(" ")[0].toLowerCase();
+  const visiblePlans = external ? planData.plans.filter((p) => p.parties.some((x) => x.name.toLowerCase().includes(orgKey))) : planData.plans;
+  const plan = visiblePlans.find((p) => p.id === planId) ?? (external ? visiblePlans[0] : undefined);
   const planCrumbs = plan ? [solutionById(plan.solution)?.name ?? plan.solution, ...folderPath(planData.folders, plan.folder).map((f) => f.name)] : [];
   const board = boards.find((b) => b.id === boardId)!;
 
@@ -256,6 +262,23 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
             <div className="text-[11px] text-stone-500"><TenantName /></div>
           </div>
         </div>
+        {external ? (
+          <>
+            <div className="mb-1 mt-6 px-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">Your plans</div>
+            {visiblePlans.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPlanId(p.id)}
+                className={cx("flex w-full items-center gap-2 rounded-[8px] px-2 py-2 text-left text-[13px]", plan?.id === p.id ? "bg-champagne font-semibold text-ink-900" : "text-stone-600 hover:bg-white")}
+              >
+                <LayoutList size={14} className="shrink-0" style={{ color: plan?.id === p.id ? C : undefined }} />
+                <span className="flex-1 truncate">{p.name}</span>
+              </button>
+            ))}
+            {!visiblePlans.length && <p className="px-2 py-3 text-[12px] leading-relaxed text-stone-500">No plans include {member.orgName} yet.</p>}
+          </>
+        ) : (
+          <>
         <div className="mb-1 mt-6 px-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">Boards</div>
         {boards.map((b) => (
           <button
@@ -291,6 +314,8 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
             setTab("plan");
           }}
         />
+          </>
+        )}
       </aside>
 
       {plan ? (
@@ -302,6 +327,8 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
             onChange={(rows) => setPlanData((d) => ({ ...d, plans: d.plans.map((p) => (p.id === plan.id ? { ...p, rows } : p)) }))}
           />
         </div>
+      ) : external ? (
+        <div className="min-w-0 flex-1 px-7 py-16 text-center text-[13px] text-stone-500">Plans you are part of will appear here.</div>
       ) : (
         <div className="min-w-0 flex-1 px-7 py-5">
           <div className="flex items-start justify-between gap-6">

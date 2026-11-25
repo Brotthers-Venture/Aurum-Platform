@@ -72,7 +72,7 @@ const gpModules: { id: string; label: [string, string?]; path: string }[] = [
 export function AdminHub({ variation = "ambient", animate = false, quiet = false }: { variation?: AmbientMotion; animate?: boolean; quiet?: boolean }) {
   const router = useRouter();
   const { brand } = useBrand();
-  const { allow } = useHexas();
+  const { allow, member } = useHexas();
   const [level, setLevel] = useState<Level>({ kind: "root" });
   const [revealed, setRevealed] = useState(false);
   const [active, setActive] = useState<string | null>(null);
@@ -244,8 +244,8 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
         color: here ? "var(--tenant-accent)" : m.color,
         name: here ? brand.name : moduleName(brand, m.id),
         label: here ? `${brand.name} solutions` : `${moduleName(brand, m.id)}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`,
-        href: here ? "/admin" : m.href,
-        badge: here ? 0 : m.badge,
+        href: here ? "/admin" : m.id === "communication" && member.party !== "employee" ? "/admin/messages" : m.href,
+        badge: here || member.party !== "employee" ? 0 : m.badge,
         x: Math.round(orbitR * Math.cos(a) * 100) / 100,
         y: Math.round(orbitR * Math.sin(a) * 100) / 100,
       },

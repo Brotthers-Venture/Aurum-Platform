@@ -1,17 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { users } from "@/lib/access";
 import { usePreviewRole } from "@/components/admin/PreviewRole";
-import { GRANTS_EVENT, allowedFor, hexasFrom, readGrants, type HexaId } from "@/lib/hexa";
+import { GRANTS_EVENT, allowedFor, hexasFrom, readInvites, type Invitation } from "@/lib/hexa";
 
-/** The current person's hexagons, kept in step with the administrator's grants. */
+/** The current person's hexagons — party defaults plus live invitations — kept in step with any change. */
 export function useHexas() {
-  const { role } = usePreviewRole();
-  const email = users.find((u) => u.role === role)?.email;
-  const [grants, setGrants] = useState<Record<string, HexaId[]> | undefined>(undefined);
+  const { member } = usePreviewRole();
+  const [invites, setInvites] = useState<Invitation[] | undefined>(undefined);
   useEffect(() => {
-    const read = () => setGrants(readGrants());
+    const read = () => setInvites(readInvites());
     read();
     window.addEventListener(GRANTS_EVENT, read);
     window.addEventListener("storage", read);
@@ -20,6 +18,6 @@ export function useHexas() {
       window.removeEventListener("storage", read);
     };
   }, []);
-  const allow = allowedFor(role, email, grants);
-  return { allow, list: hexasFrom(allow) };
+  const allow = allowedFor(member, invites);
+  return { allow, list: hexasFrom(allow), member };
 }

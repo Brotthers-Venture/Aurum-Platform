@@ -86,7 +86,6 @@ const extra: Person[] = [
   { id: "beatriz", name: "Beatriz Duarte", title: "Director, Duarte Participações S.A.", org: "duarte", clientRole: "admin", email: "beatriz@duartepar.com.br" },
   { id: "paulo", name: "Paulo Ferreira", title: "Director, Ferreira Holdings Ltd.", org: "ferreira", clientRole: "admin", email: "paulo@ferreiraholdings.com" },
   { id: "darci", name: "Darci Welter", title: "Operations, Strlex Capital", org: "strlex", clientRole: "member", email: "darci@strlexcapital.com" },
-  { id: "anamazal", name: "Ana Mazal", title: "Mazal Group", org: "mazal", clientRole: "admin", email: "ana@mazalgroup.com.br" },
   { id: "rafaelm", name: "Rafael Monteiro", title: "Investor", org: "monteiro", clientRole: "admin", email: "rafael.monteiro@gmail.com" },
 ];
 export const chatPeople: Person[] = [...commsPeople.filter((p) => p.id !== "me"), ...extra];

@@ -18,6 +18,23 @@ How every hexagon works as one system. Owner: Luca Ott · Draft 1 · 25 Nov 2026
 
 ---
 
+## 1a. Parties and default access (owner, 25 Nov 2026)
+
+| Party | Who | Opens by default | Where they work |
+|---|---|---|---|
+| **Employee** | Aurum staff | Corporate Chat, PMO | Console |
+| **General Partner** | Manager or sponsor that onboards to Fund Solution | Corporate Chat and PMO (their own conversations and plans only) | Console, and GP portal |
+| **Tenant** | Firm running the platform under its brand (for now Corporate and Multi-Family) | Corporate Chat, PMO, Corporate Solution, Multi-Family Office (their own clients only) | Console, in its brand |
+| **Client** | A tenant's end customer (B2B2C) or Aurum's direct customer (B2C) | Corporate Solution; once a company is formed, the client portal (the Multi-Family platform), with Messages | Client portal, in its tenant's brand |
+| **Limited Partner** | Investor subscribing into a GP's fund | Messages (own conversations) | Investor portal |
+| **External guest** | Auditor, counsel, bank, prospect | Nothing | Only where invited, with an end date (90 days) |
+
+Everything beyond the defaults is an **invitation**, recorded with who invited and when:
+- The **main administrator** (Platform administrator) invites anyone.
+- A **tenant's administrator** invites its own people and clients into the tenant's hexagons.
+
+The rules live in `src/lib/parties.ts` and `src/lib/hexa.ts`. The screen is Access & permissions → Hexagon access.
+
 ## 2. Where we are today
 
 | Connection | Status |

@@ -1,42 +1,52 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
-import { can, roleById, roles, users, type Permission, type RoleId } from "@/lib/access";
-import { Avatar } from "@/components/ui";
-import { initials } from "@/lib/format";
+import { can, roleById, type Permission, type RoleId } from "@/lib/access";
+import { MEMBERS, PARTY_LABEL, memberById, roleOf, type Member } from "@/lib/parties";
 
-type Ctx = { role: RoleId; setRole: (r: RoleId) => void; user: { name: string; title: string }; can: (p: Permission) => boolean };
+type Ctx = {
+  role: RoleId;
+  setRole: (r: RoleId) => void;
+  /** the person being previewed — party type, organisation, tenant */
+  member: Member;
+  setPerson: (id: string) => void;
+  user: { name: string; title: string };
+  can: (p: Permission) => boolean;
+};
 
 const PreviewRoleContext = createContext<Ctx | null>(null);
+const KEY = "aurum-preview-person";
 
-function userFor(role: RoleId) {
-  const u = users.find((x) => x.role === role);
-  return { name: u?.name ?? roleById(role).name, title: roleById(role).name };
-}
-
-/** Preview-only: lets you see the platform as each role. Replaced by Supabase Auth claims. */
+/** Preview-only: see the platform as any person — employee, GP, LP, tenant, client or guest. Replaced by sign-in. */
 export function PreviewRoleProvider({ children }: { children: ReactNode }) {
-  const [role, setRoleState] = useState<RoleId>("fund_services_head");
+  const [personId, setPersonId] = useState("luiza");
   useEffect(() => {
     try {
-      const v = window.localStorage.getItem("aurum-preview-role") as RoleId | null;
+      const v = window.localStorage.getItem(KEY);
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (v && roles.some((r) => r.id === v)) setRoleState(v);
+      if (v && memberById(v)) setPersonId(v);
     } catch {
       /* no storage */
     }
   }, []);
-  const setRole = (r: RoleId) => {
-    setRoleState(r);
+  const setPerson = (id: string) => {
+    setPersonId(id);
     try {
-      window.localStorage.setItem("aurum-preview-role", r);
+      window.localStorage.setItem(KEY, id);
     } catch {
       /* no storage */
     }
   };
+  const member = memberById(personId) ?? memberById("luiza")!;
+  const role = roleOf(member);
+  const setRole = (r: RoleId) => {
+    const m = MEMBERS.find((x) => x.role === r) ?? MEMBERS.find((x) => roleOf(x) === r);
+    if (m) setPerson(m.id);
+  };
   return (
-    <PreviewRoleContext.Provider value={{ role, setRole, user: userFor(role), can: (p) => can(role, p) }}>{children}</PreviewRoleContext.Provider>
+    <PreviewRoleContext.Provider value={{ role, setRole, member, setPerson, user: { name: member.name, title: member.party === "employee" ? roleById(role).name : `${PARTY_LABEL[member.party]} · ${member.orgName}` }, can: (p) => can(role, p) }}>
+      {children}
+    </PreviewRoleContext.Provider>
   );
 }
 
@@ -44,48 +54,4 @@ export function usePreviewRole() {
   const ctx = useContext(PreviewRoleContext);
   if (!ctx) throw new Error("usePreviewRole outside provider");
   return ctx;
-}
-
-export function RoleSwitcher() {
-  const { role, setRole, user } = usePreviewRole();
-  const [open, setOpen] = useState(false);
-  const staffAndGp = roles.filter((r) => r.audience !== "Investor");
-  return (
-    <div className="relative ml-2 border-l border-stone-200 pl-4">
-      <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-2.5 text-left" aria-expanded={open}>
-        <Avatar label={initials(user.name)} />
-        <span className="hidden leading-tight sm:block">
-          <span className="block text-[12px] font-semibold text-ink-900">{user.name}</span>
-          <span className="block text-[11px] text-stone-500">{user.title}</span>
-        </span>
-        <ChevronDown size={14} className="text-stone-400" />
-      </button>
-      {open && (
-        <div className="absolute right-0 top-11 z-50 w-[300px] text-ink-900 rounded-[8px] border border-stone-200/70 bg-white shadow-card py-2 shadow-[0_8px_24px_rgba(11,21,25,0.10)]">
-          <div className="px-4 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-stone-400">Preview as role</div>
-          {staffAndGp.map((r) => (
-            <button
-              key={r.id}
-              onClick={() => {
-                setRole(r.id);
-                setOpen(false);
-              }}
-              className={`flex w-full items-start justify-between gap-3 px-4 py-2 text-left hover:bg-stone-50 ${role === r.id ? "bg-stone-50" : ""}`}
-            >
-              <span>
-                <span className="block text-[13px] font-semibold text-ink-900">{r.name}</span>
-                <span className="block text-[11px] text-stone-500">
-                  {r.audience} · {userFor(r.id).name}
-                </span>
-              </span>
-              {role === r.id && <span className="mt-1 h-1.5 w-1.5 rounded-full bg-gold-400" />}
-            </button>
-          ))}
-          <div className="mt-1 border-t border-stone-100 px-4 pt-2 text-[11px] leading-relaxed text-stone-500">
-            Preview only. In production your role comes from your sign-in.
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }

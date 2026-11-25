@@ -130,6 +130,11 @@ export const people: Person[] = [
   { id: "aisha", name: "Aisha Bello", title: "COO", org: "ledgerline", clientRole: "admin", email: "aisha@ledgerline.io" },
   { id: "tom", name: "Tom Ashford", title: "Managing Partner", org: "cascade", clientRole: "admin", email: "tom@cascaderidge.com" },
   { id: "isabel", name: "Isabel Duarte", title: "Director", org: "altamira", clientRole: "admin", email: "isabel@altamiraholdings.com" },
+  { id: "eleanor", name: "Eleanor Reyes", title: "Managing Director", org: "northbridge", clientRole: "admin", email: "eleanor@northbridgefp.com" },
+  { id: "samito", name: "Sam Ito", title: "Client Services", org: "northbridge", clientRole: "member", email: "sam@northbridgefp.com" },
+  { id: "maraq", name: "Mara Quinn", title: "Director", org: "halcyon", clientRole: "admin", email: "mara@halcyoncs.com" },
+  { id: "margaret", name: "Margaret Calloway", title: "Trustee, Calloway Family Trust", org: "calloway", clientRole: "admin", email: "m.calloway@callowaytrust.com" },
+  { id: "anamazal", name: "Ana Mazal", title: "Mazal Group", org: "mazal", clientRole: "admin", email: "ana@mazalgroup.com.br" },
 
   {
     id: "laura",
@@ -206,6 +211,10 @@ export const clients: Client[] = [
   { id: "ledgerline", name: "Ledgerline Digital Ltd.", short: "Ledgerline", color: "#2C3E50", spaceIds: ["blockchain"] },
   { id: "cascade", name: "Cascade Ridge Partners", short: "Cascade Ridge", color: "#3E5641", spaceIds: ["offering"] },
   { id: "altamira", name: "Altamira Holdings LLC", short: "Altamira Holdings", color: "#4A3B5C", spaceIds: ["corporate"] },
+  { id: "northbridge", name: "Northbridge Fiduciary Partners", short: "Northbridge", color: "#173A2E", spaceIds: ["multi-family", "corporate"] },
+  { id: "halcyon", name: "Halcyon Corporate Services", short: "Halcyon", color: "#2B2F36", spaceIds: ["corporate", "multi-family"] },
+  { id: "mazal", name: "Mazal Group", short: "Mazal Group", color: "#6B3B2E", spaceIds: ["corporate"] },
+  { id: "calloway", name: "Calloway Family Trust", short: "Calloway Family Trust", color: "#2F4A5C", spaceIds: ["fund"] },
 ];
 
 export const clientById = (id: string) => clients.find((c) => c.id === id);
@@ -235,6 +244,10 @@ export const channels: Channel[] = [
   // Multi-Family
   { id: "m-general", spaceId: "multi-family", clientId: null, name: "general", topic: "Family Office team" },
   { id: "m-halv-general", spaceId: "multi-family", clientId: "halvorsen", name: "general", topic: "Halvorsen Family × {tenant}" },
+  { id: "t-northbridge-general", spaceId: "multi-family", clientId: "northbridge", name: "general", topic: "Northbridge × {tenant} — platform and operations" },
+  { id: "t-halcyon-general", spaceId: "corporate", clientId: "halcyon", name: "general", topic: "Halcyon × {tenant} — platform and operations" },
+  { id: "c-mazal-general", spaceId: "corporate", clientId: "mazal", name: "general", topic: "Mazal Group × {tenant} — company formation" },
+  { id: "f-calloway-general", spaceId: "fund", clientId: "calloway", name: "general", topic: "Calloway Family Trust × {tenant} — investor services" },
   { id: "m-halv-succession", spaceId: "multi-family", clientId: "halvorsen", name: "succession", topic: "Trust restructuring", private: true, memberIds: [ME, "helena", "victoria"] },
   { id: "m-val-general", spaceId: "multi-family", clientId: "valenca", name: "general", topic: "Valença Family × {tenant}" },
 
@@ -442,6 +455,12 @@ export const messages: Message[] = [
 
   // other spaces
   { id: id(), where: "m-halv-general", authorId: "victoria", at: "2026-11-22T16:00:00Z", body: "Please add the new Delaware holding company to the consolidated report." },
+  { id: id(), where: "t-northbridge-general", authorId: "helena", at: "2026-11-19T15:00:00Z", body: "Eleanor — the Valença family portal is live under your brand. Pedro has access to the consolidated view." },
+  { id: id(), where: "t-northbridge-general", authorId: "eleanor", at: "2026-11-19T16:20:00Z", body: "Perfect. We will onboard two more families in December." },
+  { id: id(), where: "c-mazal-general", authorId: "eduardo", at: "2026-11-21T14:00:00Z", body: "Welcome, Ana. Your application for Mazal Empreendimentos SPE Ltda. is in identity review — we will message you here if we need anything." },
+  { id: id(), where: "c-mazal-general", authorId: "anamazal", at: "2026-11-21T15:10:00Z", body: "Thank you. The second director's passport copy is uploaded." },
+  { id: id(), where: "f-calloway-general", authorId: "juliana", at: "2026-11-20T13:00:00Z", body: "Good afternoon, Mrs. Calloway. Your Q3 capital account statement for Atlântico Venture II is now in Documents." },
+  { id: id(), where: "f-calloway-general", authorId: "margaret", at: "2026-11-20T16:40:00Z", body: "Thank you, Juliana. Could you confirm the wire date for the next capital call?" },
   { id: id(), where: "m-halv-succession", authorId: "helena", at: "2026-11-23T15:00:00Z", body: "Draft trust deed from counsel is attached for your review.", attachments: [{ id: "x11", kind: "file", ...pdf("Halvorsen Trust — restated deed — draft.pdf", 920_000) }] },
   { id: id(), where: "m-val-general", authorId: "pedro", at: "2026-11-18T13:00:00Z", body: "Quarterly family meeting confirmed for December 9." },
   { id: id(), where: "b-payments", authorId: "noah", at: "2026-11-24T13:50:00Z", body: "Two wires over $250k awaiting second approval: Strlex distribution and Porto Real intercompany transfer." },

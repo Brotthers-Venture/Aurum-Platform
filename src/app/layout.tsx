@@ -7,6 +7,7 @@ import "@fontsource-variable/manrope";
 import "./globals.css";
 import { BrandProvider } from "@/components/brand/BrandProvider";
 import { ThemeProvider } from "@/components/shell/ThemeProvider";
+import { PreviewRoleProvider } from "@/components/admin/PreviewRole";
 import { BRAND_BOOT } from "@/lib/brand";
 import { ECO_BOOT, THEME_BOOT } from "@/lib/theme";
 
@@ -31,7 +32,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen antialiased">
         <BrandProvider>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            <PreviewRoleProvider>{children}</PreviewRoleProvider>
+          </ThemeProvider>
         </BrandProvider>
       </body>
     </html>

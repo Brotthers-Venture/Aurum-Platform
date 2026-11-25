@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { PreviewRoleProvider } from "@/components/admin/PreviewRole";
 
+/** The preview person (who is looking) is provided at the root, so portals know it too. */
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  return <PreviewRoleProvider>{children}</PreviewRoleProvider>;
+  return <>{children}</>;
 }

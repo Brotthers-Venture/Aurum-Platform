@@ -1,5 +1,8 @@
 "use client";
 
+import { usePreviewRole } from "@/components/admin/PreviewRole";
+import { MEMBERS } from "@/lib/parties";
+
 import { useEffect, useState } from "react";
 import { ArrowRight, CircleAlert, Copy, ExternalLink, X } from "lucide-react";
 import { cx } from "@/components/ui";
@@ -13,7 +16,11 @@ const jName = (id: string) => jurisdictions.find((j) => j.id === id)?.name ?? id
 const tName = (j: string, t: string) => jurisdictions.find((x) => x.id === j)?.types.find((y) => y.id === t)?.short ?? t;
 
 export function CorporateWorkspace() {
-  const [rows, setRows] = useState<Formation[]>(seed);
+  const [allRows, setRows] = useState<Formation[]>(seed);
+  // A tenant sees only the formations of its own clients.
+  const { member } = usePreviewRole();
+  const mine = member.party === "tenant" ? MEMBERS.filter((m) => m.party === "client" && m.tenantId === member.org).map((m) => m.orgName.toLowerCase()) : null;
+  const rows = mine ? allRows.filter((r) => mine.some((n) => n.startsWith(r.client.toLowerCase()) || r.client.toLowerCase().startsWith(n.split(" ")[0]))) : allRows;
   const [open, setOpen] = useState<string | null>(null);
   const [view, setView] = useState<"board" | "list">("board");
   const [toast, flash] = useToast();

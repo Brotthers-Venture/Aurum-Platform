@@ -3,11 +3,12 @@
  * Each person sees only the hexagons their role opens (preview roles today; Supabase claims later).
  */
 import type { RoleId } from "./access";
+import type { Member, PartyType } from "./parties";
 import { FIRM, type FirmId } from "./firm-colors";
 import { firmModules } from "./firm";
 import { onboarding } from "./data";
 
-export type HexaId = "fund" | "corporate" | FirmId;
+export type HexaId = "fund" | "corporate" | "multi-family" | FirmId;
 export type HexaPage = { label: string; href: string; group?: string; badge?: number };
 export type Hexa = {
   id: HexaId;
@@ -61,6 +62,7 @@ export const HEXAS: Hexa[] = [
     ],
   },
   { id: "corporate", name: "Corporate Solution", color: "var(--tenant-accent)", href: "/admin/corporate", base: "/admin/corporate", pages: [] },
+  { id: "multi-family", name: "Multi-Family Office", color: "var(--tenant-accent)", href: "/admin/multi-family", base: "/admin/multi-family", pages: [] },
   { id: "communication", firm: "communication", name: "Corporate Chat", color: FIRM.communication, href: "/admin/communication", base: "/admin/communication", badge: badgeOf("communication"), pages: [] },
   { id: "dataroom", firm: "dataroom", name: "Data rooms", color: FIRM.dataroom, href: "/admin/dataroom", base: "/admin/dataroom", badge: badgeOf("dataroom"), pages: fromRing("dataroom") },
   { id: "billing", firm: "billing", name: "Treasury", color: FIRM.billing, href: "/admin/treasury", base: "/admin/treasury", badge: badgeOf("billing"), pages: [{ label: "Overview", href: "/admin/treasury" }, ...fromRing("billing")] },
@@ -69,54 +71,72 @@ export const HEXAS: Hexa[] = [
   { id: "sales", firm: "sales", name: "Sales", color: FIRM.sales, href: "/admin/sales", base: "/admin/sales", badge: badgeOf("sales"), pages: fromRing("sales") },
 ];
 
-/* ───────────────────────── access ─────────────────────────
-   Everyone (except investors, who use their portal) always has Corporate Chat, the PMO and one solution.
-   Every other hexagon is granted person by person by the main administrator (the platform administrator),
-   who sees everything. Grants live in this browser until P4 moves them to the database. */
+/* ───────────────────────── access (see lib/parties.ts for the definitions) ───────────────────────── */
 
-export const ALWAYS: HexaId[] = ["fund", "communication", "pmo"];
-export const GRANTABLE: HexaId[] = ["corporate", "dataroom", "billing", "compliance", "sales"];
+/** Granted by default, by party type. */
+export const DEFAULTS: Record<PartyType, HexaId[]> = {
+  employee: ["communication", "pmo"],
+  gp: ["communication", "pmo"],
+  tenant: ["communication", "pmo", "corporate", "multi-family"],
+  client: ["corporate"],
+  lp: [],
+  guest: [],
+};
+export const GRANTABLE: HexaId[] = ["fund", "corporate", "multi-family", "dataroom", "billing", "compliance", "sales", "communication", "pmo"];
 export const MAIN_ADMIN: RoleId = "platform_admin";
 
-/** Grants already approved (sample). Keyed by the person's email. */
-const SEED_GRANTS: Record<string, HexaId[]> = {
-  "luiza@aurumasset.us": ["corporate", "dataroom", "billing", "compliance", "sales"],
-  "rafael@aurumasset.us": ["billing", "dataroom"],
-  "juliana@aurumasset.us": ["sales", "corporate", "dataroom"],
-  "carla@aurumasset.us": ["compliance", "corporate", "dataroom"],
-  "audit@gt.com": ["dataroom"],
-  "mhale@cordillera-infra.com": ["dataroom"],
-  "ana@atlanticocapital.com.br": ["dataroom"],
-  "sklein@cordillera-infra.com": [],
-};
-export const GRANTS_KEY = "aurum-hexa-grants-v1";
+export type Invitation = { email: string; hexa: HexaId; by: string; at: string; expires?: string };
+const SEED_INVITES: Invitation[] = [
+  ...(["fund", "corporate", "multi-family", "dataroom", "billing", "compliance", "sales"] as HexaId[]).map((h) => ({ email: "luiza@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2024-08-01" })),
+  ...(["fund", "billing", "dataroom"] as HexaId[]).map((h) => ({ email: "rafael@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2024-08-01" })),
+  ...(["fund", "sales", "corporate", "dataroom"] as HexaId[]).map((h) => ({ email: "juliana@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2025-02-03" })),
+  ...(["fund", "compliance", "corporate", "dataroom"] as HexaId[]).map((h) => ({ email: "carla@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2024-08-01" })),
+  ...(["multi-family", "corporate"] as HexaId[]).map((h) => ({ email: "helena@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2025-01-10" })),
+  ...(["corporate", "compliance"] as HexaId[]).map((h) => ({ email: "eduardo@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2025-01-10" })),
+  { email: "bianca@aurumasset.us", hexa: "corporate", by: "Eduardo Sales", at: "2025-03-02" },
+  { email: "mhale@cordillera-infra.com", hexa: "dataroom", by: "Thiago Brandão", at: "2026-11-21" },
+  { email: "audit@gt.com", hexa: "dataroom", by: "Thiago Brandão", at: "2026-11-15", expires: "2026-12-31" },
+];
+export const GRANTS_KEY = "aurum-invitations-v1";
 export const GRANTS_EVENT = "aurum-hexa-grants";
 
-export function readGrants(): Record<string, HexaId[]> {
-  if (typeof window === "undefined") return SEED_GRANTS;
+export function readInvites(): Invitation[] {
+  if (typeof window === "undefined") return SEED_INVITES;
   try {
     const raw = window.localStorage.getItem(GRANTS_KEY);
-    return raw ? { ...SEED_GRANTS, ...(JSON.parse(raw) as Record<string, HexaId[]>) } : SEED_GRANTS;
+    return raw ? (JSON.parse(raw) as Invitation[]) : SEED_INVITES;
   } catch {
-    return SEED_GRANTS;
+    return SEED_INVITES;
   }
 }
-export function writeGrant(email: string, list: HexaId[]) {
+export function writeInvites(list: Invitation[]) {
   try {
-    const cur = JSON.parse(window.localStorage.getItem(GRANTS_KEY) ?? "{}") as Record<string, HexaId[]>;
-    cur[email] = list;
-    window.localStorage.setItem(GRANTS_KEY, JSON.stringify(cur));
+    window.localStorage.setItem(GRANTS_KEY, JSON.stringify(list));
     window.dispatchEvent(new Event(GRANTS_EVENT));
   } catch {
     /* storage unavailable */
   }
 }
+export const TODAY_ISO = "2026-11-24";
+const live = (i: Invitation) => !i.expires || i.expires >= TODAY_ISO;
 
-/** The hexagons a person may open: always Chat, PMO and their solution, plus what the administrator granted. */
-export function allowedFor(role: RoleId, email: string | undefined, grants: Record<string, HexaId[]> = SEED_GRANTS): HexaId[] | "all" {
-  if (role === MAIN_ADMIN) return "all";
-  if (role === "investor_signatory" || role === "investor_viewer") return [];
-  return [...ALWAYS, ...((email && grants[email]) || [])];
+/** The hexagons a person may open: their party's defaults plus live invitations. The main administrator sees all. */
+export function allowedFor(m: Member | undefined, invites: Invitation[] = SEED_INVITES): HexaId[] | "all" {
+  if (!m) return [];
+  if (m.role === MAIN_ADMIN) return "all";
+  return [...new Set([...DEFAULTS[m.party], ...invites.filter((i) => i.email === m.email && live(i)).map((i) => i.hexa)])];
+}
+export const isDefault = (m: Member, h: HexaId) => m.role === MAIN_ADMIN || DEFAULTS[m.party].includes(h);
+
+/** Who may invite whom: the main administrator anyone outside a tenant; a tenant administrator their own people and clients, into the tenant's hexagons. */
+export function canInvite(inviter: Member | undefined, invitee: Member, h: HexaId) {
+  if (!inviter) return false;
+  if (inviter.role === MAIN_ADMIN) return true;
+  if (inviter.party === "tenant" && inviter.orgAdmin) {
+    const mine = (invitee.party === "tenant" && invitee.org === inviter.org) || (invitee.party === "client" && invitee.tenantId === inviter.org);
+    return mine && DEFAULTS.tenant.includes(h);
+  }
+  return false;
 }
 
 export function hexasFrom(allow: HexaId[] | "all") {
@@ -132,5 +152,12 @@ export function allows(allow: HexaId[] | "all", id: string, live = true) {
 
 /** The hexagon a path belongs to (longest base wins). */
 export function hexaOf(path: string) {
+  if (path.startsWith("/admin/messages")) return HEXAS.find((h) => h.id === "communication");
   return [...HEXAS].sort((a, b) => b.base.length - a.base.length).find((h) => path === h.base || path.startsWith(`${h.base}/`) || path.startsWith(`${h.base}?`));
+}
+
+/** Where a hexagon opens for this person: outsiders' Corporate Chat shows only their own conversations. */
+export function hexaHref(h: Hexa, m?: Member) {
+  if (h.id === "communication" && m && m.party !== "employee") return "/admin/messages";
+  return h.href;
 }

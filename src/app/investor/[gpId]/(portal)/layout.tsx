@@ -31,6 +31,7 @@ async function Shell({ children, params }: { children: ReactNode; params: Promis
           { href: base, label: "Overview", exact: true },
           { href: `${base}/documents`, label: "Documents" },
           { href: `${base}/subscriptions`, label: "Subscriptions" },
+          { href: `${base}/messages`, label: "Messages" },
           { href: `${base}/profile`, label: "Profile" },
         ]}
         userName="Margaret Calloway"

@@ -12,7 +12,13 @@ import { moduleName, withTenant } from "@/lib/brand";
 import { loadChat, visibleInbox, type InboxItem } from "@/lib/chat-store";
 import { personName } from "@/lib/chat";
 import type { ThemePref } from "@/lib/theme";
-import { roles } from "@/lib/access";
+import { roleById } from "@/lib/access";
+import { MEMBERS, PARTY_LABEL, homeOf, type PartyType } from "@/lib/parties";
+import { useRouter } from "next/navigation";
+
+const PREVIEW_ORDER: PartyType[] = ["employee", "tenant", "gp", "client", "lp", "guest"];
+/** A representative person of each kind, to preview the platform as them. */
+const PREVIEW_PEOPLE = ["thiago", "luiza", "rafael", "carla", "helena", "eleanor", "samito", "marcus", "lucas", "tom", "anamazal", "pedro", "margaret", "gt-audit"];
 
 /** Close a popover on outside click or Escape. */
 function useDismiss(open: boolean, close: () => void) {
@@ -88,7 +94,8 @@ export function WorkstationTopBar({
   useEffect(() => {
     onActivity?.(open !== null);
   }, [open, onActivity]);
-  const { user, role, setRole } = usePreviewRole();
+  const { user, member, setPerson } = usePreviewRole();
+  const router = useRouter();
   const [notes, setNotes] = useState<{ items: InboxItem[]; unread: number }>({ items: [], unread: 0 });
 
   useEffect(() => {
@@ -220,16 +227,30 @@ export function WorkstationTopBar({
               />
             </div>
             <div className="mx-1 my-1 h-px bg-d-line-soft" />
-            <div className={menuHead}>Preview as · sets the hexagons shown</div>
-            <div className="max-h-[180px] overflow-y-auto">
-              {roles
-                .filter((r) => r.audience !== "Investor")
-                .map((r) => (
-                  <button key={r.id} onClick={() => setRole(r.id)} className={cx(menuItem, "h-7 text-[12.5px]")}>
-                    <span className="flex-1 truncate">{r.name}</span>
-                    {role === r.id && <Check size={13} />}
-                  </button>
-                ))}
+            <div className={menuHead}>Preview as · who is looking</div>
+            <div className="max-h-[240px] overflow-y-auto">
+              {PREVIEW_ORDER.map((party) => (
+                <div key={party}>
+                  <div className="px-2.5 pb-0.5 pt-1.5 text-[10.5px] font-medium text-d-text-3">{PARTY_LABEL[party]}</div>
+                  {MEMBERS.filter((m) => m.party === party && PREVIEW_PEOPLE.includes(m.id)).map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => {
+                        setPerson(m.id);
+                        close();
+                        router.push(homeOf(m));
+                      }}
+                      className={cx(menuItem, "h-auto py-1 text-[12.5px]")}
+                    >
+                      <span className="min-w-0 flex-1 text-left">
+                        <span className="block truncate">{m.name}</span>
+                        <span className="block truncate text-[11px] text-d-text-3">{m.role ? roleById(m.role).name : m.orgName}</span>
+                      </span>
+                      {member.id === m.id && <Check size={13} />}
+                    </button>
+                  ))}
+                </div>
+              ))}
             </div>
             <div className="mx-1 my-1 h-px bg-d-line-soft" />
             <Link href="/admin/access" onClick={close} className={menuItem}>

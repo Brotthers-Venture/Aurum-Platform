@@ -27,7 +27,7 @@ export const solutions: Solution[] = [
     name: "Multi-Family Office",
     lines: ["Multi-Family", "Solution"],
     href: "/admin/multi-family",
-    live: false,
+    live: true,
     slot: "e",
     summary: "Consolidated management of a family’s entities, assets and documents in one governed view.",
     modules: ["Family structures", "Consolidated holdings", "Governance", "Document vault", "Succession planning", "Reporting"],
