@@ -3,9 +3,10 @@
 Read this and `docs/redesign-brief.md` at the start of every session. Newest entries on top.
 
 ## Status
-- **Phase reached:** 2 (Stitch: three directions) complete → next is Phase 3 (21st.dev shortlist), then Phase 4 (pick a direction and draft the design system).
+- **Phase reached:** 5 complete → **Phase 6: waiting for owner approval.** Do not start implementation before approval.
 - **Branch:** `redesign`.
-- **Awaiting owner:** a reaction to the three directions (`docs/redesign-directions.md`). The formal approval gate is Phase 6.
+- **Awaiting owner:** approval of prototypes P1–P5 (`docs/redesign-prototypes.md`), `docs/design-system.md` and the
+  new dependencies (`docs/redesign-components.md`).
 
 ## References
 - Stitch project: `projects/11182280680944937938` ("Aurum Platform"). Design system id `3776221373241039428`
@@ -22,12 +23,33 @@ Read this and `docs/redesign-brief.md` at the start of every session. Newest ent
   Tenant brand first; the sponsor brand applies inside that sponsor's portals. Replaces the separate `lib/gps.ts` brand.
 - 2026-11-25 (owner): **One chart library**, themed from design tokens, with accessible tooltips.
 - 2026-11-25 (owner): One of the three Stitch directions must be a **refined evolution of the current cream look**.
-- Final visual direction: _pending, owner decides at Phase 6._
+- 2026-11-25 (owner): **Direction for Phases 3–5.**
+  - A (Obsidian) for the admin shell and page structure.
+  - B's tabbed work queue *is* the home page. B's detail drawer for capital calls and similar records.
+  - C's investor portal (top nav, serif client name, calm layout) for LP **and** GP portals, on white/platinum surfaces.
+  - Serif only for client names and portal headers.
+  - Corrections: no monospace numerals (interface sans, tabular figures); no duplicated workspace tiles on Home;
+    remove every unverifiable claim Stitch invented (TLS, SLA, vault sync, audit verified, methodology, engine
+    version); official logo files only, never a redrawn mark; the sidebar colour is a white-label brand token.
+- Final visual direction: _formal approval at Phase 6._
 
 ## Open questions
 _None._
 
 ## Entries
+### 2026-11-25 — Phases 3–5
+- **Phase 3:** searched 21st.dev for every item in brief §3. The shortlist and rejections are in `docs/redesign-components.md`.
+  Proposed one headless layer (Base UI) plus TanStack Table, Recharts, cmdk, react-day-picker and Inter.
+- **Phase 4:** drafted `docs/design-system.md`.
+  - New brand tokens: `sidebar`/`sidebarInk`, plus the sponsor layer `--sponsor-*`.
+  - Platinum canvas. Inter with tabular figures. An 8-step type scale. Radius 2/4/6.
+  - Muted text is `#5B6B80`, because Slate `#64748B` fails AA on platinum.
+- **Phase 5:** Stitch design system `assets/279242118147208333`, and prototypes P1–P5 corrected for invented content.
+  Screen IDs and known gaps are in `docs/redesign-prototypes.md`; images are in `design/stitch/prototypes/`.
+- **Lesson:** Stitch invents content on every first pass (badges, timestamps, IDs, names, notices), and one edit
+  introduced a data error (a fee shown as a date). Re-read the image after every edit.
+- Demo figures came from a scratchpad Node script (strip-types plus a resolve hook). `src/lib` was not modified.
+
 ### 2026-11-25 — Phase 2 directions
 - Added `upload` to `tools/stitch/stitch.mjs`. Uploaded 14 screenshots of today's app to Stitch as references.
 - Created three design systems and generated Home, Capital calls and Investor portal screens for each (9 screens).
