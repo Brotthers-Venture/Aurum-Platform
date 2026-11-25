@@ -42,6 +42,17 @@ Read this and `docs/redesign-brief.md` at the start of every session. Newest ent
 _None._
 
 ## Entries
+### 2026-11-25 — Multi-Family Solution, design phase
+- Brief: private wealth and family office platform. Design and specification only; stopped for owner approval.
+- 17 prototypes rendered from one reconciling demo dataset (`design/stitch/multi-family/src/data.js`, gitignored):
+  six experiences in Platinum and Obsidian at 1440, client overview and ownership at 1024 and 390, Northbridge variant.
+- Spec: `docs/multi-family-solution.md`.
+- Assumptions: reporting date 24 Nov 2026; USD base with EUR 1.08 and BRL 5.40; history charts and TWR are sample
+  series; fund and manager names marked "(sample)" are fictional; net IRR is not shown because the demo has no dated cash
+  flows; document extraction is a proposed capability; no bank or custodian connection is claimed.
+- Copia research was not done (the fetch needed approval while the owner was away). Nothing from Copia was used.
+- No dependencies installed; no code in `src/` changed.
+
 ### 2026-11-25 — Living ecosystem (docs/aurum-living-ecosystem.md, sections 1–21)
 - **Corporate Chat:** approved by the owner. Small fixes in `10c021c`:
   - mobile summary header
