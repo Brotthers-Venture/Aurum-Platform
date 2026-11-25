@@ -227,3 +227,61 @@ They live in `src/components/ui/` and replace the two kits (`ui.tsx`, `firm/kit.
 - Redrawn logos.
 - Gradients, glass, glow, illustrations, emoji.
 - Unverifiable claims in the interface (security badges, SLA, "audit verified", "vault sync", engine versions, methodology notes) unless the platform actually provides the fact.
+
+---
+
+## Financial definitions (Direction D refinements §16, 25 Nov 2026)
+These are display definitions. They match how `src/lib/data.ts` (`fundTotals`, `capitalAccounts`) and the accounting engine compute each value. No financial logic changes.
+
+| Term | Definition | Source |
+|---|---|---|
+| **Commitment** | The amount a partner agreed to contribute over the life of the vehicle. | `commitments.ts` → `capitalAccounts.commitment` |
+| **Called capital** | The total of capital calls issued to the partner. Draft calls are excluded. | `capitalAccounts.called` (= sum of issued call allocations) |
+| **Contributed capital** | Called capital actually received. | `called − receivable` |
+| **Outstanding receivable** | Called and not yet received. On the investor side, "Called, due {date}". | `capitalAccounts.receivable` |
+| **Unfunded commitment** | Commitment less called capital, i.e. what can still be called. Shown as "Unfunded" or "Unfunded commitments". | `commitment − called` |
+| **Uncalled commitment** | A synonym of unfunded commitment on this platform. Use "Unfunded" in the interface; do not show both. | — |
+| **Distributions** | Paid distributions only. Scheduled distributions appear as obligations, never in this total. | `capitalAccounts.distributed` |
+| **NAV** | Partner capital: called − distributed + allocated income, gains, fees and expenses. It **includes the outstanding receivable**, and screens must say so where the receivable is non-zero. | `partnerNav()` |
+| **TVPI / DPI** | (Distributions + NAV − receivable) ÷ contributed / distributions ÷ contributed. Always uppercase. | `fundTotals()` |
+| **Ledger cash** | The general-ledger balance of account 1000, per vehicle. It is not a bank balance; bank balances are not in the demo data. | `trialBalance()` |
+| **Firm totals** | The sum across vehicles in USD. BRL vehicles are converted at the indicative 5.40 rate and labelled "indicative". | `INDICATIVE_BRL_USD` |
+
+### Data status in charts
+| Status | Meaning | Mark |
+|---|---|---|
+| Historical | Posted in the ledger | Solid line in the primary colour |
+| To date (open period) | The current period, partially posted | Dashed segment, open end marker, footnote with the ledger date |
+| Scheduled | Issued, with a due date in the future | Outlined marker, "Scheduled" |
+| Draft | Not yet approved | Dashed, "Draft", "awaiting approval" |
+| Sample series | Not in the data (prototypes only) | Hatched, always labelled "Sample series" |
+
+### Audit (25 Nov 2026)
+The checks were:
+- For every capital call: allocations against the amount, paid against received, components against the amount, and the status.
+- For every distribution: allocations and components against the amount.
+- For every vehicle: issued calls against called capital, receipts against contributed capital, paid distributions against the distributed total, and unfunded against commitment − called.
+
+**No inconsistencies were found.** The firm totals used in the prototypes are below (all USD; FIP Horizonte converted at 5.40):
+
+| Total | Amount |
+|---|---|
+| NAV | $284,631,481 |
+| Commitments | $581,677,778 |
+| Called | $267,470,926 |
+| Contributed | $262,820,926 |
+| Receivable | $4,650,000 |
+| Unfunded | $314,206,852 |
+| Distributed | $32,992,963 |
+
+Calloway Family Trust in Cordillera I:
+
+| Item | Amount |
+|---|---|
+| Commitment | $15,000,000 |
+| Called | $7,941,176 |
+| Contributed | $7,041,176 |
+| Receivable (Call No. 7) | $900,000 |
+| Unfunded | $7,058,824 |
+| Distributed | $552,000 |
+| NAV | $8,558,571 |

@@ -3,7 +3,7 @@
 Read this and `docs/redesign-brief.md` at the start of every session. Newest entries on top.
 
 ## Status
-- **Phase reached:** Direction D prototypes delivered (`docs/direction-d-prototypes.md`) → **waiting for owner approval.**
+- **Phase reached:** Direction D refined prototypes delivered (`docs/direction-d-refined.md`) → **waiting for final approval.**
   P1–P5 are rejected as the final direction. Do not start implementation before approval.
 - **Branch:** `redesign`.
 - **Awaiting owner:**
@@ -40,6 +40,22 @@ Read this and `docs/redesign-brief.md` at the start of every session. Newest ent
 _None._
 
 ## Entries
+### 2026-11-25 — Direction D refinements (`docs/direction-d-refinements.md`)
+- Direction D approved as the foundation. Applied refinements 1–9 and Part 2 §10–17 in HTML prototypes built on the tokens:
+  `tools/stitch/direction-d-refined.mjs`, with every figure read from `src/lib` through `tools/stitch/ts-loader.mjs`.
+- **Fonts:** installed the @fontsource Inter, Manrope, IBM Plex Sans and Source Serif 4 packages with `--no-save`, so `package.json` is
+  unchanged until implementation. All four were confirmed as loaded.
+- **Deliverables:** 16 frames in `design/stitch/direction-d/refined/`. Each was inspected and none overflows horizontally. Summary and decisions
+  are in `docs/direction-d-refined.md`.
+- **§16 audit:** checked calls, distributions and vehicle totals against the demo data. No inconsistencies were found. The financial
+  definitions and audited totals were added to `docs/design-system.md`.
+- **Q4 2026:** the quarter is real ledger data but still open. It is shown as "to date" (dashed, with a footnote), not as a sample series.
+  No sample series was needed anywhere.
+- **Contrast:** checked Aurum, Northbridge and Halcyon in both themes. Light-theme accent fills fail as graphics on white, so they get an
+  `--accent-edge` token. Zoom at 150 % and 200 % renders without overflow.
+- **Recommendation:** typography Option A (Manrope Light).
+- **Status:** stopped for final approval. No production code was changed.
+
 ### 2026-11-25 — Direction D (owner brief `docs/direction-d.md`, supersedes P1–P5)
 - **Setup:**
   - Verified that Stitch (`get_project`) and 21st.dev (`search`) respond.
