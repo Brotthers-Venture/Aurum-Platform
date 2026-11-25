@@ -11,6 +11,7 @@
 import { messages as commsMessages, people as commsPeople, requests as accessRequests, type Person } from "./comms";
 import { capitalCalls, fundById, investorById, onboarding, profileChangeRequests, documents } from "./data";
 import { formations } from "./formation";
+import { caseFor, kycOf, statusOf } from "./screening";
 import { plans } from "./plans";
 import { docs as roomDocs, questions as roomQuestions, rooms } from "./dataroom";
 
@@ -532,8 +533,8 @@ export function recordSummary(l: Linked): RecordSummary | null {
       sub: fundById(o.fundId)?.name ?? "",
       facts: [
         { label: "Commitment", value: money(o.commitment) },
-        { label: "Status", value: o.status },
-        { label: "KYC", value: o.kyc, tone: o.kyc === "Clear" ? "pos" : "warn" },
+        { label: "Status", value: statusOf(o) },
+        { label: "KYC", value: kycOf(o, caseFor(o.id)), tone: kycOf(o, caseFor(o.id)) === "Clear" ? "pos" : "warn" },
         { label: "Accreditation", value: o.accreditation },
         { label: "Progress", value: `${Math.round(o.progress * 100)}%` },
         { label: "Relationship manager", value: o.relationshipManager },

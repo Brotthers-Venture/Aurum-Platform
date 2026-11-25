@@ -89,12 +89,43 @@ export function CorporateChat() {
 
   // Load after mount (storage is browser-only), then keep a clock for relative times.
   useEffect(() => {
-    const loaded = loadChat();
+    let loaded = loadChat();
+    // "Discuss" from any hexagon: open the record's matter, or start one already linked to it.
+    const discuss = params.get("discuss");
+    if (discuss && discuss.includes(":")) {
+      const [kind, rid] = [discuss.slice(0, discuss.indexOf(":")), discuss.slice(discuss.indexOf(":") + 1)];
+      const found = loaded.matters.find((x) => x.linked.kind === kind && x.linked.id === rid);
+      if (found) {
+        window.history.replaceState(null, "", `/admin/communication?m=${found.id}`);
+      } else {
+        const label = params.get("label") ?? rid;
+        const prefix = PREFIX[kind as keyof typeof PREFIX] ?? "MAT";
+        const used = loaded.matters.filter((x) => x.ref.startsWith(prefix + "-")).map((x) => Number(x.ref.split("-")[1]) || 0);
+        const at = new Date().toISOString();
+        const nm: Matter = {
+          id: "mt-" + uid(),
+          ref: `${prefix}-${Math.max(0, ...used) + 1}`,
+          title: params.get("title") ?? label,
+          status: "Open",
+          priority: "Normal",
+          owner: VIEWER,
+          participants: [VIEWER],
+          linked: { kind: kind as Matter["linked"]["kind"], id: rid, label },
+          labels: [],
+          createdAt: at,
+          updatedAt: at,
+        };
+        loaded = { ...loaded, matters: [nm, ...loaded.matters], messages: [...loaded.messages, { id: "msg-" + uid(), where: nm.id, author: VIEWER, at, body: `opened this matter from ${label}`, kind: "event" }] };
+        saveChat(loaded);
+        window.history.replaceState(null, "", `/admin/communication?m=${nm.id}`);
+      }
+    }
+    const target = discuss ? new URLSearchParams(window.location.search).get("m") : null;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setS(loaded);
     setNow(Date.now());
     setRail(window.innerWidth >= 1280);
-    const m = params.get("m");
+    const m = target ?? params.get("m");
     if (m && loaded.matters.some((x) => x.id === m)) {
       setSelected(m);
       setMobilePane("detail");

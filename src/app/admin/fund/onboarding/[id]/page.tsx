@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AlertTriangle, ArrowLeft, Check, Circle, FileText, MessageSquare } from "lucide-react";
-import { Button, KeyValue, Panel, Progress, Status } from "@/components/ui";
+import { AlertTriangle, ArrowLeft, Check, Circle, FileText } from "lucide-react";
+import { KeyValue, Panel, Progress, Status } from "@/components/ui";
 import { fundById, onboarding, type OnboardingSubmission } from "@/lib/data";
 import { date, money } from "@/lib/format";
+import { KycSectionLabel, KycSectionMark, LiveStatus, PersonScreening, ScreeningAside, ScreeningBanner, SubmissionActions } from "@/components/fund/SubmissionScreening";
 
 export function generateStaticParams() {
   return onboarding.map((o) => ({ id: o.id }));
@@ -14,6 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return { title: onboarding.find((o) => o.id === id)?.investorName ?? "Subscription" };
 }
 
+const KYC = "KYC / AML screening";
 type Section = { title: string; state: "complete" | "attention" | "incomplete"; body: React.ReactNode; flush?: boolean };
 
 function sectionsFor(o: OnboardingSubmission): Section[] {
@@ -77,7 +79,7 @@ function sectionsFor(o: OnboardingSubmission): Section[] {
       ),
     },
     {
-      title: "KYC / AML screening",
+      title: KYC,
       state: o.kyc === "Potential match" ? "attention" : o.kyc === "Clear" ? "complete" : "incomplete",
       flush: true,
       body: (
@@ -99,7 +101,7 @@ function sectionsFor(o: OnboardingSubmission): Section[] {
                   <Status value={s === "Pending" ? "Pending" : "Clear"} />
                 </td>
                 <td>
-                  <Status value={s} />
+                  <PersonScreening id={o.id} value={s} />
                 </td>
               </tr>
             ))}
@@ -160,8 +162,6 @@ export default async function SubmissionReview({ params }: { params: Promise<{ i
   if (!o) notFound();
   const f = fundById(o.fundId)!;
   const sections = sectionsFor(o);
-  const canApprove = o.status === "Submitted";
-  const canCountersign = o.status === "Approved";
 
   return (
     <div className="space-y-6">
@@ -174,43 +174,30 @@ export default async function SubmissionReview({ params }: { params: Promise<{ i
             {f.name} · Submission {o.id.toUpperCase()}
           </div>
           <h1 className="mt-2 flex items-center gap-3 text-[26px] font-semibold tracking-[-0.015em]">
-            {o.investorName} <Status value={o.status} />
+            {o.investorName} <LiveStatus id={o.id} />
           </h1>
           <p className="num mt-1.5 text-[14px] text-stone-600">
             {money(o.commitment)} commitment · {o.investorType} · {o.jurisdiction}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="secondary">
-            <MessageSquare size={14} strokeWidth={1.8} /> Request changes
-          </Button>
-          {canCountersign ? <Button variant="gold">Countersign & accept</Button> : <Button disabled={!canApprove}>Approve subscription</Button>}
-        </div>
+        <SubmissionActions id={o.id} />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-4">
-          {o.kyc === "Potential match" && (
-            <div className="flex gap-3 border-l-2 border-negative bg-negative-bg px-4 py-3 text-[13px] text-ink-900">
-              <AlertTriangle size={16} strokeWidth={1.8} className="mt-px shrink-0 text-negative" />
-              <div>
-                <span className="font-semibold">Screening returned a potential PEP match.</span> An analyst must review the
-                match and record a disposition before the subscription can be approved.
-              </div>
-            </div>
-          )}
+          <ScreeningBanner id={o.id} />
           {sections.map((s, i) => (
             <Panel
               key={s.title}
               title={
                 <span className="flex items-center gap-3">
-                  <span className={`flex h-5 w-5 items-center justify-center rounded-full ${iconBg[s.state]}`}>{icon[s.state]}</span>
+                  {s.title === KYC ? <KycSectionMark id={o.id} server={s.state} /> : <span className={`flex h-5 w-5 items-center justify-center rounded-full ${iconBg[s.state]}`}>{icon[s.state]}</span>}
                   <span className="num text-stone-400">{String(i + 1).padStart(2, "0")}</span>
                   {s.title}
                 </span>
               }
               flush={s.flush}
-              actions={<span className="text-stone-500">{s.state === "complete" ? "Complete" : s.state === "attention" ? "Needs attention" : "Awaiting investor"}</span>}
+              actions={s.title === KYC ? <KycSectionLabel id={o.id} server={s.state} /> : <span className="text-stone-500">{s.state === "complete" ? "Complete" : s.state === "attention" ? "Needs attention" : "Awaiting investor"}</span>}
             >
               {s.body}
             </Panel>
@@ -218,6 +205,7 @@ export default async function SubmissionReview({ params }: { params: Promise<{ i
         </div>
 
         <aside className="space-y-4">
+          <ScreeningAside id={o.id} />
           <Panel title="Progress">
             <div className="flex items-baseline justify-between">
               <span className="num text-[24px] font-medium">{Math.round(o.progress * 100)}%</span>

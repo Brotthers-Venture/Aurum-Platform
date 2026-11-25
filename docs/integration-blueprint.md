@@ -160,10 +160,18 @@ A **capital call** issued raises `call.issued`, opens a call matter, and adds ex
 
 ---
 
-## 6. Decisions needed from you
+## 6. Decisions (owner, 25 Nov 2026)
 
-1. **Approve the order:** P0 → P1 → P2 → P3 → P4 → P5. My recommendation is to build P0 and P1 together next.
-2. **KYC rule:** may a subscription be *approved* (but not countersigned) while a screening case is open? My recommendation: no to both.
-3. **Expiry window** for KYC refresh: 60 days?
-4. **Who is the second approver** for screening dispositions: Compliance Officer + Head of Fund Services?
-5. **Access list per role:** confirm or edit the table in `src/lib/hexa.ts` (shown to you in the Hexa Room).
+1. **Order approved:** P0 → P1 → P2 → P3 → P4 → P5. P0 and P1 were built together.
+2. **KYC rule:** while a screening case is open, a subscription can be **neither approved nor countersigned**.
+3. **KYC refresh** starts **30 days** before expiry.
+4. **Four eyes on screening:** first review by the **Compliance Officer**, second approval by the **Head of Fund Services**; never the same person.
+5. **Access per role:** the current table in `src/lib/hexa.ts` is a test setting, to be replaced by per-person grants in P4.
+
+## 7. Progress
+
+| Phase | Status |
+|---|---|
+| P0 Spine | **Built (in-browser).** Event ledger with records (`lib/spine.ts`), events written to the audit log and posted automatically into linked chat matters; `DiscussButton` and `ActivityFeed` (`components/spine`); Discuss opens or starts the record's matter. |
+| P1 Compliance ↔ Onboarding | **Built.** Screening case per submitted subscription (`lib/screening.ts`); no match clears automatically; a match needs a first review and a second approval by two different people; the result writes back to KYC on the subscription, the onboarding list and the chat record panel; approve and countersign are locked while a case is open; KYC refresh 30 days before expiry on the Compliance calendar. |
+| P2 Chat everywhere + PMO ↔ Chat | Next. |

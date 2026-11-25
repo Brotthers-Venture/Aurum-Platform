@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Copy, Link2, Plus, Settings2, X } from "lucide-react";
 import { Button, PageHeader, Panel, Progress, Status, cx } from "@/components/ui";
 import { fundById, onboarding, type OnboardingStatus } from "@/lib/data";
 import { date, money, moneyShort } from "@/lib/format";
+import { kycOf, loadCases, statusOf, type ScreeningCase } from "@/lib/screening";
 
 const stages: (OnboardingStatus | "All")[] = ["All", "Invited", "In progress", "Submitted", "Changes requested", "Approved", "Countersigned"];
 
@@ -15,7 +16,18 @@ export function OnboardingPipeline() {
   const [stage, setStage] = useState<(typeof stages)[number]>("All");
   const [inviting, setInviting] = useState(false);
 
-  const fundRows = useMemo(() => onboarding.filter((o) => o.fundId === fundId), [fundId]);
+  // Live status and KYC: approvals and screening decisions made elsewhere show here straight away.
+  const [live, setLive] = useState<{ cases: ScreeningCase[]; tick: number }>({ cases: [], tick: 0 });
+  useEffect(() => {
+    const read = () => setLive((x) => ({ cases: loadCases(), tick: x.tick + 1 }));
+    read();
+    window.addEventListener("aurum-screening", read);
+    return () => window.removeEventListener("aurum-screening", read);
+  }, []);
+  const fundRows = useMemo(
+    () => onboarding.filter((o) => o.fundId === fundId).map((o) => (live.tick ? { ...o, status: statusOf(o), kyc: kycOf(o, live.cases.find((c) => c.subscriptionId === o.id)) as typeof o.kyc } : o)),
+    [fundId, live],
+  );
   const rows = stage === "All" ? fundRows : fundRows.filter((r) => r.status === stage);
   const fund = fundById(fundId)!;
   const fundsWithOnboarding = Array.from(new Set(onboarding.map((o) => o.fundId)));

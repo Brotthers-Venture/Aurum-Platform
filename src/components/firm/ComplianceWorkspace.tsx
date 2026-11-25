@@ -19,6 +19,8 @@ import {
   type Alert,
   type Deadline,
 } from "@/lib/compliance";
+import { ScreeningCases, useCases } from "./ScreeningCases";
+import { kycRefreshes, KYC_REFRESH_DAYS } from "@/lib/screening";
 import { ActionButton, Card, GhostButton, Kpi, ModuleHeader, ModuleTabs, Pill, Toast, daysUntil, fmtDate, fmtShort, td, th, useTab, useToast } from "./kit";
 
 const C = FIRM.compliance;
@@ -27,7 +29,22 @@ const ME = "Managing Partner";
 
 export function ComplianceWorkspace({ tab: initial }: { tab: ComplianceTab }) {
   const [tab, setTab] = useTab<ComplianceTab>(initial);
-  const [deadlines, setDeadlines] = useState<Deadline[]>(seedDeadlines);
+  // KYC that lapses within 30 days goes on the calendar as a refresh, owned by the relationship manager.
+  const [deadlines, setDeadlines] = useState<Deadline[]>(() => [
+    ...seedDeadlines,
+    ...kycRefreshes().map((k) => ({
+      id: `kyc-${k.investorId}`,
+      title: `KYC refresh — ${k.name}`,
+      authority: `KYC expires ${new Date(`${k.expires}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`,
+      entity: "Investor record",
+      due: k.expires,
+      owner: k.owner,
+      status: "In progress" as const,
+      recurrence: `Starts ${KYC_REFRESH_DAYS} days before expiry`,
+    })),
+  ]);
+  const cases = useCases();
+  const openCases = cases.filter((c) => c.status === "Needs review" || c.status === "Awaiting second approver").length;
   // Changes made in this browser (e.g. Corporate Chat status and approval changes) join the append-only log.
   const [audit, setAudit] = useState<AuditEvent[]>(auditLog);
   useEffect(() => {
@@ -55,7 +72,7 @@ export function ComplianceWorkspace({ tab: initial }: { tab: ComplianceTab }) {
           { id: "calendar", label: "Calendar", count: open.length },
           { id: "policies", label: "Policies" },
           { id: "training", label: "Training" },
-          { id: "screening", label: "Screening", count: alerts.filter((a) => a.status === "Needs review").length },
+          { id: "screening", label: "Screening", count: openCases + alerts.filter((a) => a.status === "Needs review" && !cases.some((c) => c.subject === a.subject)).length },
           { id: "reviews", label: "Access reviews" },
           { id: "audit", label: "Audit log" },
         ]}
@@ -194,7 +211,13 @@ export function ComplianceWorkspace({ tab: initial }: { tab: ComplianceTab }) {
 
         {tab === "screening" && (
           <div className="space-y-3">
+            <ScreeningCases flash={flash} />
+            <div className="flex items-baseline gap-2 pt-3">
+              <h2 className="text-[14px] font-semibold text-ink-900">Other screening</h2>
+              <span className="text-[12px] text-stone-500">Prospects and data-room guests</span>
+            </div>
             {[...alerts]
+              .filter((a) => !cases.some((c) => c.subject === a.subject))
               .sort((a, b) => Number(a.status !== "Needs review") - Number(b.status !== "Needs review"))
               .map((a) => (
                 <Card key={a.id} className="flex items-center gap-5 p-5">
