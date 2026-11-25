@@ -6,6 +6,7 @@
  *   npm run stitch -- generate "Investor statement page" [--device DESKTOP] [--model GEMINI_3_PRO]
  *   npm run stitch -- edit <screenId> "Make the table denser"
  *   npm run stitch -- variants <screenId> "Try calmer layouts" [--n 3] [--range REFINE|EXPLORE|REIMAGINE]
+ *   npm run stitch -- upload design/audit/hub-1440.png [more files…]   add screenshots as reference screens
  *   npm run stitch -- list
  *   npm run stitch -- pull                            download every screen (HTML + assets) to design/stitch/
  *
@@ -92,6 +93,15 @@ switch (cmd) {
     for (const v of list) {
       show(v);
       console.log("image ", await v.getImage());
+    }
+    break;
+  }
+  case "upload": {
+    // Upload screenshots (png/jpg/webp) or HTML as reference screens: upload <file> [<file>…]
+    const project = sdk().project(projectId());
+    for (const f of rest) {
+      const screens = await project.upload(f, { title: f.split(/[\\/]/).pop().replace(/\.\w+$/, "") });
+      for (const s of screens) console.log(`screen ${s.id}  ${f}`);
     }
     break;
   }
