@@ -14,6 +14,8 @@ import { cx } from "@/components/ui";
 import { firmById, firmModules } from "@/lib/firm";
 import { formations } from "@/lib/formation";
 import { solutions } from "@/lib/solutions";
+import { canOpen } from "@/lib/hexa";
+import { usePreviewRole } from "@/components/admin/PreviewRole";
 import { gps, gpById, type GpClient } from "@/lib/gps";
 import { gpTotals } from "@/lib/gpData";
 import { INDICATIVE_BRL_USD } from "@/lib/data";
@@ -70,6 +72,7 @@ const gpModules: { id: string; label: [string, string?]; path: string }[] = [
 export function AdminHub({ variation = "ambient", animate = false, quiet = false }: { variation?: AmbientMotion; animate?: boolean; quiet?: boolean }) {
   const router = useRouter();
   const { brand } = useBrand();
+  const { role } = usePreviewRole();
   const [level, setLevel] = useState<Level>({ kind: "root" });
   const [revealed, setRevealed] = useState(false);
   const [active, setActive] = useState<string | null>(null);
@@ -125,15 +128,17 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
 
   if (level.kind === "root") {
     ringShown = revealed;
-    nodes = solutions.map((s) => ({
-      id: s.id,
-      slot: s.slot,
-      label: s.lines,
-      sub: !s.live ? "COMING SOON" : s.id === "fund" ? `${gps.length} GPS` : `${formations.filter((f) => f.stage !== "Post-formation").length} IN PROGRESS`,
-      subTone: s.live ? "accent" : "muted",
-      outline: s.live,
-      ...(s.id === "fund" ? { open: () => go({ kind: "fund", from: s.slot }) } : { href: s.href }),
-    }));
+    nodes = solutions
+      .filter((s) => canOpen(role, s.id, s.live))
+      .map((s) => ({
+        id: s.id,
+        slot: s.slot,
+        label: s.lines,
+        sub: !s.live ? "COMING SOON" : s.id === "fund" ? `${gps.length} GPS` : `${formations.filter((f) => f.stage !== "Post-formation").length} IN PROGRESS`,
+        subTone: s.live ? "accent" : "muted",
+        outline: s.live,
+        ...(s.id === "fund" ? { open: () => go({ kind: "fund", from: s.slot }) } : { href: s.href }),
+      }));
     center = <MarkCenter expanded={revealed} />;
   } else if (level.kind === "fund") {
     centerFrom = offset(level.from);
@@ -229,19 +234,22 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
   const ORBIT_OUT = 238;
   const orbitShown = level.kind === "root" || level.kind === "module";
   const orbitR = level.kind === "root" && !revealed ? ORBIT_IN : ORBIT_OUT;
-  const orbit = firmModules.map((m, i) => {
+  const orbit = firmModules.flatMap((m, i) => {
+    if (!canOpen(role, m.id)) return []; // hexagons this person cannot open are not shown; the others keep their places
     const a = ((-90 + 60 * i) * Math.PI) / 180;
     const here = level.kind === "module" && level.id === m.id;
-    return {
-      id: here ? "aurum" : m.id,
-      color: here ? "var(--tenant-accent)" : m.color,
-      name: here ? brand.name : moduleName(brand, m.id),
-      label: here ? `${brand.name} solutions` : `${moduleName(brand, m.id)}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`,
-      href: here ? "/admin" : m.href,
-      badge: here ? 0 : m.badge,
-      x: Math.round(orbitR * Math.cos(a) * 100) / 100,
-      y: Math.round(orbitR * Math.sin(a) * 100) / 100,
-    };
+    return [
+      {
+        id: here ? "aurum" : m.id,
+        color: here ? "var(--tenant-accent)" : m.color,
+        name: here ? brand.name : moduleName(brand, m.id),
+        label: here ? `${brand.name} solutions` : `${moduleName(brand, m.id)}${m.badge ? ` — ${m.badge} ${m.badgeLabel}` : ""}`,
+        href: here ? "/admin" : m.href,
+        badge: here ? 0 : m.badge,
+        x: Math.round(orbitR * Math.cos(a) * 100) / 100,
+        y: Math.round(orbitR * Math.sin(a) * 100) / 100,
+      },
+    ];
   });
   const orbitNode = (o: (typeof orbit)[number]): Node => ({
     id: `orbit-${o.id}`,
@@ -453,14 +461,14 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
               <text className="orbit-label" textAnchor="middle" y={52} fontSize={12} fontWeight={600} fill="var(--eco-label)" style={{ pointerEvents: "none" }}>
                 {o.name}
               </text>
-            {o.badge > 0 && (
-              <g transform="translate(21 -24)">
-                <circle r={10} fill={o.color} stroke="var(--eco-bg)" strokeWidth={2.5} />
-                <text textAnchor="middle" y={3.6} fontSize={10.5} fontWeight={700} fill="#FFFFFF">
-                  {o.badge}
-                </text>
-              </g>
-            )}
+              {o.badge > 0 && (
+                <g transform="translate(21 -24)">
+                  <circle r={10} fill={o.color} stroke="var(--eco-bg)" strokeWidth={2.5} />
+                  <text textAnchor="middle" y={3.6} fontSize={10.5} fontWeight={700} fill="#FFFFFF">
+                    {o.badge}
+                  </text>
+                </g>
+              )}
             </g>
           </g>
         ))}

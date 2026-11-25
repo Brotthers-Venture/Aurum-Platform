@@ -93,3 +93,10 @@ export const canSettings = (role: RoleId) => role === "platform_admin" || role =
 export function hexaOf(path: string) {
   return [...HEXAS].sort((a, b) => b.base.length - a.base.length).find((h) => path === h.base || path.startsWith(`${h.base}/`) || path.startsWith(`${h.base}?`));
 }
+
+/** Whether a role may open a hexagon on the ecosystem page. Solutions still in development are shown to administrators only. */
+export function canOpen(role: RoleId, id: string, live = true) {
+  const allow = ROLE_HEXAS[role];
+  if (allow === "all") return true;
+  return live && (allow as string[]).includes(id);
+}
