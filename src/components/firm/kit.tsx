@@ -16,11 +16,11 @@ export function useTab<T extends string>(initial: T) {
   return [tab, setTab] as const;
 }
 
-export function ModuleHeader({ color, title, action }: { color: string; title: string; action?: ReactNode }) {
+export function ModuleHeader({ color, title, action, mark = true }: { color: string; title: string; action?: ReactNode; mark?: boolean }) {
   return (
     <div className="flex items-end justify-between gap-6">
       <div className="flex items-center gap-3">
-        <AurumMark size={30} color={color} />
+        {mark && <AurumMark size={30} color={color} />}
         <div>
           <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.02em] text-ink-900">{title}</h1>
         </div>

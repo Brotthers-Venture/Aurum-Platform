@@ -1035,3 +1035,28 @@ html[data-theme="light"] .eco-stage[data-hub] {
 @keyframes drawer-left { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
 /* Row hover inside the workstation: a tonal lift, never a light wash that hides the text. */
 .ws .data-table tbody tr.row-link:hover td { background: color-mix(in oklab, var(--d-raise) 75%, transparent); }
+
+/* ───────── Sign-in background (every entrance) ───────── */
+.brand-field-band { transform: translateX(-120%); opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .brand-field:not(.is-still) .brand-field-band { animation: brand-band 30s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+}
+.brand-field.is-still .brand-field-band { animation: none; transform: translateX(40%); opacity: 0.6; }
+@keyframes brand-band {
+  0% { transform: translateX(-120%); opacity: 0; }
+  12% { opacity: 1; }
+  55% { opacity: 1; }
+  70% { transform: translateX(260%); opacity: 0; }
+  100% { transform: translateX(260%); opacity: 0; }
+}
+.brand-field-grain {
+  opacity: 0.08;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='1' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+/* Platinum entrance: ink text on porcelain instead of white on graphite. */
+.login-light { color: var(--color-ink-900, #191d22); }
+.login-light .text-white { color: #191d22; }
+.login-light .text-white\/80 { color: rgba(25, 29, 34, 0.72); }
+.login-light .text-white\/60, .login-light footer { color: rgba(25, 29, 34, 0.6); }
+.login-light .hover\:text-white:hover { color: #191d22; }

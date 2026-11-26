@@ -5,6 +5,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { AurumLogo } from "@/components/brand/Logo";
 import { LoginStage } from "./LoginStage";
+import { BrandField } from "./BrandField";
+import { useMotionAllowed } from "./useMotionAllowed";
+import { useTheme } from "@/components/shell/ThemeProvider";
 import { useBrand } from "@/components/brand/BrandProvider";
 import type { Brand } from "@/lib/brand";
 
@@ -33,13 +36,20 @@ export function Backdrop({ brand }: { brand: Brand }) {
 
 export function AuthShell({ children }: { children: ReactNode }) {
   const { brand } = useBrand();
+  const { theme } = useTheme();
+  const motion = useMotionAllowed(brand.ambientMotion);
+  // A tenant's own photograph is kept; otherwise every entrance uses the brand field.
+  const own = brand.login.backdrop === "image" && !!brand.login.image;
+  const tone = own ? "dark" : theme === "light" ? "light" : "dark";
   return (
     <LoginStage
-      background={<Backdrop brand={brand} />}
-      logo={<AurumLogo variant={brand.login.backdrop === "gold" ? "dark" : "white"} height={44} priority />}
+      sharp={!own}
+      tone={tone}
+      background={own ? <Backdrop brand={brand} /> : <BrandField ink={brand.colors.ink} accent={brand.colors.accent} shape={brand.mark} tone={tone} still={!motion} />}
+      logo={<AurumLogo variant={tone === "light" ? "dark" : "white"} height={44} priority />}
       statement={
         <>
-          <div className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/80">{brand.login.eyebrow}</div>
+          <div className="text-[13px] font-medium text-white/80">{brand.login.eyebrow}</div>
           <h1 className="mt-4 font-serif text-[68px] font-normal leading-[1.02] tracking-[-0.015em] drop-shadow-[0_2px_20px_rgba(0,0,0,0.25)]">{brand.login.headline}</h1>
           <p className="mt-5 max-w-[440px] text-[15px] leading-relaxed text-white/80">{brand.login.text}</p>
         </>
