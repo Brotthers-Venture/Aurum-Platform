@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Building2, Check, ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Landmark, Users, X } from "lucide-react";
+import { Building2, ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Landmark, Users, X } from "lucide-react";
 import { cx } from "@/components/ui";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { AurumLogo, markPath } from "@/components/brand/Logo";
@@ -15,6 +15,7 @@ import { useHexas } from "./useHexas";
 
 const KEY = "aurum-hexa-collapsed";
 const LAST_KEY = "aurum-solution-last";
+const LAST_SOLUTION_KEY = "aurum-solution-current";
 export const HEXA_STATE_EVENT = "aurum-hexa-state";
 export const HEXA_DRAWER_EVENT = "aurum-hexa-drawer";
 
@@ -71,16 +72,17 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
   const here = hexaOf(path);
   const [collapsed, setCollapsed] = useState(true);
   const [drawer, setDrawer] = useState(false);
-  const [picker, setPicker] = useState(false);
   const [solutionsOpen, setSolutionsOpen] = useState(true);
   const [openPages, setOpenPages] = useState<string | null>(here?.id ?? null);
   const [last, setLast] = useState<Record<string, string>>({});
+  const [lastSolution, setLastSolution] = useState<string | undefined>();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the rail is the default; a pinned room is remembered
     setCollapsed(defaultCollapsed || readHexaCollapsed());
     try {
       setLast(JSON.parse(window.localStorage.getItem(LAST_KEY) ?? "{}"));
+      setLastSolution(window.localStorage.getItem(LAST_SOLUTION_KEY) ?? undefined);
     } catch {}
     const open = () => setDrawer(true);
     window.addEventListener(HEXA_DRAWER_EVENT, open);
@@ -98,17 +100,18 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
       const next = { ...m, [here.id]: href };
       try {
         window.localStorage.setItem(LAST_KEY, JSON.stringify(next));
+        window.localStorage.setItem(LAST_SOLUTION_KEY, here.id);
       } catch {}
       return next;
     });
     setOpenPages(here.id);
+    setLastSolution(here.id);
     setDrawer(false);
   }, [path, search, here]);
 
   const toggleCollapsed = () => {
     const next = !collapsed;
     setCollapsed(next);
-    setPicker(false);
     try {
       window.localStorage.setItem(KEY, next ? "1" : "0");
     } catch {}
@@ -129,6 +132,8 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
   const workspaces = list.filter((h) => !isSolution(h.id));
   const solutionBadge = solutions.reduce((n, s) => n + badgeOf(s.h), 0); // distinct sources, so a plain sum does not double count
   const inSolution = isSolution(here?.id);
+  const homeOfSolutions = solutions.find((x) => x.id === (inSolution ? here?.id : lastSolution)) ?? solutions[0];
+  const solutionHome = homeOfSolutions ? hrefOf(homeOfSolutions.h) : "/admin";
 
   const tab = params.get("tab");
   const filter = params.get("filter");
@@ -340,26 +345,17 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
           </button>
           <div className="flex flex-1 flex-col items-center gap-1">
             {solutions.length > 0 && (
-              <div className="relative">
-                <button
-                  onClick={() => setPicker((p) => !p)}
-                  aria-haspopup="menu"
-                  aria-expanded={picker}
-                  aria-label={`Solutions${solutionBadge ? `, ${solutionBadge} to act on` : ""}`}
-                  title="Solutions"
-                  className={cx("relative flex h-10 w-10 items-center justify-center rounded-[7px] transition-colors", inSolution || picker ? "bg-d-raise" : "hover:bg-d-raise")}
-                >
-                  {inSolution && <span aria-hidden className="absolute -left-2 bottom-2.5 top-2.5 w-[2px] rounded-full bg-[var(--tenant-accent)]" />}
-                  <HexGlyph color="var(--tenant-accent)" size={20} active />
-                  {!!solutionBadge && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[var(--tenant-accent)]" />}
-                </button>
-                {picker && (
-                  <SolutionPicker
-                    items={solutions.map((s) => ({ id: s.id, name: name(s.h), about: s.about, Icon: s.Icon, href: hrefOf(s.h), badge: badgeOf(s.h), active: here?.id === s.id }))}
-                    onClose={() => setPicker(false)}
-                  />
-                )}
-              </div>
+              <Link
+                href={solutionHome}
+                aria-label={`Solutions${solutionBadge ? `, ${solutionBadge} to act on` : ""}`}
+                title="Solutions"
+                aria-current={inSolution ? "page" : undefined}
+                className={cx("relative flex h-10 w-10 items-center justify-center rounded-[7px] transition-colors", inSolution ? "bg-d-raise" : "hover:bg-d-raise")}
+              >
+                {inSolution && <span aria-hidden className="absolute -left-2 bottom-2.5 top-2.5 w-[2px] rounded-full bg-[var(--tenant-accent)]" />}
+                <HexGlyph color="var(--tenant-accent)" size={20} active />
+                {!!solutionBadge && !inSolution && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[var(--tenant-accent)]" />}
+              </Link>
             )}
             {solutions.length > 0 && workspaces.length > 0 && <span aria-hidden className="my-1 h-px w-6 bg-d-line" />}
             {workspaces.map((h) => {
@@ -391,67 +387,5 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
         </div>
       )}
     </>
-  );
-}
-
-/** The floating Solutions selector from the rail: closes on selection, outside click or Escape; arrow keys move. */
-function SolutionPicker({
-  items,
-  onClose,
-}: {
-  items: { id: string; name: string; about: string; Icon: typeof Landmark; href: string; badge: number; active: boolean }[];
-  onClose: () => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const first = ref.current?.querySelector<HTMLAnchorElement>("a[role=menuitem]");
-    first?.focus();
-    const out = (e: PointerEvent) => ref.current && !ref.current.contains(e.target as Node) && !(e.target as HTMLElement).closest("[aria-haspopup=menu]") && onClose();
-    const key = (e: KeyboardEvent) => {
-      if (e.key === "Escape") return onClose();
-      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
-      const links = [...(ref.current?.querySelectorAll<HTMLAnchorElement>("a[role=menuitem]") ?? [])];
-      const i = links.indexOf(document.activeElement as HTMLAnchorElement);
-      e.preventDefault();
-      links[(i + (e.key === "ArrowDown" ? 1 : -1) + links.length) % links.length]?.focus();
-    };
-    document.addEventListener("pointerdown", out);
-    document.addEventListener("keydown", key);
-    return () => {
-      document.removeEventListener("pointerdown", out);
-      document.removeEventListener("keydown", key);
-    };
-  }, [onClose]);
-  return (
-    <div
-      ref={ref}
-      role="menu"
-      aria-label="Solutions"
-      className="picker-in absolute left-[52px] top-0 z-50 w-[292px] rounded-[8px] bg-d-raise p-1.5 shadow-[0_14px_36px_rgba(0,0,0,0.32)] ring-1 ring-d-line-strong"
-    >
-      <div className="px-2.5 pb-1.5 pt-1 text-[11.5px] text-d-text-3">Solutions</div>
-      {items.map(({ id, name, about, Icon, href, badge, active }) => (
-        <Link
-          key={id}
-          role="menuitem"
-          href={href}
-          onClick={onClose}
-          aria-current={active ? "page" : undefined}
-          className={cx(
-            "relative flex items-start gap-3 rounded-[6px] px-2.5 py-2 outline-none transition-colors focus-visible:bg-d-surface hover:bg-d-surface",
-            active && "bg-d-surface",
-          )}
-        >
-          {active && <span aria-hidden className="absolute bottom-2.5 left-0 top-2.5 w-[2px] rounded-full bg-[var(--tenant-accent)]" />}
-          <Icon size={16} strokeWidth={1.7} className="mt-0.5 shrink-0 text-d-text-2" />
-          <span className="min-w-0 flex-1">
-            <span className="block text-[13px] font-semibold text-d-text">{name}</span>
-            <span className="block text-[12px] leading-snug text-d-text-3">{about}</span>
-          </span>
-          {badge > 0 && <span className="tnum mt-0.5 text-[11.5px] text-d-text-2">{badge}</span>}
-          {active && <Check size={14} className="mt-0.5 shrink-0 text-d-text-2" />}
-        </Link>
-      ))}
-    </div>
   );
 }
