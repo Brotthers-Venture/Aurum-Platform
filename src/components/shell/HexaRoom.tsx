@@ -156,12 +156,18 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
           lastGroup = p.group;
           return (
             <li key={p.href}>
-              {head && <div className="px-2 pb-0.5 pt-2 text-[11px] text-d-text-3">{head}</div>}
+              {head && (
+                <div role="presentation" className={cx("flex items-center gap-2 px-2 pb-1 text-[12px] font-semibold text-d-text", i === 0 ? "pt-1.5" : "pt-4")}>
+                  <span className="shrink-0">{head}</span>
+                  <span aria-hidden className="h-px flex-1 bg-d-line-soft" />
+                </div>
+              )}
               <Link
                 href={p.href}
                 aria-current={on ? "page" : undefined}
                 className={cx(
-                  "relative flex h-[27px] items-center rounded-[5px] px-2 text-[12.5px] transition-colors",
+                  "relative flex h-[27px] items-center rounded-[5px] pr-2 text-[12.5px] transition-colors",
+                  p.group ? "pl-4" : "pl-2",
                   on ? "bg-d-raise font-medium text-d-text" : "text-d-text-2 hover:bg-d-raise hover:text-d-text",
                 )}
               >
