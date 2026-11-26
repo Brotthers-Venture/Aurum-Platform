@@ -114,7 +114,7 @@ export function WorkstationTopBar({
   }, []);
 
   return (
-    <header ref={ref} className={cx("relative z-40 flex h-[56px] shrink-0 items-center gap-3 pl-4 pr-3 text-[13px]", eco ? "border-b border-transparent bg-transparent" : "border-b border-d-line bg-d-chrome")}>
+    <header ref={ref} data-shell="header" className={cx("relative z-40 flex h-[56px] shrink-0 items-center gap-3 pl-4 pr-3 text-[13px]", eco ? "border-b border-transparent bg-transparent" : "border-b border-d-line bg-d-chrome")}>
       <Link href="/admin" aria-label={`${brand.name} home`} className="shrink-0">
         <AurumLogo variant={theme === "dark" ? "white" : "dark"} height={32} />
       </Link>
@@ -124,6 +124,7 @@ export function WorkstationTopBar({
       {onSearch ? (
         <button
           onClick={onSearch}
+          data-shell="search"
           className="flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-3.5 text-left text-d-text-3 hover:border-d-line-strong"
           aria-label="Search or run a command"
         >
@@ -132,7 +133,7 @@ export function WorkstationTopBar({
           <kbd className="ml-auto hidden shrink-0 whitespace-nowrap rounded-[4px] border border-d-line px-1.5 font-sans text-[10.5px] text-d-text-3 sm:inline">Ctrl K</kbd>
         </button>
       ) : (
-        <label className="flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-3.5 text-d-text-3 focus-within:border-d-line-strong">
+        <label data-shell="search" className="flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-3.5 text-d-text-3 focus-within:border-d-line-strong">
           <Search size={15} className="shrink-0" />
           <input
             placeholder="Search funds, investors, documents"

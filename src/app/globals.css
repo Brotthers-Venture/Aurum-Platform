@@ -772,3 +772,137 @@ html[data-eco-enter] .eco-enter-item {
   font-size: 12px;
   font-weight: 500;
 }
+
+/* ═════════════════ Architectural Matte — prototype finishes (Investors page only, pending approval) ═════════════════
+   A = pure matte (tonal layers, no light) · B = architectural (soft champagne light) · C = atmospheric (stronger, optional slow drift)
+   Scoped to .ws[data-finish]; nothing else in the platform changes until a finish is approved. */
+.ws[data-finish] {
+  /* Obsidian, matte graphite. Derived from the brand: neutrals are cool graphite, the light is a muted tenant accent. */
+  --d-bg: #14191f;
+  --d-chrome: #11161c;
+  --d-surface: #1a2027;
+  --d-surface-2: #171c23;
+  --d-raise: #232a32;
+  --d-line: #262e37;
+  --d-line-soft: #20272f;
+  --d-line-strong: #333c47;
+  --d-text: #e6e8eb;
+  --d-text-2: #aab3bd;
+  --d-text-3: #8a949f;
+  --d-ambient: color-mix(in oklab, var(--tenant-accent) 38%, #8c8474);
+  --d-light: 0.2;
+  --d-sheen-top: color-mix(in oklab, var(--d-ambient) 5%, var(--d-surface));
+  --d-grain: 0.035;
+  --d-radius: 6px;
+  background: var(--d-bg);
+}
+html[data-theme="light"] .ws[data-finish],
+.ws.ws-light[data-finish] {
+  /* Platinum, matte porcelain and warm stone. */
+  --d-bg: #e9e6e0;
+  --d-chrome: #e4e1da;
+  --d-surface: #f4f2ee;
+  --d-surface-2: #eeebe6;
+  --d-raise: #e6e2dc;
+  --d-line: #d9d4cb;
+  --d-line-soft: #e3dfd8;
+  --d-line-strong: #c9c3b8;
+  --d-text: #191d22;
+  --d-text-2: #4d535b;
+  --d-text-3: #5c6168;
+  --d-ambient: color-mix(in oklab, var(--tenant-accent) 16%, #fff6e6);
+  --d-light: 0.8;
+  --d-sheen-top: color-mix(in oklab, #ffffff 55%, var(--d-surface));
+  --d-grain: 0.03;
+}
+.ws[data-finish="pure"] { --d-light: 0; }
+.ws[data-finish="atmos"] { --d-light: 0.32; --d-sheen-top: color-mix(in oklab, var(--d-ambient) 9%, var(--d-surface)); }
+html[data-theme="light"] .ws[data-finish="atmos"], .ws.ws-light[data-finish="atmos"] { --d-light: 1; }
+html[data-theme="light"] .ws[data-finish="pure"], .ws.ws-light[data-finish="pure"] { --d-light: 0; }
+
+/* The light: broad, edgeless, behind the upper centre. Stacked stops avoid visible rings; grain dithers the gradient. */
+.ws-light-layer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.ws-light-layer::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -42vh;
+  width: 150vw;
+  height: 120vh;
+  transform: translateX(-50%);
+  opacity: calc(var(--d-light) * var(--d-light-k, 1));
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--d-ambient) 100%, transparent) 0%,
+    color-mix(in oklab, var(--d-ambient) 74%, transparent) 18%,
+    color-mix(in oklab, var(--d-ambient) 46%, transparent) 36%,
+    color-mix(in oklab, var(--d-ambient) 22%, transparent) 56%,
+    color-mix(in oklab, var(--d-ambient) 7%, transparent) 76%,
+    transparent 100%
+  );
+}
+.ws-light-layer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: var(--d-grain);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+}
+@media (max-width: 767px) {
+  .ws[data-finish] { --d-light-k: 0.45; }
+  .ws-light-layer::before { width: 320vw; top: -30vh; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ws[data-finish="atmos"][data-ambient="on"] .ws-light-layer::before {
+    animation: ws-drift 48s ease-in-out infinite alternate;
+  }
+}
+@keyframes ws-drift {
+  0% { transform: translateX(-52%) scale(1); }
+  50% { transform: translateX(-49%) scale(1.04); }
+  100% { transform: translateX(-51%) scale(0.98); }
+}
+
+/* Surface integration: the header and the search sit on the canvas; the Hexa Room is a tone, not a box. */
+.ws[data-finish] [data-shell="header"] { background: transparent; border-color: transparent; }
+.ws[data-finish] [data-shell="search"] {
+  border-color: transparent;
+  background: color-mix(in oklab, var(--d-surface) 72%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--d-line) 60%, transparent);
+}
+.ws[data-finish] [data-shell="search"]:hover,
+.ws[data-finish] [data-shell="search"]:focus-within { box-shadow: inset 0 0 0 1px var(--d-line-strong); }
+.ws[data-finish] [data-shell="room"] { background: color-mix(in oklab, var(--d-chrome) 62%, transparent); border-color: color-mix(in oklab, var(--d-line) 45%, transparent); }
+.ws[data-finish] .ws-stage { position: relative; z-index: 1; }
+
+/* The register: one continuous matte surface, tonal rows, hairline separators, 6px corners. */
+.ws[data-finish] .matte {
+  border-radius: var(--d-radius);
+  background: linear-gradient(to bottom, var(--d-sheen-top), var(--d-surface) 140px);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--d-line) 70%, transparent);
+}
+.ws[data-finish="pure"] .matte { background: var(--d-surface); }
+/* Register rows inside the matte surface: no row fills, hairlines only, tonal hover. */
+.ws[data-finish] .data-table.register thead th { background: transparent; border-color: var(--d-line-soft); color: var(--d-text-3); }
+.ws[data-finish] .data-table.register td { border-color: var(--d-line-soft); }
+.ws[data-finish] .data-table.register tbody tr:hover td { background: color-mix(in oklab, var(--d-raise) 45%, transparent); }
+.ws[data-finish] .data-table thead th { background: transparent; }
+.ws[data-finish] [data-panel] {
+  border-color: transparent;
+  border-radius: var(--d-radius);
+  background: linear-gradient(to bottom, var(--d-sheen-top), var(--d-surface) 140px);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--d-line) 70%, transparent);
+}
+.ws[data-finish="pure"] [data-panel] { background: var(--d-surface); }
+.ws[data-finish] [data-panel] > header { border-color: var(--d-line-soft); }
+.ws[data-finish] [data-page-header] { border-color: transparent; padding-bottom: 8px; }
+.ws[data-finish] [data-page-header] h1 { font-size: 30px; font-weight: 560; letter-spacing: -0.022em; }
+.ws[data-finish] .num { font-variant-numeric: tabular-nums lining-nums; }
+.ws[data-finish] .data-table.register th, .ws[data-finish] .data-table.register td { padding-left: 10px; padding-right: 10px; white-space: nowrap; font-size: 12.5px; }

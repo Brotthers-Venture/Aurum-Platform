@@ -81,7 +81,7 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
 
   if (collapsed)
     return (
-      <nav aria-label="Hexa Room" className="hidden w-[56px] shrink-0 flex-col items-center border-r border-d-line bg-d-chrome py-3 md:flex">
+      <nav aria-label="Hexa Room" data-shell="room" className="hidden w-[56px] shrink-0 flex-col items-center border-r border-d-line bg-d-chrome py-3 md:flex">
         <button
           onClick={toggleCollapsed}
           aria-label="Open the Hexa Room"
@@ -120,7 +120,7 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
     );
 
   return (
-    <nav aria-label="Hexa Room" className="hidden w-[248px] shrink-0 flex-col border-r border-d-line bg-d-chrome text-[13px] md:flex">
+    <nav aria-label="Hexa Room" data-shell="room" className="hidden w-[248px] shrink-0 flex-col border-r border-d-line bg-d-chrome text-[13px] md:flex">
       <div className="flex h-11 items-center gap-2 px-4">
         <span className="text-[12px] font-semibold tracking-[0.02em] text-d-text">Hexa Room</span>
         <span className="tnum text-[11.5px] text-d-text-3">{list.length}</span>

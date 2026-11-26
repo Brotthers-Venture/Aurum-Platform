@@ -50,7 +50,7 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4 border-b border-stone-200 pb-6">
+    <div data-page-header className="flex flex-wrap items-end justify-between gap-4 border-b border-stone-200 pb-6">
       <div className="min-w-0">
         {eyebrow && <div className="eyebrow mb-2">{eyebrow}</div>}
         <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.015em] text-ink-900">{title}</h1>
@@ -74,7 +74,7 @@ export function Panel({
   flush?: boolean;
 }) {
   return (
-    <section className={cx("rounded-[8px] border border-stone-200/70 bg-white shadow-card", className)}>
+    <section data-panel className={cx("rounded-[8px] border border-stone-200/70 bg-white shadow-card", className)}>
       {(title || actions) && (
         <header className="flex items-center justify-between gap-4 border-b border-stone-200 px-5 py-3.5">
           <h2 className="text-[13px] font-semibold tracking-[0.01em] text-ink-900">{title}</h2>
