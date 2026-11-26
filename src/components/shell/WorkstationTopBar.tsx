@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Bell, Check, ChevronDown, EllipsisVertical, LogOut, Menu as MenuIcon, Palette, Search, ShieldCheck, UserCog } from "lucide-react";
 import { cx } from "@/components/ui";
 import { AurumLogo, AurumMark } from "@/components/brand/Logo";
+import { GlobalSearch } from "./GlobalSearch";
 import { HEXA_DRAWER_EVENT, HEXA_STATE_EVENT, readHexaCollapsed } from "./HexaRoom";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { useTheme } from "./ThemeProvider";
@@ -95,6 +96,18 @@ export function WorkstationTopBar({
   const { pref, theme, setPref, motion, setMotion } = useTheme();
   const eco = variant === "ecosystem";
   const [railMode, setRailMode] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+  useEffect(() => {
+    if (onSearch) return; // Corporate Chat has its own command menu on Ctrl K
+    const key = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen((o) => !o);
+      }
+    };
+    window.addEventListener("keydown", key);
+    return () => window.removeEventListener("keydown", key);
+  }, [onSearch]);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- follow the Hexa Room's collapsed state
     setRailMode(readHexaCollapsed());
@@ -129,7 +142,7 @@ export function WorkstationTopBar({
       ref={ref}
       data-shell="header"
       className={cx(
-        "relative z-40 flex h-[56px] shrink-0 items-center gap-3 pl-4 pr-3 text-[13px]",
+        "relative z-40 flex h-[64px] shrink-0 items-center gap-3 pl-4 pr-4 text-[13.5px]",
         eco ? "border-b border-transparent bg-transparent" : "border-b border-d-line bg-d-chrome",
       )}
     >
@@ -156,46 +169,39 @@ export function WorkstationTopBar({
         {eco || !railMode ? (
           <>
             <span className={cx(!eco && "max-md:hidden")}>
-              <AurumLogo variant={theme === "dark" ? "white" : "dark"} height={32} />
+              <AurumLogo variant={theme === "dark" ? "white" : "dark"} height={38} />
             </span>
             {!eco && (
               <span className="md:hidden">
-                <AurumMark size={26} />
+                <AurumMark size={30} />
               </span>
             )}
           </>
         ) : (
-          <AurumMark size={27} />
+          <AurumMark size={31} />
         )}
       </Link>
       {entity}
 
       <div className="flex-1" />
-      {onSearch ? (
-        <button
-          onClick={onSearch}
-          data-shell="search"
-          className="flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-3.5 text-left text-d-text-3 hover:border-d-line-strong"
-          aria-label="Search or run a command"
-        >
-          <Search size={15} className="shrink-0" />
-          <span className="truncate text-[13px]">Search funds, investors, documents</span>
-          <kbd className="ml-auto hidden shrink-0 whitespace-nowrap rounded-[4px] border border-d-line px-1.5 font-sans text-[10.5px] text-d-text-3 sm:inline">Ctrl K</kbd>
-        </button>
-      ) : (
-        <label
-          data-shell="search"
-          className="flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-3.5 text-d-text-3 focus-within:border-d-line-strong"
-        >
-          <Search size={15} className="shrink-0" />
-          <input
-            placeholder="Search funds, investors, documents"
-            aria-label="Search funds, investors, documents"
-            onFocus={() => onActivity?.(true)}
-            onBlur={() => onActivity?.(false)}
-            className="min-w-0 flex-1 bg-transparent text-[13px] text-d-text placeholder:text-d-text-3 focus:outline-none focus-visible:outline-none"
-          />
-        </label>
+      <button
+        onClick={() => (onSearch ? onSearch() : (setSearchOpen(true), onActivity?.(true)))}
+        data-shell="search"
+        className="flex h-10 w-full min-w-0 max-w-[600px] items-center gap-2.5 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-4 text-left text-d-text-3 hover:border-d-line-strong"
+        aria-label="Search funds, investors, documents"
+      >
+        <Search size={16} className="shrink-0" />
+        <span className="truncate text-[14px]">Search funds, investors, documents</span>
+        <kbd className="ml-auto hidden shrink-0 whitespace-nowrap rounded-[4px] border border-d-line px-1.5 font-sans text-[11px] text-d-text-3 sm:inline">Ctrl K</kbd>
+      </button>
+      {!onSearch && (
+        <GlobalSearch
+          open={searchOpen}
+          onClose={() => {
+            setSearchOpen(false);
+            onActivity?.(false);
+          }}
+        />
       )}
       <div className="flex-1" />
 
@@ -204,9 +210,9 @@ export function WorkstationTopBar({
           onClick={() => toggle("more")}
           aria-label="More"
           aria-expanded={open === "more"}
-          className="flex h-8 w-8 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise hover:text-d-text"
+          className="flex h-10 w-10 items-center justify-center rounded-[6px] text-d-text-2 hover:bg-d-raise hover:text-d-text"
         >
-          <EllipsisVertical size={16} />
+          <EllipsisVertical size={18} />
         </button>
         {open === "more" && (
           <Menu className="right-0 top-10 w-[230px]">
@@ -226,9 +232,9 @@ export function WorkstationTopBar({
           onClick={() => toggle("bell")}
           aria-label={`Notifications, ${notes.unread} new`}
           aria-expanded={open === "bell"}
-          className="relative flex h-8 w-8 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise hover:text-d-text"
+          className="relative flex h-10 w-10 items-center justify-center rounded-[6px] text-d-text-2 hover:bg-d-raise hover:text-d-text"
         >
-          <Bell size={16} />
+          <Bell size={19} />
           {notes.unread > 0 && (
             <span className="tnum absolute right-0.5 top-0.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-d-text px-1 text-[9.5px] font-semibold text-d-bg">
               {notes.unread}
@@ -267,7 +273,7 @@ export function WorkstationTopBar({
           aria-expanded={open === "account"}
           className="flex items-center gap-1 rounded-full p-0.5 pr-1.5 hover:bg-d-raise"
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-d-line-strong bg-d-raise text-[11px] font-semibold">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-d-line-strong bg-d-raise text-[12.5px] font-semibold">
             {user.name
               .split(" ")
               .map((w) => w[0])

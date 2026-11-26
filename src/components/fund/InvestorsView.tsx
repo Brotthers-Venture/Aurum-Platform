@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronRight, Search } from "lucide-react";
 import { Avatar, Status, cx } from "@/components/ui";
 import { date, initials, money, moneyShort, pct } from "@/lib/format";
@@ -45,6 +45,14 @@ export function InvestorsView({ vehicles, master, fxNote }: { vehicles: Vehicle[
   const [view, setView] = useState<"vehicle" | "investor">("vehicle");
   const [fund, setFund] = useState<string>("all");
   const [q, setQ] = useState("");
+  // Deep link from search: ?q=<name>&view=investor
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const v = sp.get("view");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- apply the linked search after hydration
+    if (sp.get("q")) setQ(sp.get("q")!);
+    if (v === "investor" || v === "vehicle") setView(v);
+  }, []);
   const [closed, setClosed] = useState<Record<string, boolean>>({});
   const match = (s: string) => !q || s.toLowerCase().includes(q.toLowerCase());
   const shown = vehicles.filter((v) => fund === "all" || v.id === fund);

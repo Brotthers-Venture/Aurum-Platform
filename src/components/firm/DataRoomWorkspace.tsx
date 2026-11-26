@@ -68,6 +68,12 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
       );
   }, []);
   const [roomId, setRoomId] = useState<string | null>(null);
+  // Deep link from search: /admin/dataroom?room=<id>
+  useEffect(() => {
+    const r = new URLSearchParams(window.location.search).get("room");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- open the linked room after hydration
+    if (r) setRoomId(r);
+  }, []);
   const [banners, setBanners] = useState<Record<string, string>>({});
   useEffect(() => {
     const all = loadRoomBrands();
@@ -102,7 +108,10 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
           onUpload={(folder, files) => {
             const existing = docs.filter((x) => x.roomId === room.id && x.folder === folder);
             const n = Number(folder.split(" ")[0]) || 1;
-            setDocs((all) => [...all, ...files.map((f, i) => ({ id: `doc${Date.now()}${i}`, roomId: room.id, folder, index: `${n}.${existing.length + i + 1}`, name: f.name, size: f.size, views: 0 }))]);
+            setDocs((all) => [
+              ...all,
+              ...files.map((f, i) => ({ id: `doc${Date.now()}${i}`, roomId: room.id, folder, index: `${n}.${existing.length + i + 1}`, name: f.name, size: f.size, views: 0 })),
+            ]);
             flash(`${files.length} file${files.length > 1 ? "s" : ""} added to ${folder.replace(/^\d+ /, "")}`);
           }}
         />
@@ -163,44 +172,49 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
                   >
                     <div className="relative h-[112px] overflow-hidden bg-stone-100">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={banners[r.id] ?? roomCover(r)} alt="" style={{ objectPosition: coverPosition(banners[r.id] ?? roomCover(r)) }} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+                      <img
+                        src={banners[r.id] ?? roomCover(r)}
+                        alt=""
+                        style={{ objectPosition: coverPosition(banners[r.id] ?? roomCover(r)) }}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                      />
                     </div>
                     <div className="p-5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10.5px] font-bold uppercase tracking-[0.14em]" style={{ color: C }}>
-                        {r.purpose}
-                      </span>
-                      <Pill tone={r.status === "Open" ? "good" : r.status === "Preparing" ? "gold" : "neutral"}>{r.status}</Pill>
-                    </div>
-                    <div className="mt-2 text-[15px] font-semibold leading-snug text-ink-900">{r.name}</div>
-                    <div className="text-[12px] text-stone-500">{r.client}</div>
-                    <div className="mt-4 grid grid-cols-3 gap-2 border-t border-stone-100 pt-3 text-[11px] text-stone-500">
-                      <span>
-                        <b className="num block text-[15px] text-ink-900">{rd.length}</b>
-                        documents
-                      </span>
-                      <span>
-                        <b className="num block text-[15px] text-ink-900">{users.filter((u) => u.roomId === r.id).length}</b>
-                        people
-                      </span>
-                      <span>
-                        <b className="num block text-[15px] text-ink-900">{rd.reduce((s, x) => s + x.views, 0)}</b>
-                        views
-                      </span>
-                    </div>
-                    <div className="mt-3 flex gap-3 text-[11px] text-stone-500">
-                      {r.nda && (
-                        <span className="flex items-center gap-1">
-                          <FileSignature size={12} /> NDA
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10.5px] font-bold uppercase tracking-[0.14em]" style={{ color: C }}>
+                          {r.purpose}
                         </span>
-                      )}
-                      {r.watermark && (
-                        <span className="flex items-center gap-1">
-                          <Droplets size={12} /> Watermark
+                        <Pill tone={r.status === "Open" ? "good" : r.status === "Preparing" ? "gold" : "neutral"}>{r.status}</Pill>
+                      </div>
+                      <div className="mt-2 text-[15px] font-semibold leading-snug text-ink-900">{r.name}</div>
+                      <div className="text-[12px] text-stone-500">{r.client}</div>
+                      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-stone-100 pt-3 text-[11px] text-stone-500">
+                        <span>
+                          <b className="num block text-[15px] text-ink-900">{rd.length}</b>
+                          documents
                         </span>
-                      )}
-                      <span className="ml-auto">until {fmtShort(r.expires)}</span>
-                    </div>
+                        <span>
+                          <b className="num block text-[15px] text-ink-900">{users.filter((u) => u.roomId === r.id).length}</b>
+                          people
+                        </span>
+                        <span>
+                          <b className="num block text-[15px] text-ink-900">{rd.reduce((s, x) => s + x.views, 0)}</b>
+                          views
+                        </span>
+                      </div>
+                      <div className="mt-3 flex gap-3 text-[11px] text-stone-500">
+                        {r.nda && (
+                          <span className="flex items-center gap-1">
+                            <FileSignature size={12} /> NDA
+                          </span>
+                        )}
+                        {r.watermark && (
+                          <span className="flex items-center gap-1">
+                            <Droplets size={12} /> Watermark
+                          </span>
+                        )}
+                        <span className="ml-auto">until {fmtShort(r.expires)}</span>
+                      </div>
                     </div>
                   </button>
                 );
@@ -348,7 +362,15 @@ export function DataRoomWorkspace({ tab: initial }: { tab: DataRoomTab }) {
               setDocs((all) => [
                 ...all,
                 ...t.folders.flatMap((f, fi) =>
-                  f.items.map((it, ii) => ({ id: `doc${Date.now()}${fi}${ii}`, roomId: r.id, folder: `${fi + 1} ${f.name}`, index: `${fi + 1}.${ii + 1}`, name: it, size: 0, views: 0 })),
+                  f.items.map((it, ii) => ({
+                    id: `doc${Date.now()}${fi}${ii}`,
+                    roomId: r.id,
+                    folder: `${fi + 1} ${f.name}`,
+                    index: `${fi + 1}.${ii + 1}`,
+                    name: it,
+                    size: 0,
+                    views: 0,
+                  })),
                 ),
               ]);
             setCreating(false);
@@ -416,7 +438,11 @@ function NewRoom({ onClose, onSave }: { onClose: () => void; onSave: (r: Room, t
                     </ol>
                   )}
                   <div className="mt-4 grid grid-cols-2 gap-2">
-                    <button type="button" onClick={() => setPeek(peek === t.id ? null : t.id)} className="h-8 rounded-[8px] border border-stone-200 text-[12.5px] font-medium text-ink-900 hover:border-stone-300">
+                    <button
+                      type="button"
+                      onClick={() => setPeek(peek === t.id ? null : t.id)}
+                      className="h-8 rounded-[8px] border border-stone-200 text-[12.5px] font-medium text-ink-900 hover:border-stone-300"
+                    >
                       {peek === t.id ? "Hide index" : "View index"}
                     </button>
                     <button
@@ -446,19 +472,22 @@ function NewRoom({ onClose, onSave }: { onClose: () => void; onSave: (r: Room, t
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          onSave({
-            id: `rm${Date.now()}`,
-            name: f.name,
-            purpose: f.purpose,
-            client: f.client,
-            solution: f.solution,
-            status: "Preparing",
-            owner: "Managing Partner",
-            nda: f.nda,
-            watermark: f.watermark,
-            expires: f.expires,
-            created: "2026-11-24",
-          }, template ?? undefined);
+          onSave(
+            {
+              id: `rm${Date.now()}`,
+              name: f.name,
+              purpose: f.purpose,
+              client: f.client,
+              solution: f.solution,
+              status: "Preparing",
+              owner: "Managing Partner",
+              nda: f.nda,
+              watermark: f.watermark,
+              expires: f.expires,
+              created: "2026-11-24",
+            },
+            template ?? undefined,
+          );
         }}
         className="w-full max-w-[520px] space-y-4 rounded-[18px] bg-white p-6 shadow-lift"
       >
@@ -468,7 +497,11 @@ function NewRoom({ onClose, onSave }: { onClose: () => void; onSave: (r: Room, t
               <ArrowLeft size={13} /> Starting points
             </button>
             <h2 className="mt-1 text-[17px] font-semibold text-ink-900">New data room{template ? ` · ${template.name}` : ""}</h2>
-            {template && <p className="text-[12px] text-stone-500">{template.folders.length} folders and {template.folders.reduce((n, x) => n + x.items.length, 0)} document slots will be created.</p>}
+            {template && (
+              <p className="text-[12px] text-stone-500">
+                {template.folders.length} folders and {template.folders.reduce((n, x) => n + x.items.length, 0)} document slots will be created.
+              </p>
+            )}
           </div>
           <button type="button" onClick={onClose} className="rounded-[8px] p-1.5 text-stone-400 hover:bg-stone-100" aria-label="Close">
             <X size={16} />
