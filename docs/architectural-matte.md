@@ -76,10 +76,10 @@ optional C drift (transform on a composited layer). No new dependencies or libra
   Future solutions are added to `SOLUTIONS` in `HexaRoom.tsx` when they exist; nothing unfinished is listed.
 - **Expanded:** Solutions opens to its three applications with neutral line icons (no repeated yellow); only one
   page tree is open at a time — the current application's.
-- **Collapsed:** expand control, the Solutions hexagon, a hairline, six workspace hexagons. Every hexagon behaves
-  the same way: a link. Solutions goes to the solution in use (or the last one used), at the page you were on;
-  switching between solutions happens in the expanded room. (A floating selector was tried and removed on
-  26 Nov 2026 at the owner's request: it made the yellow hexagon behave differently from the others.)
+- **Collapsed:** expand control, the Solutions hexagon, a hairline, six workspace hexagons. Clicking Solutions
+  opens the Hexa Room with Solutions expanded (Fund, Corporate, Multi-Family Office and the current one's pages);
+  the other hexagons go straight to their workspace. A floating selector and a direct link were tried first and
+  replaced at the owner's request (26 Nov 2026).
 - **Last page per solution** is remembered (`aurum-solution-last`), so switching keeps your place. Deep links and
   browser history are unaffected.
 - **Counts:** the Solutions count is the sum of its applications' own counts (distinct sources, no double

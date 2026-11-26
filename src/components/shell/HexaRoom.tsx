@@ -15,7 +15,6 @@ import { useHexas } from "./useHexas";
 
 const KEY = "aurum-hexa-collapsed";
 const LAST_KEY = "aurum-solution-last";
-const LAST_SOLUTION_KEY = "aurum-solution-current";
 export const HEXA_STATE_EVENT = "aurum-hexa-state";
 export const HEXA_DRAWER_EVENT = "aurum-hexa-drawer";
 
@@ -75,14 +74,12 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
   const [solutionsOpen, setSolutionsOpen] = useState(true);
   const [openPages, setOpenPages] = useState<string | null>(here?.id ?? null);
   const [last, setLast] = useState<Record<string, string>>({});
-  const [lastSolution, setLastSolution] = useState<string | undefined>();
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- the rail is the default; a pinned room is remembered
     setCollapsed(defaultCollapsed || readHexaCollapsed());
     try {
       setLast(JSON.parse(window.localStorage.getItem(LAST_KEY) ?? "{}"));
-      setLastSolution(window.localStorage.getItem(LAST_SOLUTION_KEY) ?? undefined);
     } catch {}
     const open = () => setDrawer(true);
     window.addEventListener(HEXA_DRAWER_EVENT, open);
@@ -100,12 +97,10 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
       const next = { ...m, [here.id]: href };
       try {
         window.localStorage.setItem(LAST_KEY, JSON.stringify(next));
-        window.localStorage.setItem(LAST_SOLUTION_KEY, here.id);
       } catch {}
       return next;
     });
     setOpenPages(here.id);
-    setLastSolution(here.id);
     setDrawer(false);
   }, [path, search, here]);
 
@@ -132,8 +127,6 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
   const workspaces = list.filter((h) => !isSolution(h.id));
   const solutionBadge = solutions.reduce((n, s) => n + badgeOf(s.h), 0); // distinct sources, so a plain sum does not double count
   const inSolution = isSolution(here?.id);
-  const homeOfSolutions = solutions.find((x) => x.id === (inSolution ? here?.id : lastSolution)) ?? solutions[0];
-  const solutionHome = homeOfSolutions ? hrefOf(homeOfSolutions.h) : "/admin";
 
   const tab = params.get("tab");
   const filter = params.get("filter");
@@ -345,9 +338,12 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
           </button>
           <div className="flex flex-1 flex-col items-center gap-1">
             {solutions.length > 0 && (
-              <Link
-                href={solutionHome}
-                aria-label={`Solutions${solutionBadge ? `, ${solutionBadge} to act on` : ""}`}
+              <button
+                onClick={() => {
+                  setSolutionsOpen(true);
+                  toggleCollapsed();
+                }}
+                aria-label={`Solutions${solutionBadge ? `, ${solutionBadge} to act on` : ""}: open the Hexa Room`}
                 title="Solutions"
                 aria-current={inSolution ? "page" : undefined}
                 className={cx("relative flex h-10 w-10 items-center justify-center rounded-[7px] transition-colors", inSolution ? "bg-d-raise" : "hover:bg-d-raise")}
@@ -355,7 +351,7 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
                 {inSolution && <span aria-hidden className="absolute -left-2 bottom-2.5 top-2.5 w-[2px] rounded-full bg-[var(--tenant-accent)]" />}
                 <HexGlyph color="var(--tenant-accent)" size={20} active />
                 {!!solutionBadge && !inSolution && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[var(--tenant-accent)]" />}
-              </Link>
+              </button>
             )}
             {solutions.length > 0 && workspaces.length > 0 && <span aria-hidden className="my-1 h-px w-6 bg-d-line" />}
             {workspaces.map((h) => {
