@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight, FileText } from "lucide-react";
+import { cx } from "@/components/ui";
 import { funds } from "@/lib/data";
 import { date } from "@/lib/format";
 import { CURRENT_PERIOD, periodName, prevPeriod, type Period } from "@/lib/reporting/figures";
@@ -15,8 +16,8 @@ import { useInvestorReports } from "@/components/studio/Digital";
 
 const PERIODS: Period[] = [CURRENT_PERIOD, prevPeriod(CURRENT_PERIOD)];
 
-/** Quarterly packages published for this investor, newest first. */
-export function InvestorPublished({ gpId, investorId }: { gpId: string; investorId: string }) {
+/** Quarterly packages published for this investor, newest first. `panel` renders it as a workstation panel. */
+export function InvestorPublished({ gpId, investorId, panel }: { gpId: string; investorId: string; panel?: boolean }) {
   const s = useReporting();
   const rows = useMemo(
     () =>
@@ -30,40 +31,44 @@ export function InvestorPublished({ gpId, investorId }: { gpId: string; investor
     [s, gpId, investorId],
   );
   const reports = useInvestorReports(gpId, investorId);
-  if (!rows.length && !reports.length) return null;
+  if (!panel && !rows.length && !reports.length) return null;
+  const items = [
+    ...reports.map((r) => ({
+      key: r.id,
+      href: `/investor/${gpId}/documents/report?id=${r.id}`,
+      title: r.name,
+      detail: `Interactive report and PDF · published ${date((r.versions.findLast((v) => v.status === "published")?.at ?? r.modified).slice(0, 10))}`,
+    })),
+    ...rows.map(({ d, p }) => ({
+      key: `${d.fund.id}-${p}`,
+      href: `/investor/${gpId}/documents/quarterly?fund=${d.fund.id}&period=${p}`,
+      title: `${periodName(p)} investor letter and capital account statement`,
+      detail: `${d.fund.name} · published ${date(d.close!.published!.at.slice(0, 10))}`,
+    })),
+  ];
   return (
-    <section className="mt-8">
-      <h2 className="text-[15px] font-semibold">Quarterly reporting</h2>
-      <ul className="mt-3 divide-y divide-stone-200 overflow-hidden rounded-[10px] border border-stone-200 bg-white">
-        {reports.map((r) => (
-          <li key={r.id}>
-            <Link href={`/investor/${gpId}/documents/report?id=${r.id}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-stone-50">
-              <FileText size={15} strokeWidth={1.5} className="shrink-0 text-stone-400" />
-              <span className="min-w-0 flex-1">
-                <span className="block text-[13.5px] font-semibold">{r.name}</span>
-                <span className="block text-[12px] text-stone-500">
-                  Interactive report and PDF · published {date((r.versions.findLast((v) => v.status === "published")?.at ?? r.modified).slice(0, 10))}
+    <section className={cx("flex min-w-0 flex-col overflow-hidden rounded-[12px] border border-stone-200 bg-white", !panel && "mt-2")}>
+      <header className="flex h-11 shrink-0 items-center gap-3 border-b border-stone-100 px-4">
+        <h2 className="flex-1 truncate text-[13px] font-semibold text-ink-900">Quarterly reporting</h2>
+      </header>
+      {items.length === 0 ? (
+        <p className="px-4 py-10 text-center text-[12.5px] text-stone-500">Your quarterly letter and statement appear here when they are published.</p>
+      ) : (
+        <ul>
+          {items.map((it) => (
+            <li key={it.key} className="border-b border-stone-100 last:border-0">
+              <Link href={it.href} className="group flex items-center gap-3 px-4 py-3 hover:bg-stone-100/60">
+                <FileText size={15} strokeWidth={1.5} className="shrink-0 text-stone-400" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[12.5px] font-semibold text-ink-900">{it.title}</span>
+                  <span className="block truncate text-[11.5px] text-stone-500">{it.detail}</span>
                 </span>
-              </span>
-              <ArrowRight size={15} className="text-stone-400" />
-            </Link>
-          </li>
-        ))}
-        {rows.map(({ d, p }) => (
-          <li key={`${d.fund.id}-${p}`}>
-            <Link href={`/investor/${gpId}/documents/quarterly?fund=${d.fund.id}&period=${p}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-stone-50">
-              <FileText size={15} strokeWidth={1.5} className="shrink-0 text-stone-400" />
-              <span className="min-w-0 flex-1">
-                <span className="block text-[13.5px] font-semibold">{periodName(p)} investor letter and capital account statement</span>
-                <span className="block text-[12px] text-stone-500">
-                  {d.fund.name} · published {date(d.close!.published!.at.slice(0, 10))}
-                </span>
-              </span>
-              <ArrowRight size={15} className="text-stone-400" />
-            </Link>
-          </li>
-        ))}
-      </ul>
+                <ArrowRight size={14} className="shrink-0 text-stone-300 group-hover:text-ink-900" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

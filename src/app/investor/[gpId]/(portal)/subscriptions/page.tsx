@@ -1,10 +1,17 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { InvestorSubscriptions } from "@/components/portal/InvestorViews";
+import { SubscriptionsView } from "@/components/portal/InvestorPages";
+import { Frame } from "@/components/portal/InvestorKit";
 import { gpById, gps } from "@/lib/gps";
+import { loadInvestorView } from "@/lib/investor-portal-server";
 
 export function generateStaticParams() {
   return gps.map((g) => ({ gpId: g.id }));
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ gpId: string }> }) {
+  const gp = gpById((await params).gpId);
+  return { title: { absolute: gp ? `${gp.shortName} — Subscriptions` : "Subscriptions" } };
 }
 
 export default function Page({ params }: { params: Promise<{ gpId: string }> }) {
@@ -19,5 +26,10 @@ async function View({ params }: { params: Promise<{ gpId: string }> }) {
   const { gpId } = await params;
   const gp = gpById(gpId);
   if (!gp) notFound();
-  return <InvestorSubscriptions gp={gp} />;
+  const { me, v } = await loadInvestorView(gp.id);
+  return (
+    <Frame>
+      <SubscriptionsView v={v} entity={me.name} />
+    </Frame>
+  );
 }

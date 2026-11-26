@@ -7,6 +7,8 @@ export const pill: Record<string, string> = {
   Scheduled: "border-attn-line text-gold-700",
   Draft: "border-stone-200 text-stone-500",
   Overdue: "border-neg-line text-negative",
+  Due: "border-attn-line text-gold-700",
+  "Part paid": "border-attn-line text-gold-700",
   Investing: "border-up-line text-up-ink",
   Fundraising: "border-attn-line text-gold-700",
   Harvesting: "border-stone-200 text-stone-600",

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ScopedMessages } from "@/components/comms/ScopedMessages";
+import { Frame, InvHead } from "@/components/portal/InvestorKit";
 import { gpById, gps } from "@/lib/gps";
 
 export function generateStaticParams() {
@@ -21,8 +22,13 @@ async function View({ params }: { params: Promise<{ gpId: string }> }) {
   const gp = gpById(gpId);
   if (!gp) notFound();
   return (
-    <div className="mx-auto max-w-[1200px] px-8 py-8">
-      <ScopedMessages asIfStaff="margaret" accent={gp.brand.primary} accentInk={gp.brand.primaryInk} className="h-[calc(100vh-220px)] min-h-[520px]" />
-    </div>
+    <Frame>
+      <InvHead
+        eyebrow="Calloway Family Trust"
+        title="Messages"
+        meta="Your conversations with the administrator and the fund team. Never send bank details by message; use your profile."
+      />
+      <ScopedMessages asIfStaff="margaret" accent={gp.brand.primary} accentInk={gp.brand.primaryInk} className="h-[calc(100dvh-230px)] min-h-[520px]" />
+    </Frame>
   );
 }

@@ -32,7 +32,14 @@ function Row({ label, children, hint }: { label: string; children: ReactNode; hi
 
 function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
-    <button type="button" role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)} className={cx("relative h-5 w-9 rounded-full transition-colors", on ? "bg-ink-900" : "bg-stone-300")}>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      onClick={() => onChange(!on)}
+      className={cx("relative h-5 w-9 rounded-full transition-colors", on ? "bg-ink-900" : "bg-stone-300")}
+    >
       <span className={cx("absolute top-0.5 h-4 w-4 rounded-full bg-white transition-all", on ? "left-[18px]" : "left-0.5")} />
     </button>
   );
@@ -51,12 +58,12 @@ export function ProfileSettings() {
   const submit = (p: Pending) => setPending((x) => [p, ...x]);
 
   return (
-    <main className="mx-auto max-w-[1200px] px-8 py-10">
+    <main className="mx-auto max-w-[1200px] px-4 py-6 sm:px-8 sm:py-10">
       <div className="eyebrow">Calloway Family Trust</div>
       <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.02em]">Profile</h1>
       <p className="mt-1.5 max-w-[640px] text-[14px] text-stone-600">
-        Keep your information current. Changes are reviewed by the fund administrator before they take effect; bank and signatory changes are
-        verified by phone with an authorized signatory.
+        Keep your information current. Changes are reviewed by the fund administrator before they take effect; bank and signatory changes are verified by phone with an authorized
+        signatory.
       </p>
 
       {pending.length > 0 && (
@@ -78,7 +85,7 @@ export function ProfileSettings() {
         </div>
       )}
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-[200px_minmax(0,1fr)]">
+      <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[200px_minmax(0,1fr)]">
         <nav className="lg:sticky lg:top-6 lg:self-start">
           <ul className="space-y-px text-[13px]">
             {sections.map(([id, l]) => (
@@ -158,31 +165,33 @@ export function ProfileSettings() {
                 </Button>
               }
             >
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Role</th>
-                    <th>Notices</th>
-                    <th>Portal access</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ["Margaret Calloway", "Trustee · authorized signatory", "All", "Full · can sign"],
-                    ["Robert Calloway", "Co-trustee · authorized signatory", "All", "Full · can sign"],
-                    ["Daniel Moreau, CPA", "Accountant", "Tax, reports", "View only"],
-                    ["Whitmore Advisory LLC", "Investment advisor", "Reports", "View only"],
-                  ].map(([n, r, no, a]) => (
-                    <tr key={n}>
-                      <td className="font-semibold">{n}</td>
-                      <td className="text-stone-600">{r}</td>
-                      <td className="text-stone-600">{no}</td>
-                      <td className="text-stone-600">{a}</td>
+              <div className="overflow-x-auto">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Role</th>
+                      <th>Notices</th>
+                      <th>Portal access</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["Margaret Calloway", "Trustee · authorized signatory", "All", "Full · can sign"],
+                      ["Robert Calloway", "Co-trustee · authorized signatory", "All", "Full · can sign"],
+                      ["Daniel Moreau, CPA", "Accountant", "Tax, reports", "View only"],
+                      ["Whitmore Advisory LLC", "Investment advisor", "Reports", "View only"],
+                    ].map(([n, r, no, a]) => (
+                      <tr key={n}>
+                        <td className="font-semibold">{n}</td>
+                        <td className="text-stone-600">{r}</td>
+                        <td className="text-stone-600">{no}</td>
+                        <td className="text-stone-600">{a}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </Panel>
           </section>
 
@@ -200,8 +209,8 @@ export function ProfileSettings() {
               </div>
               <div className="mt-4 flex items-start justify-between gap-6">
                 <p className="max-w-[520px] text-[12px] leading-relaxed text-stone-500">
-                  For your protection, new bank details are verified by a call to an authorized signatory and held for five business
-                  days before any payment. Your administrator will never ask you to change bank details by email.
+                  For your protection, new bank details are verified by a call to an authorized signatory and held for five business days before any payment. Your administrator
+                  will never ask you to change bank details by email.
                 </p>
                 <Button size="sm" variant="secondary" onClick={() => setBankModal(true)}>
                   Change account
@@ -291,7 +300,12 @@ export function ProfileSettings() {
                 className="w-full rounded-[3px] border border-stone-300 p-4 text-left hover:border-ink-900"
                 onClick={() => {
                   setBankModal(false);
-                  submit({ field: "Distribution bank account", to: "New account via Plaid (ownership verified)", submitted: "Nov 24, 2026", control: "Callback to signatory + 5-day hold" });
+                  submit({
+                    field: "Distribution bank account",
+                    to: "New account via Plaid (ownership verified)",
+                    submitted: "Nov 24, 2026",
+                    control: "Callback to signatory + 5-day hold",
+                  });
                 }}
               >
                 <div className="flex items-center justify-between">
@@ -305,7 +319,12 @@ export function ProfileSettings() {
                 className="w-full rounded-[3px] border border-stone-300 p-4 text-left hover:border-ink-900"
                 onClick={() => {
                   setBankModal(false);
-                  submit({ field: "Distribution bank account", to: "New wire instructions (statement uploaded)", submitted: "Nov 24, 2026", control: "Callback to signatory + 5-day hold" });
+                  submit({
+                    field: "Distribution bank account",
+                    to: "New wire instructions (statement uploaded)",
+                    submitted: "Nov 24, 2026",
+                    control: "Callback to signatory + 5-day hold",
+                  });
                 }}
               >
                 <div className="text-[14px] font-semibold">Enter wire details and upload a statement</div>
