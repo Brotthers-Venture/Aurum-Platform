@@ -18,8 +18,7 @@ export const solutions: Solution[] = [
     href: "/admin/fund",
     live: true,
     slot: "ne",
-    summary:
-      "Administration and fiduciary oversight for private funds, offshore vehicles and SPVs — from investor onboarding to capital activity and reporting.",
+    summary: "Administration and fiduciary oversight for private funds, offshore vehicles and SPVs — from investor onboarding to capital activity and reporting.",
     modules: ["Fund administration", "Investor onboarding", "Capital calls", "Distributions", "Investor reporting", "Banking"],
   },
   {
@@ -57,11 +56,10 @@ export const solutions: Solution[] = [
     name: "Offering Solution",
     lines: ["Offering", "Solution"],
     href: "/admin/offering",
-    live: false,
+    live: true,
     slot: "w",
-    summary:
-      "Coordination, documentation, due diligence and data rooms for offerings distributed by a registered broker-dealer.",
-    modules: ["Offering setup", "Data rooms", "Due diligence", "Investor eligibility", "Closing", "Escrow"],
+    summary: "Capital formation for the funds and offerings we administer: offerings, investor pipeline, relationships and agreements, from introduction to closing.",
+    modules: ["Offerings", "Investor pipeline", "Investors", "Agreements", "Closings", "Placement agents"],
   },
   {
     id: "corporate",

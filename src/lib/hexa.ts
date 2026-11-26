@@ -8,7 +8,7 @@ import { FIRM, type FirmId } from "./firm-colors";
 import { firmModules } from "./firm";
 import { onboarding } from "./data";
 
-export type HexaId = "fund" | "corporate" | "multi-family" | FirmId;
+export type HexaId = "fund" | "corporate" | "multi-family" | "offering" | FirmId;
 export type HexaPage = { label: string; href: string; group?: string; badge?: number };
 export type Hexa = {
   id: HexaId;
@@ -67,6 +67,20 @@ export const HEXAS: Hexa[] = [
     ],
   },
   { id: "corporate", name: "Corporate Solution", color: "var(--tenant-accent)", href: "/admin/corporate", base: "/admin/corporate", pages: [] },
+  {
+    id: "offering",
+    name: "Offering Solution",
+    color: "var(--tenant-accent)",
+    href: "/admin/offering",
+    base: "/admin/offering",
+    pages: [
+      { label: "Overview", href: "/admin/offering" },
+      { label: "Offerings", href: "/admin/offering/offerings", group: "Capital formation" },
+      { label: "Pipeline", href: "/admin/offering/pipeline", group: "Capital formation" },
+      { label: "Investors", href: "/admin/offering/investors", group: "Relationships" },
+      { label: "Agreements", href: "/admin/offering/agreements", group: "Relationships" },
+    ],
+  },
   {
     id: "multi-family",
     name: "Multi-Family Office",
@@ -130,19 +144,19 @@ export const DEFAULTS: Record<PartyType, HexaId[]> = {
   lp: [],
   guest: [],
 };
-export const GRANTABLE: HexaId[] = ["fund", "corporate", "multi-family", "dataroom", "billing", "compliance", "sales", "communication", "pmo"];
+export const GRANTABLE: HexaId[] = ["fund", "corporate", "multi-family", "offering", "dataroom", "billing", "compliance", "sales", "communication", "pmo"];
 export const MAIN_ADMIN: RoleId = "platform_admin";
 
 export type Invitation = { email: string; hexa: HexaId; by: string; at: string; expires?: string };
 const SEED_INVITES: Invitation[] = [
-  ...(["fund", "corporate", "multi-family", "dataroom", "billing", "compliance", "sales"] as HexaId[]).map((h) => ({
+  ...(["fund", "corporate", "multi-family", "offering", "dataroom", "billing", "compliance", "sales"] as HexaId[]).map((h) => ({
     email: "luiza@aurumasset.us",
     hexa: h,
     by: "Thiago Brandão",
     at: "2024-08-01",
   })),
   ...(["fund", "billing", "dataroom"] as HexaId[]).map((h) => ({ email: "rafael@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2024-08-01" })),
-  ...(["fund", "sales", "corporate", "dataroom"] as HexaId[]).map((h) => ({ email: "juliana@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2025-02-03" })),
+  ...(["fund", "sales", "corporate", "offering", "dataroom"] as HexaId[]).map((h) => ({ email: "juliana@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2025-02-03" })),
   ...(["fund", "compliance", "corporate", "dataroom"] as HexaId[]).map((h) => ({ email: "carla@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2024-08-01" })),
   ...(["multi-family", "corporate"] as HexaId[]).map((h) => ({ email: "helena@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2025-01-10" })),
   ...(["corporate", "compliance"] as HexaId[]).map((h) => ({ email: "eduardo@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2025-01-10" })),
