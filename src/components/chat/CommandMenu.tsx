@@ -33,16 +33,43 @@ export function CommandMenu({ onClose, onHelp }: { onClose: () => void; onHelp: 
       { id: "a-new", group: "Actions", label: "New matter", icon: <PenSquare size={15} />, run: go(() => openNew()), keys: "C" },
       ...(sel
         ? [
-            ...MATTER_STATUSES.filter((x) => x !== sel.status).map((st) => ({ id: "a-st-" + st, group: "Actions", label: `Change status to ${st}`, sub: sel.ref, icon: <StatusRing status={st} />, run: go(() => setStatus(sel.id, st)) })),
+            ...MATTER_STATUSES.filter((x) => x !== sel.status).map((st) => ({
+              id: "a-st-" + st,
+              group: "Actions",
+              label: `Change status to ${st}`,
+              sub: sel.ref,
+              icon: <StatusRing status={st} />,
+              run: go(() => setStatus(sel.id, st)),
+            })),
             { id: "a-assign", group: "Actions", label: "Assign…", sub: sel.ref, icon: <UserRound size={15} />, run: go(() => setPropMenu("owner")), keys: "A" },
           ]
         : []),
       { id: "a-inbox", group: "Actions", label: "Go to inbox", icon: <Inbox size={15} />, run: go(() => setNav({ kind: "inbox" })), keys: "G I" },
-      { id: "a-theme", group: "Actions", label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme", icon: theme === "dark" ? <Sun size={15} /> : <Moon size={15} />, run: go(() => setPref(theme === "dark" ? "light" : "dark")) },
+      {
+        id: "a-theme",
+        group: "Actions",
+        label: theme === "dark" ? "Switch to light theme" : "Switch to dark theme",
+        icon: theme === "dark" ? <Sun size={15} /> : <Moon size={15} />,
+        run: go(() => setPref(theme === "dark" ? "light" : "dark")),
+      },
       { id: "a-keys", group: "Actions", label: "Keyboard shortcuts", icon: <Keyboard size={15} />, run: go(onHelp), keys: "?" },
     ];
-    const matters: Item[] = s.matters.map((m) => ({ id: m.id, group: "Matters", label: m.title, sub: `${m.ref} · ${m.linked.label}`, icon: <StatusRing status={m.status} />, run: go(() => (setNav({ kind: "view", id: "v-open" }), select(m.id))) }));
-    const channels: Item[] = s.channels.map((c) => ({ id: c.id, group: "Channels", label: c.name, sub: c.topic, icon: <Hash size={15} />, run: go(() => setNav({ kind: "conv", id: c.id })) }));
+    const matters: Item[] = s.matters.map((m) => ({
+      id: m.id,
+      group: "Matters",
+      label: m.title,
+      sub: `${m.ref} · ${m.linked.label}`,
+      icon: <StatusRing status={m.status} />,
+      run: go(() => (setNav({ kind: "view", id: "v-open" }), select(m.id))),
+    }));
+    const channels: Item[] = s.channels.map((c) => ({
+      id: c.id,
+      group: "Channels",
+      label: c.name,
+      sub: c.topic,
+      icon: <Hash size={15} />,
+      run: go(() => setNav({ kind: "conv", id: c.id })),
+    }));
     const views: Item[] = s.views.map((v) => ({ id: v.id, group: "Views", label: v.name, icon: <Layers size={15} />, run: go(() => setNav({ kind: "view", id: v.id })) }));
     const people: Item[] = chatPeople
       .filter((p) => p.id !== VIEWER)
@@ -58,15 +85,38 @@ export function CommandMenu({ onClose, onHelp }: { onClose: () => void; onHelp: 
         };
       });
     const records: Item[] = [
-      ...capitalCalls.map((c) => ({ id: "r-" + c.id, group: "Records", label: `Capital Call No. ${c.number}`, sub: `${fundById(c.fundId)?.shortName} · ${c.status}`, icon: <ArrowRight size={15} />, run: go(() => router.push("/admin/fund/capital-calls")) })),
-      ...funds.map((f) => ({ id: "r-" + f.id, group: "Records", label: f.name, sub: f.status, icon: <ArrowRight size={15} />, run: go(() => router.push(`/admin/fund/funds/${f.id}`)) })),
-      ...investors.map((i) => ({ id: "r-" + i.id, group: "Records", label: i.name, sub: i.type, icon: <ArrowRight size={15} />, run: go(() => router.push("/admin/fund/investors")) })),
+      ...capitalCalls.map((c) => ({
+        id: "r-" + c.id,
+        group: "Records",
+        label: `Capital Call No. ${c.number}`,
+        sub: `${fundById(c.fundId)?.shortName} · ${c.status}`,
+        icon: <ArrowRight size={15} />,
+        run: go(() => router.push("/admin/fund/capital-calls")),
+      })),
+      ...funds.map((f) => ({
+        id: "r-" + f.id,
+        group: "Records",
+        label: f.name,
+        sub: f.status,
+        icon: <ArrowRight size={15} />,
+        run: go(() => router.push(`/admin/fund/funds/${f.id}`)),
+      })),
+      ...investors.map((i) => ({
+        id: "r-" + i.id,
+        group: "Records",
+        label: i.name,
+        sub: i.type,
+        icon: <ArrowRight size={15} />,
+        run: go(() => router.push("/admin/fund/investors")),
+      })),
     ];
     return [...actions, ...matters, ...views, ...channels, ...people, ...records];
   }, [s, sel, theme]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const term = q.trim().toLowerCase();
-  const shown = term ? items.filter((i) => (i.label + " " + (i.sub ?? "") + " " + i.group).toLowerCase().includes(term)).slice(0, 40) : items.filter((i) => i.group !== "Records" && i.group !== "People").slice(0, 24);
+  const shown = term
+    ? items.filter((i) => (i.label + " " + (i.sub ?? "") + " " + i.group).toLowerCase().includes(term)).slice(0, 40)
+    : items.filter((i) => i.group !== "Records" && i.group !== "People").slice(0, 24);
 
   useEffect(() => {
     input.current?.focus();
@@ -77,7 +127,13 @@ export function CommandMenu({ onClose, onHelp }: { onClose: () => void; onHelp: 
 
   return (
     <div className="fixed inset-0 z-[70] flex items-start justify-center bg-black/45 px-4 pt-[12vh]" onMouseDown={onClose}>
-      <div role="dialog" aria-modal="true" aria-label="Command menu" onMouseDown={(e) => e.stopPropagation()} className="w-full max-w-[620px] overflow-hidden rounded-[8px] bg-d-surface shadow-[var(--d-pop)]">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Command menu"
+        onMouseDown={(e) => e.stopPropagation()}
+        className="w-full max-w-[620px] overflow-hidden rounded-[8px] bg-d-surface shadow-[var(--d-pop)]"
+      >
         <div className="flex items-center gap-2.5 border-b border-d-line px-4">
           <Search size={16} className="text-d-text-3" />
           <input
@@ -139,9 +195,16 @@ export function CommandMenu({ onClose, onHelp }: { onClose: () => void; onHelp: 
           })}
         </div>
         <div className="flex items-center gap-3 border-t border-d-line-soft px-4 py-2 text-[11px] text-d-text-3">
-          <span className="flex items-center gap-1"><Kbd>↑</Kbd><Kbd>↓</Kbd> move</span>
-          <span className="flex items-center gap-1"><Kbd>Enter</Kbd> open</span>
-          <span className="ml-auto">{api.s.matters.length} matters · {api.s.channels.length} channels</span>
+          <span className="flex items-center gap-1">
+            <Kbd>↑</Kbd>
+            <Kbd>↓</Kbd> move
+          </span>
+          <span className="flex items-center gap-1">
+            <Kbd>Enter</Kbd> open
+          </span>
+          <span className="ml-auto">
+            {api.s.matters.length} matters · {api.s.channels.length} channels
+          </span>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { cx } from "@/components/ui";
 import { WorkstationTopBar } from "@/components/shell/WorkstationTopBar";
+import { FinishScope } from "@/components/shell/FinishScope";
 import { HexaRoom } from "@/components/shell/HexaRoom";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { recordAudit } from "@/lib/audit-local";
@@ -28,7 +29,7 @@ import {
   type Priority,
   type ReactionKey,
 } from "@/lib/chat";
-import { ChatCtx, type ChatApi, type Nav, type PropMenu } from "./context";
+import { ChatCtx, type ChatApi, type ChatMode, type Nav, type PropMenu } from "./context";
 import { Sidebar } from "./Sidebar";
 import { ListPane } from "./ListPane";
 import { Detail } from "./Detail";
@@ -76,7 +77,14 @@ export function CorporateChat() {
   const [filters, setFilters] = useState<Filters>({ status: "open" });
   const [group, setGroup] = useState<"status" | "linked">("status");
   const [sort, setSort] = useState<"updated" | "due" | "priority">("updated");
-  const [rail, setRail] = useState(true);
+  const [rail, setRail] = useState(false);
+  const [mode, setModeState] = useState<ChatMode>("conversation");
+  const setMode = useCallback((m: ChatMode) => {
+    setModeState(m);
+    try {
+      window.localStorage.setItem("aurum-chat-mode", m);
+    } catch {}
+  }, []);
   const [thread, setThread] = useState<string | null>(null);
   const [propMenu, setPropMenu] = useState<PropMenu>(null);
   const [cmd, setCmd] = useState(false);
@@ -115,7 +123,11 @@ export function CorporateChat() {
           createdAt: at,
           updatedAt: at,
         };
-        loaded = { ...loaded, matters: [nm, ...loaded.matters], messages: [...loaded.messages, { id: "msg-" + uid(), where: nm.id, author: VIEWER, at, body: `opened this matter from ${label}`, kind: "event" }] };
+        loaded = {
+          ...loaded,
+          matters: [nm, ...loaded.matters],
+          messages: [...loaded.messages, { id: "msg-" + uid(), where: nm.id, author: VIEWER, at, body: `opened this matter from ${label}`, kind: "event" }],
+        };
         saveChat(loaded);
         window.history.replaceState(null, "", `/admin/communication?m=${nm.id}`);
       }
@@ -124,7 +136,10 @@ export function CorporateChat() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setS(loaded);
     setNow(Date.now());
-    setRail(window.innerWidth >= 1280);
+    try {
+      const saved = window.localStorage.getItem("aurum-chat-mode") as ChatMode | null;
+      if (saved === "inbox" || saved === "conversation" || saved === "focus") setModeState(saved);
+    } catch {}
     const m = target ?? params.get("m");
     if (m && loaded.matters.some((x) => x.id === m)) {
       setSelected(m);
@@ -160,7 +175,8 @@ export function CorporateChat() {
   });
   const matterById = (id: string) => s?.matters.find((m) => m.id === id);
 
-  const audit = (action: string, m: Matter | undefined, detail: string) => recordAudit({ user: personName(VIEWER), action, object: `Corporate Chat · ${m?.ref ?? ""} ${m?.title ?? ""} · ${detail}` });
+  const audit = (action: string, m: Matter | undefined, detail: string) =>
+    recordAudit({ user: personName(VIEWER), action, object: `Corporate Chat · ${m?.ref ?? ""} ${m?.title ?? ""} · ${detail}` });
 
   const setStatus = (id: string, st: MatterStatus) => {
     const m = matterById(id);
@@ -183,7 +199,14 @@ export function CorporateChat() {
   const setDue = (id: string, d: string) => {
     const m = matterById(id);
     if (!m) return;
-    commit((x) => touch(x, id, { dueDate: d || undefined }, d ? `set the due date to ${new Date(d + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : "cleared the due date"));
+    commit((x) =>
+      touch(
+        x,
+        id,
+        { dueDate: d || undefined },
+        d ? `set the due date to ${new Date(d + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : "cleared the due date",
+      ),
+    );
     audit("Changed due date", m, d || "none");
   };
 
@@ -200,11 +223,17 @@ export function CorporateChat() {
     if (!c.ok) return flash(c.why!);
     const nextStatus: MatterStatus = m.linked.kind === "access" && decision === "approved" ? "Resolved" : "Open";
     commit((x) => {
-      let y = touch(x, id, { status: nextStatus, approvals: [...(m.approvals ?? []), { by: VIEWER, at: iso(), decision, note }] }, `${decision === "approved" ? "approved" : "rejected"}${note ? ` — ${note}` : ""}`);
+      let y = touch(
+        x,
+        id,
+        { status: nextStatus, approvals: [...(m.approvals ?? []), { by: VIEWER, at: iso(), decision, note }] },
+        `${decision === "approved" ? "approved" : "rejected"}${note ? ` — ${note}` : ""}`,
+      );
       // An approved channel request opens the channel for the client.
       if (m.linked.kind === "access" && decision === "approved") {
         const name = m.title.replace(/^Channel request — #/, "");
-        if (!y.channels.some((c2) => c2.name === name)) y = { ...y, channels: [...y.channels, { id: "ch-" + name, name, topic: "Opened from an approved request", external: true, members: m.participants }] };
+        if (!y.channels.some((c2) => c2.name === name))
+          y = { ...y, channels: [...y.channels, { id: "ch-" + name, name, topic: "Opened from an approved request", external: true, members: m.participants }] };
       }
       return y;
     });
@@ -278,12 +307,19 @@ export function CorporateChat() {
           flash(`${m!.ref} isn't linked to a project plan, so there's nowhere to add a ${head.slice(1)}.`);
           return true;
         }
-        if (!rest) return flash(`Describe the ${head.slice(1)}, e.g. ${head} Signed LPA`), true;
+        if (!rest) return (flash(`Describe the ${head.slice(1)}, e.g. ${head} Signed LPA`), true);
         const p = plans.find((x) => x.id === m!.linked.id);
         const party = head === "/request" ? p?.parties.find((x) => x.id !== "aurum") : undefined;
         const res = addPlanRow(m!.linked.id, rest, { party: party?.id, owner: party ? party.contact : personName(VIEWER), deliverable: head === "/request" ? rest : undefined });
         if (res) {
-          commit((x) => touch(x, m!.id, {}, head === "/request" ? `requested “${rest}” from ${party?.name} — plan item ${res.row.id}` : `added task ${res.row.id} “${rest}” to ${res.plan.name}`));
+          commit((x) =>
+            touch(
+              x,
+              m!.id,
+              {},
+              head === "/request" ? `requested “${rest}” from ${party?.name} — plan item ${res.row.id}` : `added task ${res.row.id} “${rest}” to ${res.plan.name}`,
+            ),
+          );
           audit(head === "/request" ? "Created party request" : "Created plan task", m, `${res.plan.name} · ${res.row.id}`);
           flash(head === "/request" ? `Request added to ${res.plan.name}` : `Task ${res.row.id} added to ${res.plan.name}`);
         }
@@ -304,7 +340,18 @@ export function CorporateChat() {
       commit((x) => ({ ...x, drafts: { ...x.drafts, [where]: "" } }));
       return;
     }
-    const msg: ChatMessage = { id: uid(), where, author: VIEWER, at: iso(), body: body.trim(), kind: "message", mentions: parseMentions(body), refs: parseRefs(body), attachments: attachments.length ? attachments : undefined, replyTo };
+    const msg: ChatMessage = {
+      id: uid(),
+      where,
+      author: VIEWER,
+      at: iso(),
+      body: body.trim(),
+      kind: "message",
+      mentions: parseMentions(body),
+      refs: parseRefs(body),
+      attachments: attachments.length ? attachments : undefined,
+      replyTo,
+    };
     commit((x) => ({
       ...x,
       messages: [...x.messages, msg],
@@ -317,7 +364,11 @@ export function CorporateChat() {
   const editMessage = (id: string, body: string) =>
     commit((x) => ({
       ...x,
-      messages: x.messages.map((m) => (m.id === id ? { ...m, edits: [...(m.edits ?? []), { at: m.editedAt ?? m.at, body: m.body }], body, editedAt: iso(), mentions: parseMentions(body), refs: parseRefs(body) } : m)),
+      messages: x.messages.map((m) =>
+        m.id === id
+          ? { ...m, edits: [...(m.edits ?? []), { at: m.editedAt ?? m.at, body: m.body }], body, editedAt: iso(), mentions: parseMentions(body), refs: parseRefs(body) }
+          : m,
+      ),
     }));
   const react = (id: string, key: ReactionKey) =>
     commit((x) => ({
@@ -336,16 +387,33 @@ export function CorporateChat() {
   const markConvRead = (where: string) => commit((x) => (x.read[where] && x.read[where] >= iso().slice(0, 16) ? x : { ...x, read: { ...x.read, [where]: iso() } }));
   const inboxAct: ChatApi["inboxAct"] = (id, act) => {
     const d = new Date();
-    const until = act === "snooze-1h" ? new Date(d.getTime() + 3600_000) : act === "snooze-tomorrow" ? new Date(d.setHours(24 + 8, 0, 0, 0)) : act === "snooze-week" ? new Date(Date.now() + 7 * 86400_000) : null;
+    const until =
+      act === "snooze-1h"
+        ? new Date(d.getTime() + 3600_000)
+        : act === "snooze-tomorrow"
+          ? new Date(d.setHours(24 + 8, 0, 0, 0))
+          : act === "snooze-week"
+            ? new Date(Date.now() + 7 * 86400_000)
+            : null;
     commit((x) => ({
       ...x,
       inbox: {
         ...x.inbox,
-        [id]: { ...x.inbox[id], ...(act === "read" ? { read: true } : act === "unread" ? { read: false } : act === "done" ? { done: true, read: true } : { snoozedUntil: until!.toISOString(), read: true }) },
+        [id]: {
+          ...x.inbox[id],
+          ...(act === "read"
+            ? { read: true }
+            : act === "unread"
+              ? { read: false }
+              : act === "done"
+                ? { done: true, read: true }
+                : { snoozedUntil: until!.toISOString(), read: true }),
+        },
       },
     }));
     if (act === "done") flash("Marked done");
-    else if (act.startsWith("snooze")) flash(`Snoozed until ${until!.toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`);
+    else if (act.startsWith("snooze"))
+      flash(`Snoozed until ${until!.toLocaleString("en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`);
   };
   const saveView = (name: string) => {
     const id = "v-" + uid();
@@ -465,6 +533,7 @@ export function CorporateChat() {
         if (cmd || help || newM) return;
         if (propMenu) return setPropMenu(null);
         if (thread) return setThread(null);
+        if (rail) return setRail(false);
         if (typing) return t.blur();
         if (mobilePane === "detail") return setMobilePane("list");
         return;
@@ -522,6 +591,21 @@ export function CorporateChat() {
         case "?":
           setHelp(true);
           break;
+        case "1":
+          setMode("inbox");
+          break;
+        case "2":
+          setMode("conversation");
+          break;
+        case "3":
+          setMode(mode === "focus" ? "conversation" : "focus");
+          break;
+        case "d":
+          if (sel) setRail(!rail);
+          break;
+        case "o":
+          if (sel) document.querySelector<HTMLAnchorElement>("[data-open-record]")?.click();
+          break;
       }
     };
     window.addEventListener("keydown", onKey);
@@ -548,6 +632,8 @@ export function CorporateChat() {
             setSort,
             rail,
             setRail,
+            mode,
+            setMode,
             thread,
             setThread,
             propMenu,
@@ -576,29 +662,48 @@ export function CorporateChat() {
           }
         : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [s, now, nav, selected, q, filters, group, sort, rail, thread, propMenu, mobilePane],
+    [s, now, nav, selected, q, filters, group, sort, rail, mode, thread, propMenu, mobilePane],
   );
 
   return (
-    <div className="ws flex h-dvh flex-col overflow-hidden">
+    <FinishScope className="overflow-hidden">
       <WorkstationTopBar app="communication" onSearch={() => setCmd(true)} />
       {!api ? (
         <Skeleton />
       ) : (
         <ChatCtx.Provider value={api}>
           <div className="relative flex min-h-0 flex-1">
-            <HexaRoom defaultCollapsed />
-            {/* Sidebar: inline from 1024, a drawer below */}
-            <div className={cx("absolute inset-y-0 left-0 z-30 w-[260px] -translate-x-full transition-transform duration-150 ease-out lg:static lg:w-[232px] lg:translate-x-0", side && "translate-x-0")}>
+            {mode !== "focus" && <HexaRoom defaultCollapsed />}
+            {/* Sidebar: inline from 1024 (not in Focus), a drawer otherwise */}
+            <div
+              className={cx(
+                "absolute inset-y-0 left-0 z-30 w-[260px] -translate-x-full transition-transform duration-150 ease-out",
+                mode !== "focus" && "lg:static lg:w-[232px] lg:translate-x-0",
+                side && "translate-x-0",
+              )}
+            >
               <Sidebar brandName={brand.name} onClose={() => setSide(false)} />
             </div>
             {side && <button aria-label="Close navigation" onClick={() => setSide(false)} className="absolute inset-0 z-20 bg-black/40 lg:hidden" />}
-            {nav.kind !== "conv" && (
-              <div className={cx("min-w-0 flex-1 border-r border-d-line md:max-w-[380px] md:flex-none md:basis-[340px] xl:basis-[380px]", mobilePane === "detail" && "hidden md:block")}>
+            {nav.kind !== "conv" && mode !== "focus" && (
+              <div
+                className={cx(
+                  "min-w-0 flex-1 border-r border-d-line",
+                  mode === "inbox" ? "md:max-w-none" : "md:max-w-[380px] md:flex-none md:basis-[340px] xl:basis-[380px]",
+                  mobilePane === "detail" && "hidden md:block",
+                )}
+              >
                 <ListPane onMenu={() => setSide(true)} setList={setList} />
               </div>
             )}
-            <div className={cx("min-w-0 flex-1", nav.kind !== "conv" && mobilePane === "list" && "hidden md:flex", "flex")}>
+            <div
+              className={cx(
+                "min-w-0 flex-1",
+                nav.kind !== "conv" && mobilePane === "list" && "hidden md:flex",
+                mode === "inbox" && nav.kind !== "conv" && mobilePane === "list" && "md:hidden",
+                "flex",
+              )}
+            >
               <Detail onMenu={() => setSide(true)} />
             </div>
           </div>
@@ -619,6 +724,6 @@ export function CorporateChat() {
       <div aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-5 z-[60] flex justify-center px-4">
         {toast && <div className="pointer-events-auto max-w-[520px] rounded-[6px] bg-d-raise px-4 py-2.5 text-[12.5px] text-d-text shadow-[var(--d-pop)]">{toast}</div>}
       </div>
-    </div>
+    </FinishScope>
   );
 }

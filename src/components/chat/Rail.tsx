@@ -18,12 +18,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 /** The record behind a matter: amounts and progress from the ledger, people, files and related matters. */
 export function ContextRail({ m, onClose }: { m: Matter; onClose: () => void }) {
-  const { s, select } = useChat();
+  const { s, select, setPropMenu } = useChat();
   const r = recordSummary(m.linked);
-  const files: ChatAttachment[] = [...s.messages.filter((x) => x.where === m.id).flatMap((x) => x.attachments ?? []), ...(r?.files ?? [])].filter((f, i, all) => all.findIndex((y) => y.name === f.name) === i);
+  const files: ChatAttachment[] = [...s.messages.filter((x) => x.where === m.id).flatMap((x) => x.attachments ?? []), ...(r?.files ?? [])].filter(
+    (f, i, all) => all.findIndex((y) => y.name === f.name) === i,
+  );
   const related = s.matters.filter((x) => x.id !== m.id && (x.linked.label === m.linked.label || (x.linked.kind === m.linked.kind && x.linked.id === m.linked.id))).slice(0, 4);
   return (
-    <aside aria-label="Record details" className="flex h-full flex-col border-l border-d-line bg-d-chrome">
+    <aside aria-label="Record details" className="drawer-in flex h-full flex-col border-l border-d-line bg-d-chrome">
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-d-line px-4">
         <span className="text-[12.5px] font-semibold">{r?.kind ?? "Record"}</span>
         <button onClick={onClose} aria-label="Close record details" className="flex h-7 w-7 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise">
@@ -31,6 +33,35 @@ export function ContextRail({ m, onClose }: { m: Matter; onClose: () => void }) 
         </button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto">
+        <Section title="Matter">
+          <dl className="space-y-1 text-[12.5px]">
+            {(
+              [
+                ["Status", m.status, "status"],
+                ["Owner", personName(m.owner), "owner"],
+                ["Priority", m.priority, "priority"],
+                [
+                  "Due",
+                  m.dueDate ? new Date(`${m.dueDate}T12:00:00Z`).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }) : "None",
+                  "due",
+                ],
+                ["Reference", m.ref, null],
+                ["Labels", m.labels.join(", ") || "None", null],
+              ] as const
+            ).map(([k, v, menu]) => (
+              <div key={k} className="flex items-center justify-between gap-3">
+                <dt className="text-d-text-3">{k}</dt>
+                {menu ? (
+                  <button onClick={() => setPropMenu(menu)} className="rounded-[4px] px-1.5 py-0.5 text-right text-d-text hover:bg-d-raise">
+                    {v}
+                  </button>
+                ) : (
+                  <dd className="px-1.5 text-right text-d-text">{v}</dd>
+                )}
+              </div>
+            ))}
+          </dl>
+        </Section>
         {r ? (
           <Section title="Linked record">
             <div className="text-[14px] font-semibold leading-snug">{r.title}</div>
@@ -51,7 +82,11 @@ export function ContextRail({ m, onClose }: { m: Matter; onClose: () => void }) 
                 </div>
               ))}
             </dl>
-            <Link href={r.href} className="mt-3 flex h-8 items-center justify-center gap-1.5 rounded-[4px] border border-d-line-strong text-[12.5px] font-medium hover:bg-d-raise">
+            <Link
+              data-open-record
+              href={r.href}
+              className="mt-3 flex h-8 items-center justify-center gap-1.5 rounded-[4px] border border-d-line-strong text-[12.5px] font-medium hover:bg-d-raise"
+            >
               Open record <ArrowUpRight size={13} />
             </Link>
           </Section>

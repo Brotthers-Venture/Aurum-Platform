@@ -43,7 +43,10 @@ export function Avatar({ id, size = 22 }: { id: string; size?: number }) {
   return (
     <span
       title={personName(id) + (ext ? " · External" : "")}
-      className={cx("inline-flex shrink-0 items-center justify-center rounded-full border font-semibold", ext ? "border-dashed border-d-text-3 bg-d-bg text-d-text-2" : "border-d-line-strong bg-d-raise text-d-text")}
+      className={cx(
+        "inline-flex shrink-0 items-center justify-center rounded-full border font-semibold",
+        ext ? "border-dashed border-d-text-3 bg-d-bg text-d-text-2" : "border-d-line-strong bg-d-raise text-d-text",
+      )}
       style={{ width: size, height: size, fontSize: size * 0.4 }}
     >
       {id === SYSTEM ? "·" : initials(id)}
@@ -65,11 +68,15 @@ export function AvatarStack({ ids, max = 3 }: { ids: string[]; max?: number }) {
 }
 
 export function ExternalTag({ className }: { className?: string }) {
-  return <span className={cx("inline-flex h-[17px] items-center rounded-[3px] border border-d-line-strong px-1 text-[10.5px] font-medium text-d-text-2", className)}>External</span>;
+  return (
+    <span className={cx("inline-flex h-[17px] items-center rounded-[3px] border border-d-line-strong px-1 text-[10.5px] font-medium text-d-text-2", className)}>External</span>
+  );
 }
 
 export function Kbd({ children }: { children: ReactNode }) {
-  return <kbd className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-[3px] border border-d-line px-1 font-sans text-[10.5px] text-d-text-3">{children}</kbd>;
+  return (
+    <kbd className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-[3px] border border-d-line px-1 font-sans text-[10.5px] text-d-text-3">{children}</kbd>
+  );
 }
 
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -146,8 +153,18 @@ function inline(text: string, onRef?: (ref: string) => void): ReactNode[] {
   for (const m of text.matchAll(re)) {
     const t = m[0];
     if (m.index! > last) out.push(text.slice(last, m.index));
-    if (t.startsWith("**")) out.push(<strong key={k++} className="font-semibold">{t.slice(2, -2)}</strong>);
-    else if (t.startsWith("`")) out.push(<code key={k++} className="rounded-[3px] bg-d-raise px-1 py-px text-[0.92em]">{t.slice(1, -1)}</code>);
+    if (t.startsWith("**"))
+      out.push(
+        <strong key={k++} className="font-semibold">
+          {t.slice(2, -2)}
+        </strong>,
+      );
+    else if (t.startsWith("`"))
+      out.push(
+        <code key={k++} className="rounded-[3px] bg-d-raise px-1 py-px text-[0.92em]">
+          {t.slice(1, -1)}
+        </code>,
+      );
     else if (t.startsWith("*")) out.push(<em key={k++}>{t.slice(1, -1)}</em>);
     else if (t.startsWith("http"))
       out.push(
@@ -155,7 +172,12 @@ function inline(text: string, onRef?: (ref: string) => void): ReactNode[] {
           {t}
         </a>,
       );
-    else if (t.startsWith("@")) out.push(<span key={k++} className="rounded-[3px] bg-d-raise px-1 font-medium text-d-text">{t}</span>);
+    else if (t.startsWith("@"))
+      out.push(
+        <span key={k++} className="rounded-[3px] bg-d-raise px-1 font-medium text-d-text">
+          {t}
+        </span>,
+      );
     else
       out.push(
         <button key={k++} onClick={() => onRef?.(t.slice(1))} className="rounded-[3px] border border-d-line px-1 text-[0.92em] font-medium text-d-text hover:border-d-line-strong">

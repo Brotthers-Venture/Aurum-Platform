@@ -28,7 +28,14 @@ function AttachPicker({ onPick, onClose }: { onPick: (a: ChatAttachment) => void
     <Menu className="bottom-12 left-2 w-[min(440px,calc(100vw-32px))]">
       <div className="flex items-center gap-2 border-b border-d-line-soft px-2 pb-2">
         <Search size={13} className="text-d-text-3" />
-        <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a document in data rooms and the register" aria-label="Find a document" className="h-7 flex-1 bg-transparent text-[12.5px] focus:outline-none" />
+        <input
+          autoFocus
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Find a document in data rooms and the register"
+          aria-label="Find a document"
+          className="h-7 flex-1 bg-transparent text-[12.5px] focus:outline-none"
+        />
         <button onClick={onClose} aria-label="Close">
           <X size={13} className="text-d-text-3" />
         </button>
@@ -115,7 +122,7 @@ export function Composer({ where, replyTo }: { where: string; replyTo?: string }
   const ext = (matter?.participants ?? s.channels.find((c) => c.id === where)?.members ?? s.directs.find((d) => d.id === where)?.members ?? []).some(isExternal);
 
   return (
-    <div className={cx("relative shrink-0 bg-d-bg px-4 pb-3 pt-2", replyTo ? "border-t border-d-line" : "mx-auto w-full max-w-[792px]")}>
+    <div className={cx("chat-composer relative shrink-0 bg-d-bg px-4 pb-3 pt-2", replyTo ? "border-t border-d-line" : "mx-auto w-full max-w-[792px]")}>
       {sug && options.length > 0 && (
         <Menu className="bottom-full left-4 mb-1 w-[min(420px,calc(100%-32px))]">
           <div role="listbox" aria-label={sug.kind === "@" ? "People" : sug.kind === "#" ? "Matters" : "Commands"}>
@@ -147,7 +154,7 @@ export function Composer({ where, replyTo }: { where: string; replyTo?: string }
           }}
         />
       )}
-      <div className="rounded-[6px] border border-d-line bg-d-surface focus-within:border-d-line-strong">
+      <div className="group/composer rounded-[6px] bg-d-surface ring-1 ring-d-line transition-shadow focus-within:ring-d-line-strong">
         {files.length > 0 && (
           <div className="flex flex-wrap gap-1.5 px-2.5 pt-2.5">
             {files.map((f) => (
@@ -165,17 +172,20 @@ export function Composer({ where, replyTo }: { where: string; replyTo?: string }
           id={replyTo ? undefined : "chat-composer"}
           ref={ta}
           value={text}
-          rows={replyTo ? 2 : 3}
+          rows={1}
           onChange={(e) => {
             setText(e.target.value);
+            // grow with the text, up to about eight lines
+            e.target.style.height = "auto";
+            e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
             detect(e.target.value, e.target.selectionStart);
           }}
           onKeyDown={(e) => {
             if (sug && options.length) {
-              if (e.key === "ArrowDown") return e.preventDefault(), setIdx((i) => (i + 1) % options.length);
-              if (e.key === "ArrowUp") return e.preventDefault(), setIdx((i) => (i - 1 + options.length) % options.length);
-              if (e.key === "Enter" || e.key === "Tab") return e.preventDefault(), apply(options[idx].insert);
-              if (e.key === "Escape") return e.stopPropagation(), setSug(null);
+              if (e.key === "ArrowDown") return (e.preventDefault(), setIdx((i) => (i + 1) % options.length));
+              if (e.key === "ArrowUp") return (e.preventDefault(), setIdx((i) => (i - 1 + options.length) % options.length));
+              if (e.key === "Enter" || e.key === "Tab") return (e.preventDefault(), apply(options[idx].insert));
+              if (e.key === "Escape") return (e.stopPropagation(), setSug(null));
             }
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -184,10 +194,15 @@ export function Composer({ where, replyTo }: { where: string; replyTo?: string }
           }}
           placeholder={placeholder}
           aria-label={placeholder}
-          className="block w-full resize-none bg-transparent px-3 py-2.5 text-[14px] leading-[1.55] text-d-text placeholder:text-d-text-3 focus:outline-none focus-visible:outline-none"
+          className="block max-h-[200px] min-h-[42px] w-full resize-none bg-transparent px-3.5 py-2.5 text-[14px] leading-[1.55] text-d-text placeholder:text-d-text-3 focus:outline-none focus-visible:outline-none"
         />
         <div className="flex items-center gap-0.5 px-1.5 pb-1.5">
-          <button onClick={() => setPicker((p) => !p)} aria-label="Attach from a data room" title="Attach from a data room" className="flex h-7 w-7 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise hover:text-d-text">
+          <button
+            onClick={() => setPicker((p) => !p)}
+            aria-label="Attach from a data room"
+            title="Attach from a data room"
+            className="flex h-7 w-7 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise hover:text-d-text"
+          >
             <Paperclip size={15} />
           </button>
           {[
@@ -221,7 +236,7 @@ export function Composer({ where, replyTo }: { where: string; replyTo?: string }
             disabled={!text.trim() && !files.length}
             className={cx(
               "ml-auto flex h-7 items-center gap-1.5 rounded-[4px] px-3 text-[12.5px] font-semibold disabled:opacity-40",
-              replyTo ? "border border-d-line-strong text-d-text hover:bg-d-raise" : "bg-d-accent-fill text-d-on-accent",
+              text.trim() || files.length ? "bg-d-text text-d-bg" : "border border-d-line-strong text-d-text-2",
             )}
           >
             Send <SendHorizontal size={13} />

@@ -4,6 +4,9 @@ import { createContext, useContext } from "react";
 import type { ChatState } from "@/lib/chat-store";
 import type { ChatAttachment, Filters, Matter, MatterStatus, Priority, ReactionKey } from "@/lib/chat";
 
+/** Inbox: the list fills the workspace. Conversation: navigation, list and conversation. Focus: the conversation alone. */
+export type ChatMode = "inbox" | "conversation" | "focus";
+
 export type Nav = { kind: "inbox" } | { kind: "assigned" } | { kind: "mentions" } | { kind: "drafts" } | { kind: "view"; id: string } | { kind: "conv"; id: string };
 export type PropMenu = null | "status" | "owner" | "priority" | "due";
 
@@ -24,6 +27,8 @@ export type ChatApi = {
   setSort: (s: "updated" | "due" | "priority") => void;
   rail: boolean;
   setRail: (v: boolean) => void;
+  mode: ChatMode;
+  setMode: (m: ChatMode) => void;
   thread: string | null;
   setThread: (id: string | null) => void;
   propMenu: PropMenu;

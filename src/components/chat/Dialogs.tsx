@@ -13,7 +13,14 @@ function Modal({ label, onClose, children, width = 480 }: { label: string; onClo
   }, [onClose]);
   return (
     <div className="fixed inset-0 z-[70] flex items-start justify-center bg-black/45 px-4 pt-[14vh]" onMouseDown={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={label} onMouseDown={(e) => e.stopPropagation()} className="w-full overflow-hidden rounded-[8px] bg-d-surface shadow-[var(--d-pop)]" style={{ maxWidth: width }}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={label}
+        onMouseDown={(e) => e.stopPropagation()}
+        className="w-full overflow-hidden rounded-[8px] bg-d-surface shadow-[var(--d-pop)]"
+        style={{ maxWidth: width }}
+      >
         <div className="flex h-12 items-center justify-between border-b border-d-line px-4">
           <h2 className="text-[13.5px] font-semibold">{label}</h2>
           <button onClick={onClose} aria-label="Close" className="flex h-7 w-7 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise">
@@ -26,7 +33,15 @@ function Modal({ label, onClose, children, width = 480 }: { label: string; onClo
   );
 }
 
-export function NewMatterDialog({ prefill, onClose, onCreate }: { prefill: { title?: string; from?: string }; onClose: () => void; onCreate: (title: string, from?: string) => void }) {
+export function NewMatterDialog({
+  prefill,
+  onClose,
+  onCreate,
+}: {
+  prefill: { title?: string; from?: string };
+  onClose: () => void;
+  onCreate: (title: string, from?: string) => void;
+}) {
   const { s } = useChat();
   const [title, setTitle] = useState(prefill.title ?? "");
   const [from, setFrom] = useState(prefill.from ?? "");
@@ -41,11 +56,21 @@ export function NewMatterDialog({ prefill, onClose, onCreate }: { prefill: { tit
       >
         <label className="block">
           <span className="mb-1.5 block text-[12px] text-d-text-2">Title</span>
-          <input autoFocus value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What is this about?" className="h-9 w-full rounded-[4px] border border-d-line bg-d-bg px-2.5 text-[13px] focus:border-d-line-strong focus:outline-none" />
+          <input
+            autoFocus
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="What is this about?"
+            className="h-9 w-full rounded-[4px] border border-d-line bg-d-bg px-2.5 text-[13px] focus:border-d-line-strong focus:outline-none"
+          />
         </label>
         <label className="block">
           <span className="mb-1.5 block text-[12px] text-d-text-2">Link to the same record as</span>
-          <select value={from} onChange={(e) => setFrom(e.target.value)} className="h-9 w-full rounded-[4px] border border-d-line bg-d-bg px-2 text-[13px] focus:border-d-line-strong focus:outline-none">
+          <select
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="h-9 w-full rounded-[4px] border border-d-line bg-d-bg px-2 text-[13px] focus:border-d-line-strong focus:outline-none"
+          >
             <option value="">Not linked</option>
             {s.matters.map((m) => (
               <option key={m.id} value={m.id}>
@@ -82,6 +107,9 @@ const SHORTCUTS: [string, string[]][] = [
   ["Go to inbox", ["G", "I"]],
   ["Go to matters", ["G", "M"]],
   ["Back / close", ["Esc"]],
+  ["Show or hide details", ["D"]],
+  ["Open the linked record", ["O"]],
+  ["Inbox · Conversation · Focus", ["1", "2", "3"]],
   ["This sheet", ["?"]],
 ];
 

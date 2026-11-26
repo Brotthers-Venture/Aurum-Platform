@@ -17,7 +17,7 @@ const KEY = "aurum-finish-preview";
  * The workstation's root. On prototype pages it applies the selected matte finish and the ambient light,
  * and shows a temporary switcher for comparing the three variations. Everywhere else it renders as before.
  */
-export function FinishScope({ children }: { children: ReactNode }) {
+export function FinishScope({ children, className }: { children: ReactNode; className?: string }) {
   const { brand } = useBrand();
   // Architectural Matte (B) is the workstation finish; A and C stay reachable with ?finish= for comparison.
   const on = true;
@@ -42,7 +42,7 @@ export function FinishScope({ children }: { children: ReactNode }) {
   };
   const ambient = motion && (brand.ambientMotion ?? "ambient") !== "off";
   return (
-    <div className="ws ws-bridge relative flex h-dvh flex-col bg-d-bg" data-finish={on ? finish : undefined} data-ambient={on && ambient ? "on" : undefined}>
+    <div className={cx("ws ws-bridge relative flex h-dvh flex-col bg-d-bg", className)} data-finish={on ? finish : undefined} data-ambient={on && ambient ? "on" : undefined}>
       {on && finish !== "pure" && <div aria-hidden className="ws-light-layer" />}
       <div className={cx("flex min-h-0 flex-1 flex-col", on && "ws-stage")}>{children}</div>
       {on && compare && (
