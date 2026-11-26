@@ -30,6 +30,7 @@ import { GlobalSearch, type Hit } from "@/components/shell/GlobalSearch";
 import { Menu, Segmented, menuHead, menuItem, useDismiss } from "@/components/shell/WorkstationTopBar";
 import { readableOn } from "@/lib/brand";
 import { inkFor, type GpClient } from "@/lib/gps";
+import { GpUserContext, useGpCloseTasks } from "@/components/reporting/GpClose";
 import type { ThemePref } from "@/lib/theme";
 
 const KEY = "gp-room-collapsed";
@@ -48,7 +49,7 @@ export function GpShell({
   user,
   funds,
   search,
-  approvals,
+  approvals: serverApprovals,
   preview,
   children,
 }: {
@@ -61,6 +62,9 @@ export function GpShell({
   children: ReactNode;
 }) {
   const path = usePathname();
+  const closeTasks = useGpCloseTasks(gp.id);
+  const approvals = useMemo(() => [...serverApprovals, ...closeTasks], [serverApprovals, closeTasks]);
+  const userCtx = useMemo(() => ({ name: user.name }), [user.name]);
   const { theme, pref, setPref, motion, setMotion } = useTheme();
   const dark = theme === "dark";
   const wide = !gp.logo || gp.logo.width / gp.logo.height >= 3;
@@ -126,8 +130,8 @@ export function GpShell({
     { href: base, label: "Overview", Icon: LayoutGrid, exact: true },
     { href: `${base}/funds`, label: "Funds", Icon: Landmark },
     { href: `${base}/investors`, label: "Investors", Icon: Users },
-    { href: `${base}/activity`, label: "Capital activity", Icon: ArrowLeftRight, badge: approvals.length },
-    { href: `${base}/reports`, label: "Reports", Icon: FileText },
+    { href: `${base}/activity`, label: "Capital activity", Icon: ArrowLeftRight, badge: serverApprovals.length },
+    { href: `${base}/reports`, label: "Reports", Icon: FileText, badge: closeTasks.length },
     { href: `${base}/messages`, label: "Corporate Chat", Icon: MessagesSquare },
   ];
   const isOn = (n: (typeof nav)[number]) => (n.exact ? path === n.href : path === n.href || path.startsWith(`${n.href}/`));
@@ -402,7 +406,9 @@ export function GpShell({
               <div className="drawer-left absolute inset-y-0 left-0 flex max-w-[86vw]">{room("drawer")}</div>
             </div>
           )}
-          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">{children}</main>
+          <main className="min-h-0 min-w-0 flex-1 overflow-y-auto">
+            <GpUserContext.Provider value={userCtx}>{children}</GpUserContext.Provider>
+          </main>
         </div>
       </div>
     </div>

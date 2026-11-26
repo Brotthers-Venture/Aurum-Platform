@@ -17,4 +17,11 @@ export const pill: Record<string, string> = {
   Approved: "border-up-line text-up-ink",
   Countersigned: "border-up-line text-up-ink",
   Invited: "border-stone-200 text-stone-500",
+  "Not started": "border-stone-200 text-stone-500",
+  Preparing: "border-stone-200 text-stone-600",
+  "In review": "border-attn-line text-gold-700",
+  "With the manager": "border-attn-line text-gold-700",
+  Published: "border-up-line text-up-ink",
+  "Waiting for you": "border-attn-line text-gold-700",
+  "Your approval": "border-attn-line text-gold-700",
 };

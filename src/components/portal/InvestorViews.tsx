@@ -4,6 +4,7 @@ import { ButtonLink, Panel, Progress, Status } from "@/components/ui";
 import { PORTAL_INVESTOR_ID, capitalAccounts, capitalCalls, documents, fundById, investorById, onboarding } from "@/lib/data";
 import { date, money, multiple, pct } from "@/lib/format";
 import type { GpClient } from "@/lib/gps";
+import { InvestorPublished } from "@/components/reporting/InvestorClose";
 
 const inv = () => investorById(PORTAL_INVESTOR_ID)!;
 const inGp = (gpId: string) => (fundId: string) => fundById(fundId)?.gpId === gpId;
@@ -217,7 +218,9 @@ export function InvestorDocuments({ gp }: { gp: GpClient }) {
       <div className="eyebrow">{me.name}</div>
       <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.02em]">Documents</h1>
       <p className="mt-1.5 text-[14px] text-stone-600">Notices, statements, reports and tax documents for your investments with {gp.shortName}.</p>
-      <Panel className="mt-8" flush>
+      <InvestorPublished gpId={gp.id} investorId={me.id} />
+      {docs.length > 0 && <h2 className="mt-8 text-[15px] font-semibold">All documents</h2>}
+      <Panel className="mt-3" flush>
         {docs.length ? (
           <table className="data-table">
             <thead>

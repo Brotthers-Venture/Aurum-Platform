@@ -8,21 +8,30 @@ import { PageHeader } from "@/components/ui";
 export const metadata: Metadata = { title: "Reports" };
 
 const reports = [
-  ["Investor reporting", [
-    ["Capital account statements", "Quarterly partner statements with contributions, distributions, fees and allocated P&L."],
-    ["Quarterly investor report", "Fund-level narrative, portfolio summary and performance metrics."],
-    ["ILPA reporting template", "Fees, expenses and carried interest in the ILPA standard format."],
-  ]],
-  ["Fund accounting", [
-    ["Trial balance", "General ledger balances by vehicle and period."],
-    ["Schedule of investments", "Cost, fair value and unrealized gain by holding."],
-    ["Management fee calculation", "Fee basis, offsets and partner-level allocation."],
-  ]],
-  ["Regulatory & tax", [
-    ["Schedule K-1 package", "Partner-level tax reporting for US vehicles."],
-    ["FATCA / CRS report", "Reportable account holders by jurisdiction."],
-    ["Informe CVM", "Periodic reporting for Brazilian FIPs, with MF Pepper."],
-  ]],
+  [
+    "Investor reporting",
+    [
+      ["Capital account statements", "Quarterly partner statements with contributions, distributions, fees and allocated P&L."],
+      ["Quarterly investor report", "Fund-level narrative, portfolio summary and performance metrics."],
+      ["ILPA reporting template", "Fees, expenses and carried interest in the ILPA standard format."],
+    ],
+  ],
+  [
+    "Fund accounting",
+    [
+      ["Trial balance", "General ledger balances by vehicle and period."],
+      ["Schedule of investments", "Cost, fair value and unrealized gain by holding."],
+      ["Management fee calculation", "Fee basis, offsets and partner-level allocation."],
+    ],
+  ],
+  [
+    "Regulatory & tax",
+    [
+      ["Schedule K-1 package", "Partner-level tax reporting for US vehicles."],
+      ["FATCA / CRS report", "Reportable account holders by jurisdiction."],
+      ["Informe CVM", "Periodic reporting for Brazilian FIPs, with MF Pepper."],
+    ],
+  ],
 ] as const;
 
 export default function ReportsPage() {
@@ -32,11 +41,23 @@ export default function ReportsPage() {
         eyebrow="Records"
         title="Reports"
         actions={
-          <Link href="/admin/fund/analytics" className="inline-flex h-9 items-center gap-2 rounded-[3px] border border-stone-300 bg-white px-4 text-[13px] font-semibold hover:border-ink-900">
+          <Link
+            href="/admin/fund/analytics"
+            className="inline-flex h-9 items-center gap-2 rounded-[3px] border border-stone-300 bg-white px-4 text-[13px] font-semibold hover:border-ink-900"
+          >
             <LineChart size={14} /> Analytics
           </Link>
         }
       />
+      <Link href="/admin/fund/quarter-close" className="group flex items-center gap-4 rounded-[12px] border border-stone-200 bg-white px-5 py-4 hover:bg-stone-50">
+        <span className="min-w-0 flex-1">
+          <span className="block text-[14px] font-semibold text-ink-900">Quarter close</span>
+          <span className="block text-[12.5px] text-stone-600">
+            Prepare, check, review and publish each fund’s quarterly package — letter, report and statements — with figures linked to the books.
+          </span>
+        </span>
+        <ArrowRight size={16} className="text-stone-400 group-hover:text-ink-900" />
+      </Link>
       <section>
         <h2 className="eyebrow mb-3">Quarterly investor reports</h2>
         <div className="grid gap-px overflow-hidden rounded-[8px] border border-stone-200/70 bg-stone-200 shadow-card md:grid-cols-3">

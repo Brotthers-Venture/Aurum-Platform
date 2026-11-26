@@ -40,11 +40,14 @@ export function Panel({
   actions,
   className,
   bodyClass,
+  aside,
   tag = "var(--tenant-metal)",
 }: {
   title?: ReactNode;
   children: ReactNode;
   actions?: ReactNode;
+  /** always visible, at the right of the header */
+  aside?: ReactNode;
   className?: string;
   bodyClass?: string;
   tag?: string;
@@ -53,6 +56,7 @@ export function Panel({
     <section className={cx("group/panel flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[12px] border border-stone-200 bg-white", className)} data-tag={tag}>
       <header className="flex h-11 shrink-0 items-center gap-3 border-b border-stone-100 px-4">
         <div className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink-900">{title}</div>
+        {aside}
         <div className="flex items-center gap-1 text-stone-400 opacity-0 transition-opacity focus-within:opacity-100 group-hover/panel:opacity-100">
           {actions}
           <button type="button" aria-label="Panel options" className="rounded-[6px] p-1 hover:bg-stone-100 hover:text-ink-900">

@@ -7,6 +7,7 @@ import { cx } from "@/components/ui";
 import { ApproveButton } from "@/components/gp/ApproveButton";
 import { Figures, Meter, PageHead, StatusPill, td, th, tr } from "@/components/gp/GpKit";
 import { InvestorTable } from "@/components/gp/InvestorTable";
+import { GpCloseReview, GpCloseSection } from "@/components/reporting/GpClose";
 import { LegendWorkspace, Panel, type WorkspaceAttention, type WorkspaceCall, type WorkspaceEvent } from "@/components/workspace/LegendWorkspace";
 import { gps, gpById } from "@/lib/gps";
 import { callsForGp, distributionsForGp, documentsForGp, fundsForGp, investorsForGp, onboardingForGp } from "@/lib/gpData";
@@ -17,7 +18,11 @@ import { date, money, moneyShort, multiple, pct } from "@/lib/format";
 const sections = ["", "funds", "investors", "activity", "reports"];
 
 export function generateStaticParams() {
-  return gps.flatMap((g) => [...sections.map((s) => ({ gpId: g.id, section: s ? [s] : [] })), ...fundsForGp(g.id).map((f) => ({ gpId: g.id, section: ["funds", f.id] }))]);
+  return gps.flatMap((g) => [
+    ...sections.map((s) => ({ gpId: g.id, section: s ? [s] : [] })),
+    ...fundsForGp(g.id).map((f) => ({ gpId: g.id, section: ["funds", f.id] })),
+    ...fundsForGp(g.id).map((f) => ({ gpId: g.id, section: ["reports", f.id] })),
+  ]);
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ gpId: string; section?: string[] }> }) {
@@ -42,7 +47,7 @@ async function GpPortal({ params }: { params: Promise<{ gpId: string; section?: 
   const gp = gpById(gpId);
   if (!gp) notFound();
   const current = section?.[0] ?? "";
-  if (!sections.includes(current) || (section?.length ?? 0) > (current === "funds" ? 2 : 1)) notFound();
+  if (!sections.includes(current) || (section?.length ?? 0) > (current === "funds" || current === "reports" ? 2 : 1)) notFound();
   const base = `/gp/${gp.id}`;
   const fs = fundsForGp(gp.id);
   const calls = callsForGp(gp.id);
@@ -534,12 +539,23 @@ async function GpPortal({ params }: { params: Promise<{ gpId: string; section?: 
   }
 
   /* ───────── Reports ───────── */
+  if (section?.[1]) {
+    if (!fs.some((f) => f.id === section[1])) notFound();
+    return (
+      <Frame>
+        <GpCloseReview gpId={gp.id} fundId={section[1]} />
+      </Frame>
+    );
+  }
   const docs = documentsForGp(gp.id)
     .filter((d) => d.visibility !== "Internal")
     .sort((a, b) => b.date.localeCompare(a.date));
   return (
     <Frame>
-      <PageHead eyebrow={gp.shortName} title="Reports" meta="Reports, notices and statements published by your administrator." />
+      <PageHead eyebrow={gp.shortName} title="Reports" meta="Quarterly reporting, notices and statements published by your administrator." />
+      <div className="mb-2">
+        <GpCloseSection gpId={gp.id} />
+      </div>
       <Panel title={`Documents · ${docs.length}`}>
         <table className="w-full text-[12.5px]">
           <thead>
