@@ -1197,3 +1197,15 @@ html[data-theme="light"] .eco-stage[data-hub]::before { opacity: 0.32; }
   .eco-stage[data-hub] .eco-t-orbit { font-size: 19px; }
   html[data-theme="light"] .eco-stage[data-hub] .eco-halo { display: none; }
 }
+
+/* ───────── Report Studio: print-ready output (A4, no margins: the page itself carries them) ───────── */
+@media print {
+  @page { size: A4; margin: 0; }
+  html, body { background: #fff !important; }
+  .print-chrome { display: none !important; }
+  .print-root { background: #fff !important; min-height: 0 !important; }
+  .print-pages { display: block !important; padding: 0 !important; gap: 0 !important; }
+  .print-page { box-shadow: none !important; break-after: page; page-break-after: always; }
+  .print-page:last-child { break-after: auto; page-break-after: auto; }
+  .report-sheet { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
