@@ -1060,3 +1060,11 @@ html[data-theme="light"] .eco-stage[data-hub] {
 .login-light .text-white\/80 { color: rgba(25, 29, 34, 0.72); }
 .login-light .text-white\/60, .login-light footer { color: rgba(25, 29, 34, 0.6); }
 .login-light .hover\:text-white:hover { color: #191d22; }
+
+/* GP logos with tone="auto": the light-surface art by default and on Platinum, the dark-surface art in the Obsidian workstation. */
+.logo-on-light { display: contents; }
+.logo-on-dark { display: none; }
+.ws:not(.ws-light) .logo-on-light { display: none; }
+.ws:not(.ws-light) .logo-on-dark { display: contents; }
+html[data-theme="light"] .ws .logo-on-light { display: contents; }
+html[data-theme="light"] .ws .logo-on-dark { display: none; }

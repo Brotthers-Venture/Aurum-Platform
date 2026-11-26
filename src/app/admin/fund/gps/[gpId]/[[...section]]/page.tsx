@@ -226,11 +226,11 @@ export default async function GpWorkspace({ params }: { params: Promise<{ gpId: 
           <div className="grid gap-6 xl:grid-cols-2">
             <Panel title="Brand">
               <div className="grid grid-cols-2 gap-3">
-                <div className="flex h-[110px] items-center justify-center rounded-[3px] border border-stone-200 bg-white p-4">
-                  <GpLogo gp={gp} height={gp.logo && gp.logo.width / gp.logo.height < 3 ? 60 : 30} />
+                <div className="flex h-[110px] items-center justify-center rounded-[3px] border border-stone-200 bg-[#fbfaf7] p-4">
+                  <GpLogo gp={gp} tone="light" height={gp.logo && gp.logo.width / gp.logo.height < 3 ? 60 : 30} />
                 </div>
                 <div className="flex h-[110px] items-center justify-center rounded-[3px] p-4" style={{ background: gp.brand.soft }}>
-                  <GpMark gp={gp} size={56} />
+                  <GpMark gp={gp} size={56} tone="light" />
                 </div>
               </div>
               <div className="mt-5 grid grid-cols-3 gap-3">
@@ -246,9 +246,7 @@ export default async function GpWorkspace({ params }: { params: Promise<{ gpId: 
                   </div>
                 ))}
               </div>
-              <p className="mt-5 text-[12px] text-stone-500">
-                Logos are stored as transparent files; the primary colour drives buttons, active navigation and report headers.
-              </p>
+              <p className="mt-5 text-[12px] text-stone-500">Logos are stored as transparent files; the primary colour drives buttons, active navigation and report headers.</p>
             </Panel>
             <Panel title="Portal settings">
               <dl className="space-y-3 text-[13px]">
@@ -377,9 +375,7 @@ export default async function GpWorkspace({ params }: { params: Promise<{ gpId: 
       </nav>
       {body}
       {fundsForGp(gp.id).some((f) => f.economicsPending) && (
-        <p className="text-[12px] text-stone-500">
-          Fund economics for this GP are pending LPA review; capital figures shown are preview data.
-        </p>
+        <p className="text-[12px] text-stone-500">Fund economics for this GP are pending LPA review; capital figures shown are preview data.</p>
       )}
     </div>
   );

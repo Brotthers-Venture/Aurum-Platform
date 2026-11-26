@@ -1,13 +1,30 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 import type { GpClient } from "@/lib/gps";
 import { cx } from "@/components/ui";
 
 /** The GP's own logo, or a typographic wordmark for sample clients. */
+type Tone = "light" | "dark" | "auto";
+
+/** Both versions, the theme decides which shows (see .logo-on-light / .logo-on-dark in globals.css). */
+function Auto({ light, dark }: { light: ReactNode; dark: ReactNode }) {
+  return (
+    <>
+      <span className="logo-on-light">{light}</span>
+      <span className="logo-on-dark">{dark}</span>
+    </>
+  );
+}
+
+/**
+ * The GP's own logo, or a typographic wordmark for sample clients.
+ * tone "auto" (default) follows Light / Dark inside the workstation; pass "light" or "dark" for a fixed surface.
+ */
 export function GpLogo({
   gp,
   height = 32,
   className,
-  tone = "light",
+  tone = "auto",
   compact = false,
 }: {
   gp: GpClient;
@@ -16,8 +33,17 @@ export function GpLogo({
   /** Tighter tracking and a wrapping subtitle, for narrow containers such as hub cells */
   compact?: boolean;
   /** "dark" when placed on a dark or brand-coloured surface */
-  tone?: "light" | "dark";
+  tone?: Tone;
 }) {
+  if (tone === "auto") {
+    if (gp.logo && (!gp.logoDark || gp.logoDark.src === gp.logo.src)) return <GpLogo gp={gp} height={height} className={className} compact={compact} tone="light" />;
+    return (
+      <Auto
+        light={<GpLogo gp={gp} height={height} className={className} compact={compact} tone="light" />}
+        dark={<GpLogo gp={gp} height={height} className={className} compact={compact} tone="dark" />}
+      />
+    );
+  }
   const art = tone === "dark" ? (gp.logoDark ?? gp.logo) : gp.logo;
   if (art) {
     return <Image src={art.src} alt={gp.name} height={height} width={Math.round((height * art.width) / art.height)} className={className} priority />;
@@ -46,7 +72,12 @@ export function GpLogo({
 }
 
 /** Square-ish mark for tight spaces (honeycomb centre, avatars). */
-export function GpMark({ gp, size = 28, tone = "light" }: { gp: GpClient; size?: number; tone?: "light" | "dark" }) {
+export function GpMark({ gp, size = 28, tone = "auto" }: { gp: GpClient; size?: number; tone?: Tone }) {
+  if (tone === "auto") {
+    if (!gp.mark || (gp.markDark && gp.markDark.src !== gp.mark.src))
+      return gp.mark ? <Auto light={<GpMark gp={gp} size={size} tone="light" />} dark={<GpMark gp={gp} size={size} tone="dark" />} /> : <GpMark gp={gp} size={size} tone="light" />;
+    return <GpMark gp={gp} size={size} tone="light" />;
+  }
   const art = tone === "dark" ? (gp.markDark ?? gp.mark) : gp.mark;
   if (art) {
     return <Image src={art.src} alt="" height={size} width={Math.round((size * art.width) / art.height)} />;

@@ -39,7 +39,7 @@ function Page({ gp, fund, asOf, n, total, children }: { gp: GpClient; fund: Repo
       <div className="absolute inset-x-0 top-0 h-[5px]" style={{ background: gp.brand.primary }} />
       <header className="flex items-end justify-between border-b border-stone-200 pb-4">
         <div className="flex items-center gap-5">
-          <GpLogo gp={gp} height={30} />
+          <GpLogo gp={gp} height={30} tone="light" />
           <span className="h-8 w-px bg-stone-200" />
           <div>
             <div className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-stone-500">{quarterTitle(asOf)}</div>
@@ -92,14 +92,23 @@ export function QuarterlyReport({ data, fund, gp }: { data: { periods: string[];
         <Link href="/admin/fund/analytics" className="inline-flex items-center gap-1.5 text-[12px] text-stone-500 hover:text-ink-900">
           <ArrowLeft size={13} /> Analytics
         </Link>
-        <select aria-label="Period" value={asOfIdx} onChange={(e) => setAsOfIdx(Number(e.target.value))} className="ml-auto h-8 rounded-[3px] border border-stone-300 bg-white px-2.5 text-[12.5px]">
+        <select
+          aria-label="Period"
+          value={asOfIdx}
+          onChange={(e) => setAsOfIdx(Number(e.target.value))}
+          className="ml-auto h-8 rounded-[3px] border border-stone-300 bg-white px-2.5 text-[12.5px]"
+        >
           {data.periods.map((d, i) => (
             <option key={d} value={i}>
               {periodLabel(d) === "Today" ? "Today" : periodLabel(d).replace(" ", " 20")}
             </option>
           ))}
         </select>
-        <button type="button" onClick={() => window.print()} className="inline-flex h-8 items-center gap-1.5 rounded-[3px] bg-ink-900 px-3 text-[12px] font-semibold text-white hover:bg-ink-800">
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="inline-flex h-8 items-center gap-1.5 rounded-[3px] bg-ink-900 px-3 text-[12px] font-semibold text-white hover:bg-ink-800"
+        >
           <Printer size={13} /> Print / save PDF
         </button>
       </div>
@@ -151,7 +160,15 @@ export function QuarterlyReport({ data, fund, gp }: { data: { periods: string[];
                 <MiniTable
                   headers={["Partner", "Commitment", "Paid-in", "Unfunded", "Distributed", "NAV", "Share of NAV"]}
                   rows={[
-                    ...investors.map((i) => [i.name, fmtFull(i.commitment), fmtFull(i.paidIn), fmtFull(i.commitment - i.paidIn), fmtFull(i.distributed), fmtFull(i.nav), `${((i.nav / totalNav) * 100).toFixed(1)}%`]),
+                    ...investors.map((i) => [
+                      i.name,
+                      fmtFull(i.commitment),
+                      fmtFull(i.paidIn),
+                      fmtFull(i.commitment - i.paidIn),
+                      fmtFull(i.distributed),
+                      fmtFull(i.nav),
+                      `${((i.nav / totalNav) * 100).toFixed(1)}%`,
+                    ]),
                     [
                       <strong key="t">Total</strong>,
                       ...[v.end.commitment, v.end.paidIn, v.end.commitment - v.end.paidIn, v.end.distributed, v.end.nav].map((n, i) => <strong key={i}>{fmtFull(n)}</strong>),
