@@ -1,6 +1,6 @@
 # Corporate Chat — Architectural Matte (Linear-inspired refinement)
 
-Status: **built on the `redesign` branch, awaiting owner approval. Not on `main`.**
+Status: **approved and deployed 26 Nov 2026 (finish B).**
 
 ## What changed
 - **Matte finish.** Chat now sits in the same workstation root as every other page (`FinishScope`), so it gets
