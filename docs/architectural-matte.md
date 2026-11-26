@@ -64,3 +64,37 @@ optional C drift (transform on a composited layer). No new dependencies or libra
 - Legacy components elsewhere use 8–16 px radii and white cards; they change only when the finish is rolled out.
 - The light is tuned for the Aurum accent and Northbridge's gold; very dark tenant accents give almost no light
   (by design — it falls back to Pure matte rather than a muddy glow).
+
+## Hexa Room navigation — Solutions (26 Nov 2026, deployed)
+- **Corporate identity, always visible, independent of navigation.** Full logo (official asset, light/dark
+  variant, tenant logo for white-label) on the landing page and beside an expanded Hexa Room; the mark alone,
+  centred over the 56 px rail, when collapsed. Click → landing. Phones: menu button + mark; the drawer shows the
+  full logo. The header follows the room's state through a window event (`aurum-hexa-state`).
+- **Seven categories:** one **Solutions** hexagon in the tenant accent (Fund Solution, Corporate Solution,
+  Multi-Family Office — navigation grouping only; routes, records and permissions unchanged), then Corporate Chat,
+  Data rooms, Treasury, Compliance, PMO, Sales in their existing colours, filtered by the person's access.
+  Future solutions are added to `SOLUTIONS` in `HexaRoom.tsx` when they exist; nothing unfinished is listed.
+- **Expanded:** Solutions opens to its three applications with neutral line icons (no repeated yellow); only one
+  page tree is open at a time — the current application's.
+- **Collapsed:** expand control, the Solutions hexagon, a hairline, six workspace hexagons. Clicking Solutions
+  opens a floating selector (descriptions, active mark, counts); it closes on selection, outside click or Esc,
+  and supports arrow keys and touch. Hover shows a tooltip only. The previous hover-to-expand of the whole room
+  was removed so navigation does not depend on hover; the expand control pins the room open.
+- **Last page per solution** is remembered (`aurum-solution-last`), so switching keeps your place. Deep links and
+  browser history are unaffected.
+- **Counts:** the Solutions count is the sum of its applications' own counts (distinct sources, no double
+  counting); outsiders (GPs, LPs, tenants, clients, guests) see no counts.
+- Mobile: a drawer (`aurum-hexa-drawer` event) with the full logo; the selector never overflows (292 px).
+
+## Hexa Room landing — atmosphere (26 Nov 2026, deployed; B default)
+- Matte graphite (#15191D → #202529 → #2B3033) instead of near-black; Platinum in warm platinum and mineral
+  off-white. Tokens live on `.eco-stage[data-hub]` and also drive the header and menus on the landing page.
+- One broad, desaturated champagne light derived from the tenant accent (`color-mix(accent 34%, #6F6450)`); the
+  concentrated halo behind the mark and the dot/sparkle field are removed; the architectural lattice is at 2% and
+  hidden on phones. A static grain (soft-light, 9%) dithers the gradients so no bands show.
+- **B · Atmosphere:** the light breathes over 18 s (opacity and scale only), paused when the page is hidden, off
+  with reduced motion, the user's motion setting, or Brand Studio's Off. **A · Pure matte:** a faint static light.
+  **C · Depth:** stronger graphite layering, very faint static light. Compare with `/admin?hub=pure|atmos|depth`.
+- Surrounding workspaces rest at a desaturated derivative of their colour and return to full colour on hover or
+  keyboard focus, when the label appears; badges are smaller outlined counters. Geometry, positions, the central
+  mark and the entrance sequence are unchanged.

@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Bell, Check, ChevronDown, EllipsisVertical, LogOut, Palette, Search, ShieldCheck, UserCog } from "lucide-react";
+import { Bell, Check, ChevronDown, EllipsisVertical, LogOut, Menu as MenuIcon, Palette, Search, ShieldCheck, UserCog } from "lucide-react";
 import { cx } from "@/components/ui";
 import { AurumLogo, AurumMark } from "@/components/brand/Logo";
+import { HEXA_DRAWER_EVENT, HEXA_STATE_EVENT, readHexaCollapsed } from "./HexaRoom";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { useTheme } from "./ThemeProvider";
 import { usePreviewRole } from "@/components/admin/PreviewRole";
@@ -93,6 +94,14 @@ export function WorkstationTopBar({
   const { brand } = useBrand();
   const { pref, theme, setPref, motion, setMotion } = useTheme();
   const eco = variant === "ecosystem";
+  const [railMode, setRailMode] = useState(true);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- follow the Hexa Room's collapsed state
+    setRailMode(readHexaCollapsed());
+    const on = (e: Event) => setRailMode((e as CustomEvent<{ collapsed: boolean }>).detail.collapsed);
+    window.addEventListener(HEXA_STATE_EVENT, on);
+    return () => window.removeEventListener(HEXA_STATE_EVENT, on);
+  }, []);
   useEffect(() => {
     onActivity?.(open !== null);
   }, [open, onActivity]);
@@ -124,14 +133,40 @@ export function WorkstationTopBar({
         eco ? "border-b border-transparent bg-transparent" : "border-b border-d-line bg-d-chrome",
       )}
     >
-      {/* The mark alone; the full logo appears on hover or focus, so the hexagon is not repeated next to the rail. */}
-      <Link href="/admin" aria-label={`${brand.name} home`} className="group/logo relative flex h-10 w-[28px] shrink-0 items-center justify-start rounded-[4px] outline-offset-4">
-        <span className="logo-mark flex items-center">
-          <AurumMark size={26} />
-        </span>
-        <span className="logo-full pointer-events-none absolute left-0 top-1/2 w-max">
-          <AurumLogo variant={theme === "dark" ? "white" : "dark"} height={32} />
-        </span>
+      {/* Corporate identity, always visible and independent of navigation: the full logo on the landing page and beside
+          an expanded Hexa Room; the mark alone, centred over the rail, when the room is collapsed. Phones: menu + mark. */}
+      {!eco && (
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent(HEXA_DRAWER_EVENT))}
+          aria-label="Open navigation"
+          className="-ml-1 flex h-9 w-9 items-center justify-center rounded-[6px] text-d-text-2 hover:bg-d-raise md:hidden"
+        >
+          <MenuIcon size={18} />
+        </button>
+      )}
+      <Link
+        href="/admin"
+        aria-label={`${brand.name} home`}
+        className={cx(
+          "flex h-10 shrink-0 items-center rounded-[4px] outline-offset-2",
+          !eco && railMode && "md:-ml-4 md:w-[56px] md:justify-center",
+          !eco && !railMode && "md:w-[232px]",
+        )}
+      >
+        {eco || !railMode ? (
+          <>
+            <span className={cx(!eco && "max-md:hidden")}>
+              <AurumLogo variant={theme === "dark" ? "white" : "dark"} height={32} />
+            </span>
+            {!eco && (
+              <span className="md:hidden">
+                <AurumMark size={26} />
+              </span>
+            )}
+          </>
+        ) : (
+          <AurumMark size={27} />
+        )}
       </Link>
       {entity}
 

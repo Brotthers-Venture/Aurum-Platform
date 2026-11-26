@@ -24,10 +24,23 @@ export function AmbientBackdrop({ variation, animate, accent2 }: { variation: Am
           <svg className="eco-hex absolute inset-0 h-full w-full">
             <defs>
               <pattern id={`hex-${id}`} width="56" height="96.99" patternUnits="userSpaceOnUse" patternTransform="translate(-28 -48.5)">
-                <path d="M28 0 L56 16.17 L56 48.5 L28 64.66 L0 48.5 L0 16.17 Z M28 64.66 L28 96.99" fill="none" stroke="var(--eco-lattice)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+                <path
+                  d="M28 0 L56 16.17 L56 48.5 L28 64.66 L0 48.5 L0 16.17 Z M28 64.66 L28 96.99"
+                  fill="none"
+                  stroke="var(--eco-lattice)"
+                  strokeWidth="1"
+                  vectorEffect="non-scaling-stroke"
+                />
               </pattern>
               <pattern id={`hexlit-${id}`} width="56" height="96.99" patternUnits="userSpaceOnUse" patternTransform="translate(-28 -48.5)">
-                <path d="M28 0 L56 16.17 L56 48.5 L28 64.66 L0 48.5 L0 16.17 Z M28 64.66 L28 96.99" fill="none" stroke="var(--eco-mark)" strokeOpacity="0.35" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+                <path
+                  d="M28 0 L56 16.17 L56 48.5 L28 64.66 L0 48.5 L0 16.17 Z M28 64.66 L28 96.99"
+                  fill="none"
+                  stroke="var(--eco-mark)"
+                  strokeOpacity="0.35"
+                  strokeWidth="1"
+                  vectorEffect="non-scaling-stroke"
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill={`url(#hex-${id})`} />

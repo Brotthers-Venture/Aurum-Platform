@@ -1,20 +1,36 @@
 "use client";
 
-import { FAMILIES } from "@/lib/wealth";
 import Link from "next/link";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Pin } from "lucide-react";
+import { Building2, Check, ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Landmark, Users, X } from "lucide-react";
 import { cx } from "@/components/ui";
 import { useBrand } from "@/components/brand/BrandProvider";
+import { AurumLogo, markPath } from "@/components/brand/Logo";
+import { useTheme } from "@/components/shell/ThemeProvider";
 import { moduleName } from "@/lib/brand";
-import { hexaHref, hexaOf, type Hexa, type HexaPage } from "@/lib/hexa";
+import { FAMILIES } from "@/lib/wealth";
+import { hexaHref, hexaOf, type Hexa, type HexaId, type HexaPage } from "@/lib/hexa";
 import { useHexas } from "./useHexas";
-import { markPath } from "@/components/brand/Logo";
 
 const KEY = "aurum-hexa-collapsed";
+const LAST_KEY = "aurum-solution-last";
+export const HEXA_STATE_EVENT = "aurum-hexa-state";
+export const HEXA_DRAWER_EVENT = "aurum-hexa-drawer";
 
-/** The brand mark (two concentric bands, open centre) in the hexagon's own colour. */
+/**
+ * Solutions: the firm's client-facing applications, grouped under one hexagon in the tenant's colour.
+ * Navigation only — each keeps its own routes, records and permissions. Later solutions (Offering, Blockchain,
+ * Banking) are added here when they exist; nothing unfinished is listed.
+ */
+const SOLUTIONS: { id: HexaId; about: string; Icon: typeof Landmark }[] = [
+  { id: "fund", about: "Fund administration and investment vehicles.", Icon: Landmark },
+  { id: "corporate", about: "Corporate entities and administration.", Icon: Building2 },
+  { id: "multi-family", about: "Private wealth and family office services.", Icon: Users },
+];
+const isSolution = (id?: string) => SOLUTIONS.some((s) => s.id === id);
+
+/** The brand mark (two concentric bands, open centre) in a workspace's colour. */
 export function HexGlyph({ color, size = 16, active }: { color: string; size?: number; active?: boolean }) {
   return (
     <svg width={size} height={size * (348 / 302)} viewBox="-151 -174 302 348" aria-hidden className="shrink-0" style={{ opacity: active ? 1 : 0.92 }}>
@@ -23,9 +39,20 @@ export function HexGlyph({ color, size = 16, active }: { color: string; size?: n
   );
 }
 
+/** Whether the Hexa Room is a rail (collapsed). Shared with the header so the logo can follow it. */
+export function readHexaCollapsed() {
+  try {
+    const v = window.localStorage.getItem(KEY);
+    return v === null ? true : v === "1";
+  } catch {
+    return true;
+  }
+}
+
 /**
- * The Hexa Room: the side drawer listing the hexagons this person can open. The current hexagon is expanded
- * to its pages; any other can be opened in place. Collapses to a rail of hexagons for more room.
+ * The Hexa Room: one Solutions hexagon (Fund, Corporate, Multi-Family Office) and the firm's workspaces.
+ * Expanded, the active solution's pages are shown; collapsed, a rail of hexagons with a Solutions selector.
+ * On phones it is a drawer, opened from the header.
  */
 export function HexaRoom({ defaultCollapsed = false }: { defaultCollapsed?: boolean }) {
   return (
@@ -39,45 +66,70 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
   const path = usePathname();
   const params = useSearchParams();
   const { brand } = useBrand();
+  const { theme } = useTheme();
   const { list, member } = useHexas();
   const here = hexaOf(path);
-  const [collapsed, setCollapsed] = useState(defaultCollapsed);
-  const [peek, setPeek] = useState(false);
-  const timer = useRef<number | undefined>(undefined);
-  // Hovering the rail opens the full room over the page after a short pause; leaving closes it.
-  const enter = () => {
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setPeek(true), 140);
-  };
-  const leave = () => {
-    window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setPeek(false), 220);
-  };
-  const [open, setOpen] = useState<Set<string>>(() => new Set(here ? [here.id] : []));
+  const [collapsed, setCollapsed] = useState(true);
+  const [drawer, setDrawer] = useState(false);
+  const [picker, setPicker] = useState(false);
+  const [solutionsOpen, setSolutionsOpen] = useState(true);
+  const [openPages, setOpenPages] = useState<string | null>(here?.id ?? null);
+  const [last, setLast] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the rail is the default; a pinned room is remembered
+    setCollapsed(defaultCollapsed || readHexaCollapsed());
     try {
-      const v = window.localStorage.getItem(KEY);
-      // The rail of hexagons is the default; the full room opens on hover and can be kept open.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      if (!defaultCollapsed) setCollapsed(v === null ? true : v === "1");
-    } catch {
-      /* no storage */
-    }
+      setLast(JSON.parse(window.localStorage.getItem(LAST_KEY) ?? "{}"));
+    } catch {}
+    const open = () => setDrawer(true);
+    window.addEventListener(HEXA_DRAWER_EVENT, open);
+    return () => window.removeEventListener(HEXA_DRAWER_EVENT, open);
   }, [defaultCollapsed]);
-  const toggleCollapsed = () => {
-    setCollapsed((c) => {
+
+  // Remember the last page visited inside each solution, so switching between them keeps your place.
+  const search = params.toString();
+  useEffect(() => {
+    if (!here || !isSolution(here.id)) return;
+    const href = path + (search ? `?${search}` : "");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- record the visit; the current solution's pages become the open tree
+    setLast((m) => {
+      if (m[here.id] === href) return m;
+      const next = { ...m, [here.id]: href };
       try {
-        window.localStorage.setItem(KEY, c ? "0" : "1");
-      } catch {
-        /* no storage */
-      }
-      return !c;
+        window.localStorage.setItem(LAST_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
     });
-    setPeek(false);
+    setOpenPages(here.id);
+    setDrawer(false);
+  }, [path, search, here]);
+
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    setPicker(false);
+    try {
+      window.localStorage.setItem(KEY, next ? "1" : "0");
+    } catch {}
+    window.dispatchEvent(new CustomEvent(HEXA_STATE_EVENT, { detail: { collapsed: next } }));
   };
 
+  const outsider = member.party !== "employee";
+  const pagesOf = (h: Hexa): HexaPage[] => {
+    if (outsider && (h.id === "pmo" || h.id === "communication")) return [];
+    if (h.id === "multi-family" && member.party === "tenant")
+      return h.pages.filter((p) => !p.group || FAMILIES.some((f) => f.tenantId === member.org && p.href.endsWith(`/${f.id}`)));
+    return h.pages;
+  };
+  const badgeOf = (h: Hexa) => (outsider ? 0 : (h.badge ?? 0));
   const name = (h: Hexa) => (h.firm ? moduleName(brand, h.firm) : h.name);
+  const hrefOf = (h: Hexa) => (isSolution(h.id) && last[h.id]) || hexaHref(h, member);
+  const solutions = SOLUTIONS.map((s) => ({ ...s, h: list.find((h) => h.id === s.id) })).filter((s): s is (typeof SOLUTIONS)[number] & { h: Hexa } => !!s.h);
+  const workspaces = list.filter((h) => !isSolution(h.id));
+  const solutionBadge = solutions.reduce((n, s) => n + badgeOf(s.h), 0); // distinct sources, so a plain sum does not double count
+  const inSolution = isSolution(here?.id);
+
   const tab = params.get("tab");
   const filter = params.get("filter");
   const isPage = (h: Hexa, p: HexaPage, i: number) => {
@@ -92,157 +144,314 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
     return path === p0 || path.startsWith(`${p0}/`);
   };
 
-  if (collapsed)
+  /* ───────── pieces ───────── */
+  const PageTree = ({ h }: { h: Hexa }) => {
+    const pages = pagesOf(h);
+    let lastGroup: string | undefined;
     return (
-      <div
-        className="relative hidden w-[56px] shrink-0 md:block"
-        onPointerEnter={enter}
-        onPointerLeave={leave}
-        onFocus={() => setPeek(true)}
-        onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node) && setPeek(false)}
-      >
-        {peek && <div className="absolute inset-y-0 left-0 z-40 flex">{full(true)}</div>}
-        <nav aria-label="Hexa Room" data-shell="room" className="flex h-full w-[56px] flex-col items-center border-r border-d-line bg-d-chrome py-3">
+      <ul className="mb-1.5 ml-[30px] mt-0.5 border-l border-d-line-soft pl-1.5">
+        {pages.map((p, i) => {
+          const on = here?.id === h.id && isPage(h, p, i);
+          const head = p.group && p.group !== lastGroup ? p.group : undefined;
+          lastGroup = p.group;
+          return (
+            <li key={p.href}>
+              {head && <div className="px-2 pb-0.5 pt-2 text-[11px] text-d-text-3">{head}</div>}
+              <Link
+                href={p.href}
+                aria-current={on ? "page" : undefined}
+                className={cx(
+                  "relative flex h-[27px] items-center rounded-[5px] px-2 text-[12.5px] transition-colors",
+                  on ? "bg-d-raise font-medium text-d-text" : "text-d-text-2 hover:bg-d-raise hover:text-d-text",
+                )}
+              >
+                {on && (
+                  <span
+                    aria-hidden
+                    className="absolute -left-[7px] bottom-1.5 top-1.5 w-[2px] rounded-full"
+                    style={{ background: isSolution(h.id) ? "var(--tenant-accent)" : h.color }}
+                  />
+                )}
+                <span className="flex-1 truncate">{p.label}</span>
+                {!!p.badge && !outsider && <span className="tnum text-[11px] text-d-text-3">{p.badge}</span>}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
+
+  const Row = ({
+    active,
+    href,
+    icon,
+    label,
+    badge,
+    toggle,
+    expanded,
+    accent,
+    indent,
+  }: {
+    active: boolean;
+    href: string;
+    icon: ReactNode;
+    label: string;
+    badge?: number;
+    toggle?: () => void;
+    expanded?: boolean;
+    accent?: string;
+    indent?: boolean;
+  }) => (
+    <div
+      className={cx(
+        "group relative flex h-9 items-center rounded-[6px] transition-colors",
+        active ? "bg-d-raise" : "hover:bg-[color-mix(in_oklab,var(--d-raise)_70%,transparent)]",
+        indent && "ml-3",
+      )}
+    >
+      {active && accent && <span aria-hidden className="absolute -left-2 bottom-2 top-2 w-[2px] rounded-full" style={{ background: accent }} />}
+      <Link href={href} aria-current={active ? "page" : undefined} className="flex min-w-0 flex-1 items-center gap-2.5 pl-2.5 pr-1">
+        {icon}
+        <span className={cx("truncate", active ? "font-semibold text-d-text" : "font-medium text-d-text-2 group-hover:text-d-text")}>{label}</span>
+      </Link>
+      {!!badge && <span className="tnum mr-1 text-[11.5px] text-d-text-3">{badge}</span>}
+      {toggle && (
+        <button
+          onClick={toggle}
+          aria-label={expanded ? `Hide ${label}` : `Show ${label}`}
+          aria-expanded={expanded}
+          className="mr-1 flex h-6 w-6 items-center justify-center rounded-[5px] text-d-text-3 hover:bg-d-line-soft hover:text-d-text"
+        >
+          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </button>
+      )}
+    </div>
+  );
+
+  const full = (mode: "inline" | "drawer") => (
+    <nav
+      aria-label="Hexa Room"
+      data-shell="room"
+      data-overlay={mode === "drawer" || undefined}
+      className={cx("flex w-[248px] shrink-0 flex-col border-r border-d-line bg-d-chrome text-[13px]", mode === "drawer" ? "h-full" : "")}
+    >
+      {mode === "drawer" && (
+        <div className="flex h-14 shrink-0 items-center justify-between border-b border-d-line-soft px-4">
+          <Link href="/admin" aria-label={`${brand.name} home`}>
+            <AurumLogo variant={theme === "dark" ? "white" : "dark"} height={30} />
+          </Link>
+          <button onClick={() => setDrawer(false)} aria-label="Close navigation" className="flex h-8 w-8 items-center justify-center rounded-[6px] text-d-text-2 hover:bg-d-raise">
+            <X size={16} />
+          </button>
+        </div>
+      )}
+      <div className="flex h-11 items-center gap-2 px-4">
+        <span className="text-[12px] font-semibold text-d-text">Hexa Room</span>
+        {mode === "inline" && (
           <button
             onClick={toggleCollapsed}
-            aria-label="Keep the Hexa Room open"
-            title="Keep open"
+            aria-label="Collapse the Hexa Room to hexagons"
+            title="Collapse"
+            className="ml-auto flex h-7 w-7 items-center justify-center rounded-[6px] text-d-text-3 hover:bg-d-raise hover:text-d-text"
+          >
+            <ChevronsLeft size={15} />
+          </button>
+        )}
+      </div>
+
+      <div className="scroll-quiet flex-1 overflow-y-auto px-2 pb-3">
+        {solutions.length > 0 && (
+          <div className="mb-1">
+            <div
+              className={cx(
+                "group relative flex h-9 items-center rounded-[6px] transition-colors",
+                inSolution ? "bg-[color-mix(in_oklab,var(--d-raise)_55%,transparent)]" : "hover:bg-[color-mix(in_oklab,var(--d-raise)_70%,transparent)]",
+              )}
+            >
+              <button onClick={() => setSolutionsOpen((o) => !o)} aria-expanded={solutionsOpen} className="flex min-w-0 flex-1 items-center gap-2.5 pl-2.5 pr-1 text-left">
+                <HexGlyph color="var(--tenant-accent)" size={17} active />
+                <span className={cx("truncate", inSolution ? "font-semibold text-d-text" : "font-medium text-d-text-2 group-hover:text-d-text")}>Solutions</span>
+              </button>
+              {!!solutionBadge && <span className="tnum mr-1 text-[11.5px] text-d-text-3">{solutionBadge}</span>}
+              <span aria-hidden className="mr-2 text-d-text-3">
+                {solutionsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              </span>
+            </div>
+            {solutionsOpen &&
+              solutions.map(({ h, Icon }) => {
+                const active = here?.id === h.id;
+                const tree = openPages === h.id && pagesOf(h).length > 0;
+                return (
+                  <div key={h.id}>
+                    <Row
+                      indent
+                      active={active}
+                      accent="var(--tenant-accent)"
+                      href={hrefOf(h)}
+                      icon={<Icon size={15} strokeWidth={1.7} className={active ? "text-d-text" : "text-d-text-3"} />}
+                      label={name(h)}
+                      badge={badgeOf(h)}
+                      toggle={pagesOf(h).length ? () => setOpenPages((o) => (o === h.id ? null : h.id)) : undefined}
+                      expanded={tree}
+                    />
+                    {tree && <PageTree h={h} />}
+                  </div>
+                );
+              })}
+          </div>
+        )}
+        {workspaces.map((h) => {
+          const active = here?.id === h.id;
+          const pages = pagesOf(h);
+          const tree = openPages === h.id && pages.length > 0;
+          return (
+            <div key={h.id} className="mb-0.5">
+              <Row
+                active={active}
+                accent={h.color}
+                href={hrefOf(h)}
+                icon={<HexGlyph color={h.color} size={17} active={active} />}
+                label={name(h)}
+                badge={badgeOf(h)}
+                toggle={pages.length ? () => setOpenPages((o) => (o === h.id ? null : h.id)) : undefined}
+                expanded={tree}
+              />
+              {tree && <PageTree h={h} />}
+            </div>
+          );
+        })}
+        {list.length === 0 && <p className="px-3 py-6 text-[12px] leading-relaxed text-d-text-3">No workspaces are open to this role yet. Ask an administrator for access.</p>}
+      </div>
+    </nav>
+  );
+
+  return (
+    <>
+      {collapsed ? (
+        <nav aria-label="Hexa Room" data-shell="room" className="relative hidden w-[56px] shrink-0 flex-col items-center border-r border-d-line bg-d-chrome py-3 md:flex">
+          <button
+            onClick={toggleCollapsed}
+            aria-label="Expand the Hexa Room"
+            title="Expand"
             className="mb-2 flex h-8 w-8 items-center justify-center rounded-[6px] text-d-text-3 hover:bg-d-raise hover:text-d-text"
           >
             <ChevronsRight size={15} />
           </button>
           <div className="flex flex-1 flex-col items-center gap-1">
-            {list.map((h) => {
+            {solutions.length > 0 && (
+              <div className="relative">
+                <button
+                  onClick={() => setPicker((p) => !p)}
+                  aria-haspopup="menu"
+                  aria-expanded={picker}
+                  aria-label={`Solutions${solutionBadge ? `, ${solutionBadge} to act on` : ""}`}
+                  title="Solutions"
+                  className={cx("relative flex h-10 w-10 items-center justify-center rounded-[7px] transition-colors", inSolution || picker ? "bg-d-raise" : "hover:bg-d-raise")}
+                >
+                  {inSolution && <span aria-hidden className="absolute -left-2 bottom-2.5 top-2.5 w-[2px] rounded-full bg-[var(--tenant-accent)]" />}
+                  <HexGlyph color="var(--tenant-accent)" size={20} active />
+                  {!!solutionBadge && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-[var(--tenant-accent)]" />}
+                </button>
+                {picker && (
+                  <SolutionPicker
+                    items={solutions.map((s) => ({ id: s.id, name: name(s.h), about: s.about, Icon: s.Icon, href: hrefOf(s.h), badge: badgeOf(s.h), active: here?.id === s.id }))}
+                    onClose={() => setPicker(false)}
+                  />
+                )}
+              </div>
+            )}
+            {solutions.length > 0 && workspaces.length > 0 && <span aria-hidden className="my-1 h-px w-6 bg-d-line" />}
+            {workspaces.map((h) => {
               const active = here?.id === h.id;
               return (
                 <Link
                   key={h.id}
-                  href={hexaHref(h, member)}
+                  href={hrefOf(h)}
                   title={name(h)}
-                  aria-label={name(h)}
+                  aria-label={`${name(h)}${badgeOf(h) ? `, ${badgeOf(h)} to act on` : ""}`}
                   aria-current={active ? "page" : undefined}
-                  className={cx("relative flex h-10 w-10 items-center justify-center rounded-[8px] transition-colors", active ? "bg-d-raise" : "hover:bg-d-raise")}
+                  className={cx("relative flex h-10 w-10 items-center justify-center rounded-[7px] transition-colors", active ? "bg-d-raise" : "hover:bg-d-raise")}
                 >
+                  {active && <span aria-hidden className="absolute -left-2 bottom-2.5 top-2.5 w-[2px] rounded-full" style={{ background: h.color }} />}
                   <HexGlyph color={h.color} size={20} active={active} />
-                  {!!h.badge && !active && member.party === "employee" && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full" style={{ background: h.color }} />}
+                  {!!badgeOf(h) && !active && <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full" style={{ background: h.color }} />}
                 </Link>
               );
             })}
           </div>
-          <Link
-            href="/admin"
-            title="Ecosystem"
-            aria-label="Ecosystem"
-            className="flex h-9 w-9 items-center justify-center rounded-[6px] text-d-text-3 hover:bg-d-raise hover:text-d-text"
-          >
-            <HexGlyph color="var(--d-text-3)" size={16} />
-          </Link>
         </nav>
-      </div>
-    );
-
-  return full(false);
-
-  function full(overlay: boolean) {
-    return (
-      <nav
-        aria-label="Hexa Room"
-        data-shell="room"
-        data-overlay={overlay || undefined}
-        className={cx(
-          "w-[248px] shrink-0 flex-col border-r border-d-line bg-d-chrome text-[13px]",
-          overlay ? "hexa-peek flex shadow-[12px_0_32px_rgba(0,0,0,0.28)]" : "hidden md:flex",
-        )}
-      >
-        <div className="flex h-11 items-center gap-2 px-4">
-          <span className="text-[12px] font-semibold tracking-[0.02em] text-d-text">Hexa Room</span>
-          <span className="tnum text-[11.5px] text-d-text-3">{list.length}</span>
-          <button
-            onClick={toggleCollapsed}
-            aria-label={overlay ? "Keep the Hexa Room open" : "Collapse the Hexa Room to hexagons"}
-            title={overlay ? "Keep open" : "Collapse to hexagons"}
-            className="ml-auto flex h-7 w-7 items-center justify-center rounded-[6px] text-d-text-3 hover:bg-d-raise hover:text-d-text"
-          >
-            {overlay ? <Pin size={14} /> : <ChevronsLeft size={15} />}
-          </button>
+      ) : (
+        <div className="hidden md:flex">{full("inline")}</div>
+      )}
+      {drawer && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button aria-label="Close navigation" onClick={() => setDrawer(false)} className="absolute inset-0 bg-black/40" />
+          <div className="drawer-left absolute inset-y-0 left-0 flex max-w-[86vw]">{full("drawer")}</div>
         </div>
+      )}
+    </>
+  );
+}
 
-        <div className="scroll-quiet flex-1 overflow-y-auto px-2 pb-3">
-          {list.map((h0) => {
-            const outsider = member.party !== "employee";
-            const pages =
-              h0.id === "multi-family" && member.party === "tenant"
-                ? h0.pages.filter((p) => !p.group || FAMILIES.some((f) => f.tenantId === member.org && p.href.endsWith(`/${f.id}`)))
-                : h0.pages;
-            const h = outsider ? { ...h0, badge: undefined, pages: h0.id === "pmo" || h0.id === "communication" ? [] : pages } : h0;
-            const active = here?.id === h.id;
-            const expanded = h.pages.length > 0 && open.has(h.id);
-            let lastGroup: string | undefined;
-            return (
-              <div key={h.id} className="mb-0.5">
-                <div className={cx("group relative flex h-9 items-center rounded-[7px] transition-colors", active ? "bg-d-raise" : "hover:bg-d-raise")}>
-                  {active && <span aria-hidden className="absolute -left-2 bottom-2 top-2 w-[2px] rounded-full" style={{ background: h.color }} />}
-                  <Link href={hexaHref(h, member)} aria-current={active ? "page" : undefined} className="flex min-w-0 flex-1 items-center gap-2.5 pl-2.5 pr-1">
-                    <HexGlyph color={h.color} size={17} active={active} />
-                    <span className={cx("truncate", active ? "font-semibold text-d-text" : "font-medium text-d-text-2 group-hover:text-d-text")}>{name(h)}</span>
-                  </Link>
-                  {!!h.badge && <span className="tnum mr-1 text-[11.5px] text-d-text-3">{h.badge}</span>}
-                  {h.pages.length > 0 && (
-                    <button
-                      onClick={() =>
-                        setOpen((s) => {
-                          const n = new Set(s);
-                          if (n.has(h.id)) n.delete(h.id);
-                          else n.add(h.id);
-                          return n;
-                        })
-                      }
-                      aria-label={expanded ? `Hide ${name(h)} pages` : `Show ${name(h)} pages`}
-                      aria-expanded={expanded}
-                      className="mr-1 flex h-6 w-6 items-center justify-center rounded-[5px] text-d-text-3 hover:bg-d-line-soft hover:text-d-text"
-                    >
-                      {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                    </button>
-                  )}
-                </div>
-                {expanded && (
-                  <ul className="relative mb-2 ml-[18px] mt-0.5 border-l border-d-line pl-2">
-                    {h.pages.map((p, i) => {
-                      const on = active && isPage(h, p, i);
-                      const head = p.group && p.group !== lastGroup ? p.group : undefined;
-                      lastGroup = p.group;
-                      return (
-                        <li key={p.href}>
-                          {head && <div className="px-2 pb-0.5 pt-2.5 text-[10.5px] font-medium text-d-text-3">{head}</div>}
-                          <Link
-                            href={p.href}
-                            aria-current={on ? "page" : undefined}
-                            className={cx(
-                              "relative flex h-[28px] items-center rounded-[5px] px-2 text-[12.5px] transition-colors",
-                              on ? "bg-d-raise font-medium text-d-text" : "text-d-text-2 hover:bg-d-raise hover:text-d-text",
-                            )}
-                          >
-                            {on && <span aria-hidden className="absolute -left-[9px] bottom-1.5 top-1.5 w-[2px] rounded-full" style={{ background: h.color }} />}
-                            <span className="flex-1 truncate">{p.label}</span>
-                            {!!p.badge && <span className="tnum text-[11px] text-d-text-3">{p.badge}</span>}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            );
-          })}
-          {list.length === 0 && <p className="px-3 py-6 text-[12px] leading-relaxed text-d-text-3">No hexagons are open to this role yet. Ask an administrator for access.</p>}
-        </div>
-
-        <div className="border-t border-d-line p-2">
-          <Link href="/admin" className="flex h-9 items-center gap-2.5 rounded-[7px] px-2.5 text-d-text-2 hover:bg-d-raise hover:text-d-text">
-            <HexGlyph color="var(--d-text-3)" size={15} /> Ecosystem
-          </Link>
-        </div>
-      </nav>
-    );
-  }
+/** The floating Solutions selector from the rail: closes on selection, outside click or Escape; arrow keys move. */
+function SolutionPicker({
+  items,
+  onClose,
+}: {
+  items: { id: string; name: string; about: string; Icon: typeof Landmark; href: string; badge: number; active: boolean }[];
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const first = ref.current?.querySelector<HTMLAnchorElement>("a[role=menuitem]");
+    first?.focus();
+    const out = (e: PointerEvent) => ref.current && !ref.current.contains(e.target as Node) && !(e.target as HTMLElement).closest("[aria-haspopup=menu]") && onClose();
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") return onClose();
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      const links = [...(ref.current?.querySelectorAll<HTMLAnchorElement>("a[role=menuitem]") ?? [])];
+      const i = links.indexOf(document.activeElement as HTMLAnchorElement);
+      e.preventDefault();
+      links[(i + (e.key === "ArrowDown" ? 1 : -1) + links.length) % links.length]?.focus();
+    };
+    document.addEventListener("pointerdown", out);
+    document.addEventListener("keydown", key);
+    return () => {
+      document.removeEventListener("pointerdown", out);
+      document.removeEventListener("keydown", key);
+    };
+  }, [onClose]);
+  return (
+    <div
+      ref={ref}
+      role="menu"
+      aria-label="Solutions"
+      className="picker-in absolute left-[52px] top-0 z-50 w-[292px] rounded-[8px] bg-d-raise p-1.5 shadow-[0_14px_36px_rgba(0,0,0,0.32)] ring-1 ring-d-line-strong"
+    >
+      <div className="px-2.5 pb-1.5 pt-1 text-[11.5px] text-d-text-3">Solutions</div>
+      {items.map(({ id, name, about, Icon, href, badge, active }) => (
+        <Link
+          key={id}
+          role="menuitem"
+          href={href}
+          onClick={onClose}
+          aria-current={active ? "page" : undefined}
+          className={cx(
+            "relative flex items-start gap-3 rounded-[6px] px-2.5 py-2 outline-none transition-colors focus-visible:bg-d-surface hover:bg-d-surface",
+            active && "bg-d-surface",
+          )}
+        >
+          {active && <span aria-hidden className="absolute bottom-2.5 left-0 top-2.5 w-[2px] rounded-full bg-[var(--tenant-accent)]" />}
+          <Icon size={16} strokeWidth={1.7} className="mt-0.5 shrink-0 text-d-text-2" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-[13px] font-semibold text-d-text">{name}</span>
+            <span className="block text-[12px] leading-snug text-d-text-3">{about}</span>
+          </span>
+          {badge > 0 && <span className="tnum mt-0.5 text-[11.5px] text-d-text-2">{badge}</span>}
+          {active && <Check size={14} className="mt-0.5 shrink-0 text-d-text-2" />}
+        </Link>
+      ))}
+    </div>
+  );
 }

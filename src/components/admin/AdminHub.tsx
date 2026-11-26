@@ -456,15 +456,23 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
               <circle r={34} fill="transparent" />
               <polygon className="orbit-ring" points={hexPoints(36)} fill="none" stroke="var(--eco-label)" strokeWidth={1.5} />
               <g className="orbit-inner">
-                <path d={markPath(brand.mark)} transform="scale(0.14368)" fill={o.color} fillRule="evenodd" />
+                {/* resting: a desaturated derivative of the workspace colour; hover or focus restores it */}
+                <path
+                  className="orbit-rest"
+                  d={markPath(brand.mark)}
+                  transform="scale(0.14368)"
+                  fill={`color-mix(in oklab, ${o.color} 58%, var(--eco-desat))`}
+                  fillRule="evenodd"
+                />
+                <path className="orbit-full" d={markPath(brand.mark)} transform="scale(0.14368)" fill={o.color} fillRule="evenodd" />
               </g>
               <text className="orbit-label" textAnchor="middle" y={52} fontSize={12} fontWeight={600} fill="var(--eco-label)" style={{ pointerEvents: "none" }}>
                 {o.name}
               </text>
               {o.badge > 0 && (
-                <g transform="translate(21 -24)">
-                  <circle r={10} fill={o.color} stroke="var(--eco-bg)" strokeWidth={2.5} />
-                  <text textAnchor="middle" y={3.6} fontSize={10.5} fontWeight={700} fill="#FFFFFF">
+                <g transform="translate(22 -24)">
+                  <circle r={8.5} fill="var(--eco-cell)" stroke={o.color} strokeWidth={1.2} />
+                  <text textAnchor="middle" y={3.3} fontSize={9.5} fontWeight={600} fill="var(--eco-label)" className="tabular-nums">
                     {o.badge}
                   </text>
                 </g>
