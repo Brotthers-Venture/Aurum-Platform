@@ -1,7 +1,11 @@
 # Architectural Matte — Direction D visual refinement (prototype)
 
-Status: **prototype on the Investors page only, on the `redesign` branch. Awaiting owner approval before it is applied
-across the platform.** Nothing outside `/admin/fund/investors` changes: every rule is scoped to `.ws[data-finish]`,
+Status: **approved and deployed 26 Nov 2026 — finish B (Architectural) is the workstation finish on every page that uses the
+workstation shell.** A and C remain reachable for comparison with `?finish=pure` / `?finish=atmos` (the switcher
+appears only then). Also shipped: the Hexa Room rail (brand marks, opens on hover, pin to keep open) and a header that
+shows the mark alone, revealing the full logo on hover or keyboard focus.
+
+_Original prototype note:_ Nothing outside `/admin/fund/investors` changes: every rule is scoped to `.ws[data-finish]`,
 and only the Investors page sets `data-finish`.
 
 ## How to compare

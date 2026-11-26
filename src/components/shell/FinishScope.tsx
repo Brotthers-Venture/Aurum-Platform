@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { usePathname } from "next/navigation";
 import { cx } from "@/components/ui";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { readMotionPref } from "@/lib/theme";
@@ -13,24 +12,24 @@ const FINISHES: { id: Finish; label: string; about: string }[] = [
   { id: "atmos", label: "C · Atmospheric", about: "Stronger light, slow drift" },
 ];
 const KEY = "aurum-finish-preview";
-/** Pages that carry the prototype finish while it is under review. */
-const PROTOTYPE = ["/admin/fund/investors"];
 
 /**
  * The workstation's root. On prototype pages it applies the selected matte finish and the ambient light,
  * and shows a temporary switcher for comparing the three variations. Everywhere else it renders as before.
  */
 export function FinishScope({ children }: { children: ReactNode }) {
-  const path = usePathname();
   const { brand } = useBrand();
-  const on = PROTOTYPE.includes(path);
+  // Architectural Matte (B) is the workstation finish; A and C stay reachable with ?finish= for comparison.
+  const on = true;
+  const [compare, setCompare] = useState(false);
   const [finish, setFinish] = useState<Finish>("arch");
   const [motion, setMotion] = useState(false);
   useEffect(() => {
     try {
       const q = new URLSearchParams(window.location.search).get("finish") as Finish | null;
-      const saved = (q ?? window.localStorage.getItem(KEY)) as Finish | null;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- restore the reviewer's choice after hydration
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- read the comparison flag after hydration
+      setCompare(!!q);
+      const saved = q;
       if (saved && FINISHES.some((f) => f.id === saved)) setFinish(saved);
       setMotion(readMotionPref() !== "off");
     } catch {}
@@ -46,7 +45,7 @@ export function FinishScope({ children }: { children: ReactNode }) {
     <div className="ws ws-bridge relative flex h-dvh flex-col bg-d-bg" data-finish={on ? finish : undefined} data-ambient={on && ambient ? "on" : undefined}>
       {on && finish !== "pure" && <div aria-hidden className="ws-light-layer" />}
       <div className={cx("flex min-h-0 flex-1 flex-col", on && "ws-stage")}>{children}</div>
-      {on && (
+      {on && compare && (
         <div
           role="radiogroup"
           aria-label="Finish preview"

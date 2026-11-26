@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Bell, Check, ChevronDown, EllipsisVertical, LogOut, Palette, Search, ShieldCheck, UserCog } from "lucide-react";
 import { cx } from "@/components/ui";
-import { AurumLogo } from "@/components/brand/Logo";
+import { AurumLogo, AurumMark } from "@/components/brand/Logo";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { useTheme } from "./ThemeProvider";
 import { usePreviewRole } from "@/components/admin/PreviewRole";
@@ -37,7 +37,6 @@ function useDismiss(open: boolean, close: () => void) {
   return ref;
 }
 
-
 export function Menu({ children, className }: { children: ReactNode; className?: string }) {
   return <div className={cx("absolute z-50 rounded-[6px] bg-d-surface p-1.5 text-[12.5px] text-d-text shadow-[var(--d-pop)]", className)}>{children}</div>;
 }
@@ -53,7 +52,10 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
           role="radio"
           aria-checked={value === o.v}
           onClick={() => onChange(o.v)}
-          className={cx("h-7 rounded-[3px] text-[12px] text-d-text-3 hover:text-d-text", value === o.v && "bg-d-raise font-medium text-d-text shadow-[0_0_0_1px_var(--d-line-strong)]")}
+          className={cx(
+            "h-7 rounded-[3px] text-[12px] text-d-text-3 hover:text-d-text",
+            value === o.v && "bg-d-raise font-medium text-d-text shadow-[0_0_0_1px_var(--d-line-strong)]",
+          )}
         >
           {o.label}
         </button>
@@ -114,9 +116,22 @@ export function WorkstationTopBar({
   }, []);
 
   return (
-    <header ref={ref} data-shell="header" className={cx("relative z-40 flex h-[56px] shrink-0 items-center gap-3 pl-4 pr-3 text-[13px]", eco ? "border-b border-transparent bg-transparent" : "border-b border-d-line bg-d-chrome")}>
-      <Link href="/admin" aria-label={`${brand.name} home`} className="shrink-0">
-        <AurumLogo variant={theme === "dark" ? "white" : "dark"} height={32} />
+    <header
+      ref={ref}
+      data-shell="header"
+      className={cx(
+        "relative z-40 flex h-[56px] shrink-0 items-center gap-3 pl-4 pr-3 text-[13px]",
+        eco ? "border-b border-transparent bg-transparent" : "border-b border-d-line bg-d-chrome",
+      )}
+    >
+      {/* The mark alone; the full logo appears on hover or focus, so the hexagon is not repeated next to the rail. */}
+      <Link href="/admin" aria-label={`${brand.name} home`} className="group/logo relative flex h-10 w-[28px] shrink-0 items-center justify-start rounded-[4px] outline-offset-4">
+        <span className="logo-mark flex items-center">
+          <AurumMark size={26} />
+        </span>
+        <span className="logo-full pointer-events-none absolute left-0 top-1/2 w-max">
+          <AurumLogo variant={theme === "dark" ? "white" : "dark"} height={32} />
+        </span>
       </Link>
       {entity}
 
@@ -133,7 +148,10 @@ export function WorkstationTopBar({
           <kbd className="ml-auto hidden shrink-0 whitespace-nowrap rounded-[4px] border border-d-line px-1.5 font-sans text-[10.5px] text-d-text-3 sm:inline">Ctrl K</kbd>
         </button>
       ) : (
-        <label data-shell="search" className="flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-3.5 text-d-text-3 focus-within:border-d-line-strong">
+        <label
+          data-shell="search"
+          className="flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-3.5 text-d-text-3 focus-within:border-d-line-strong"
+        >
           <Search size={15} className="shrink-0" />
           <input
             placeholder="Search funds, investors, documents"
@@ -147,7 +165,12 @@ export function WorkstationTopBar({
       <div className="flex-1" />
 
       <div className="relative">
-        <button onClick={() => toggle("more")} aria-label="More" aria-expanded={open === "more"} className="flex h-8 w-8 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise hover:text-d-text">
+        <button
+          onClick={() => toggle("more")}
+          aria-label="More"
+          aria-expanded={open === "more"}
+          className="flex h-8 w-8 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise hover:text-d-text"
+        >
           <EllipsisVertical size={16} />
         </button>
         {open === "more" && (
@@ -164,9 +187,18 @@ export function WorkstationTopBar({
       </div>
 
       <div className="relative">
-        <button onClick={() => toggle("bell")} aria-label={`Notifications, ${notes.unread} new`} aria-expanded={open === "bell"} className="relative flex h-8 w-8 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise hover:text-d-text">
+        <button
+          onClick={() => toggle("bell")}
+          aria-label={`Notifications, ${notes.unread} new`}
+          aria-expanded={open === "bell"}
+          className="relative flex h-8 w-8 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise hover:text-d-text"
+        >
           <Bell size={16} />
-          {notes.unread > 0 && <span className="tnum absolute right-0.5 top-0.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-d-text px-1 text-[9.5px] font-semibold text-d-bg">{notes.unread}</span>}
+          {notes.unread > 0 && (
+            <span className="tnum absolute right-0.5 top-0.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-d-text px-1 text-[9.5px] font-semibold text-d-bg">
+              {notes.unread}
+            </span>
+          )}
         </button>
         {open === "bell" && (
           <Menu className="right-0 top-10 w-[360px]">
@@ -179,7 +211,13 @@ export function WorkstationTopBar({
                   <span className="tnum">{new Date(i.at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
                 </div>
                 <div className="mt-0.5 line-clamp-2 text-d-text">
-                  {i.reason === "Assigned" ? i.text : <><span className="font-medium">{personName(i.author)}</span> <span className="text-d-text-2">{withTenant(i.text, brand.name)}</span></>}
+                  {i.reason === "Assigned" ? (
+                    i.text
+                  ) : (
+                    <>
+                      <span className="font-medium">{personName(i.author)}</span> <span className="text-d-text-2">{withTenant(i.text, brand.name)}</span>
+                    </>
+                  )}
                 </div>
               </Link>
             ))}
@@ -188,14 +226,31 @@ export function WorkstationTopBar({
       </div>
 
       <div className="relative">
-        <button onClick={() => toggle("account")} aria-label={`Account: ${user.name}`} aria-expanded={open === "account"} className="flex items-center gap-1 rounded-full p-0.5 pr-1.5 hover:bg-d-raise">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-d-line-strong bg-d-raise text-[11px] font-semibold">{user.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}</span>
+        <button
+          onClick={() => toggle("account")}
+          aria-label={`Account: ${user.name}`}
+          aria-expanded={open === "account"}
+          className="flex items-center gap-1 rounded-full p-0.5 pr-1.5 hover:bg-d-raise"
+        >
+          <span className="flex h-7 w-7 items-center justify-center rounded-full border border-d-line-strong bg-d-raise text-[11px] font-semibold">
+            {user.name
+              .split(" ")
+              .map((w) => w[0])
+              .slice(0, 2)
+              .join("")}
+          </span>
           <ChevronDown size={13} className="text-d-text-3" />
         </button>
         {open === "account" && (
           <Menu className="right-0 top-10 w-[280px]">
             <div className="flex items-center gap-2.5 px-2.5 py-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-d-line-strong bg-d-raise text-[11.5px] font-semibold">{user.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}</span>
+              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-d-line-strong bg-d-raise text-[11.5px] font-semibold">
+                {user.name
+                  .split(" ")
+                  .map((w) => w[0])
+                  .slice(0, 2)
+                  .join("")}
+              </span>
               <span className="min-w-0">
                 <span className="block truncate font-semibold">{user.name}</span>
                 <span className="block truncate text-[11.5px] text-d-text-3">{user.title}</span>
