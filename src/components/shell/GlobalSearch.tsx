@@ -14,7 +14,7 @@ import { FAMILIES } from "@/lib/wealth";
 import { allows, hexaHref } from "@/lib/hexa";
 import { useHexas } from "./useHexas";
 
-type Hit = { id: string; group: string; label: string; detail?: string; href: string; Icon: LucideIcon; keys: string };
+export type Hit = { id: string; group: string; label: string; detail?: string; href: string; Icon: LucideIcon; keys: string };
 
 const fold = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 const fundName = (id: string) => funds.find((f) => f.id === id)?.shortName ?? id;
@@ -60,19 +60,17 @@ function useIndex(): Hit[] {
           keys: `${i.name} ${i.contact} ${i.email}`,
         }),
       );
-      capitalCalls
-        .slice(0, 40)
-        .forEach((c) =>
-          hits.push({
-            id: `cc-${c.id}`,
-            group: "Capital calls",
-            label: `Capital call No. ${c.number}`,
-            detail: `${fundName(c.fundId)} · due ${c.dueDate}`,
-            href: `/admin/fund/capital-calls/${c.id}`,
-            Icon: Wallet,
-            keys: `capital call ${c.number} ${fundName(c.fundId)}`,
-          }),
-        );
+      capitalCalls.slice(0, 40).forEach((c) =>
+        hits.push({
+          id: `cc-${c.id}`,
+          group: "Capital calls",
+          label: `Capital call No. ${c.number}`,
+          detail: `${fundName(c.fundId)} · due ${c.dueDate}`,
+          href: `/admin/fund/capital-calls/${c.id}`,
+          Icon: Wallet,
+          keys: `capital call ${c.number} ${fundName(c.fundId)}`,
+        }),
+      );
       documents.forEach((d) =>
         hits.push({
           id: `dc-${d.id}`,
@@ -126,9 +124,10 @@ function useIndex(): Hit[] {
 }
 
 /** Search across funds, investors, GPs, companies, families, data rooms, documents and pages. Ctrl K or ⌘K. */
-export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function GlobalSearch({ open, onClose, index: own, placeholder }: { open: boolean; onClose: () => void; index?: Hit[]; placeholder?: string }) {
   const router = useRouter();
-  const index = useIndex();
+  const all = useIndex();
+  const index = own ?? all;
   const [q, setQ] = useState("");
   const [i, setI] = useState(0);
   const input = useRef<HTMLInputElement>(null);
@@ -197,7 +196,7 @@ export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => 
                 setI((n) => Math.max(n - 1, 0));
               } else if (e.key === "Enter") go(results[i]);
             }}
-            placeholder="Search funds, investors, companies, families, documents…"
+            placeholder={placeholder ?? "Search funds, investors, companies, families, documents…"}
             aria-label="Search"
             aria-activedescendant={results[i] ? `gs-${i}` : undefined}
             style={{ outline: "none", boxShadow: "none" }}
@@ -206,7 +205,7 @@ export function GlobalSearch({ open, onClose }: { open: boolean; onClose: () => 
           <kbd className="rounded-[4px] border border-d-line px-1.5 text-[11px] text-d-text-3">Esc</kbd>
         </label>
         <div ref={list} role="listbox" className="max-h-[min(460px,60vh)] overflow-y-auto p-1.5">
-          {results.length === 0 && <p className="px-3 py-8 text-center text-[13px] text-d-text-3">Nothing matches “{q}”. Try a fund, an investor, a company or a page name.</p>}
+          {results.length === 0 && <p className="px-3 py-8 text-center text-[13px] text-d-text-3">Nothing matches “{q}”. Try a fund, an investor or a page name.</p>}
           {results.map((h, n) => {
             const head = n === 0 || results[n - 1].group !== h.group ? h.group : null;
             return (

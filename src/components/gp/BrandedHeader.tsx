@@ -53,7 +53,15 @@ export function BrandedHeader({
         <div className="ml-auto flex items-center gap-4">
           {right}
           <div className="flex items-center gap-2.5">
-            <Avatar label={userName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()} size={30} />
+            <Avatar
+              label={userName
+                .split(" ")
+                .map((w) => w[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase()}
+              size={30}
+            />
             <span className="hidden leading-tight md:block">
               <span className="block text-[12px] font-semibold">{userName}</span>
               <span className="block text-[11px] text-stone-500">{userTitle}</span>

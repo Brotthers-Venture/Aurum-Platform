@@ -23,7 +23,7 @@ const PREVIEW_ORDER: PartyType[] = ["employee", "tenant", "gp", "client", "lp", 
 const PREVIEW_PEOPLE = ["thiago", "luiza", "rafael", "carla", "helena", "eleanor", "samito", "marcus", "lucas", "tom", "anamazal", "pedro", "margaret", "gt-audit"];
 
 /** Close a popover on outside click or Escape. */
-function useDismiss(open: boolean, close: () => void) {
+export function useDismiss(open: boolean, close: () => void) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;

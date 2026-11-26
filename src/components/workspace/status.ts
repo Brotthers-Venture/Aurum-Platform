@@ -1,0 +1,20 @@
+/** Status pill colours shared by the workspace panels (server and client). */
+export const pill: Record<string, string> = {
+  Funded: "border-up-line text-up-ink",
+  Paid: "border-up-line text-up-ink",
+  Issued: "border-attn-line text-gold-700",
+  "Partially funded": "border-attn-line text-gold-700",
+  Scheduled: "border-attn-line text-gold-700",
+  Draft: "border-stone-200 text-stone-500",
+  Overdue: "border-neg-line text-negative",
+  Investing: "border-up-line text-up-ink",
+  Fundraising: "border-attn-line text-gold-700",
+  Harvesting: "border-stone-200 text-stone-600",
+  "Fully called": "border-stone-200 text-stone-600",
+  Submitted: "border-attn-line text-gold-700",
+  "In progress": "border-stone-200 text-stone-600",
+  "Changes requested": "border-neg-line text-negative",
+  Approved: "border-up-line text-up-ink",
+  Countersigned: "border-up-line text-up-ink",
+  Invited: "border-stone-200 text-stone-500",
+};

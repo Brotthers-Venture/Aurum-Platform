@@ -7,6 +7,9 @@ import { cx } from "@/components/ui";
 import { Columns, Lines, MEANING } from "@/components/analytics/charts";
 import { fmtShort, useAnalyticsView } from "@/components/analytics/AnalyticsPanels";
 import { periodLabel, type FundAnalytics, type PeriodFx } from "@/lib/analytics";
+import { pill } from "./status";
+
+export { pill };
 
 /* Robinhood Legend-style workspace in Aurum cream: tiled panels, dense lists, one big chart. */
 
@@ -31,7 +34,7 @@ export type WorkspaceAttention = { tag: string; title: string; detail: string; h
 const usd0 = (v: number) => `$${Math.round(v).toLocaleString("en-US")}`;
 const money = (v: number, ccy = "USD") => `${ccy === "BRL" ? "R$" : "$"}${Math.round(v).toLocaleString("en-US")}`;
 
-function Panel({
+export function Panel({
   title,
   children,
   actions,
@@ -87,14 +90,18 @@ function Spark({ values, w = 64, h = 22 }: { values: number[]; w?: number; h?: n
   );
 }
 
-const pill: Record<string, string> = {
-  Funded: "border-up-line text-up-ink",
-  Paid: "border-up-line text-up-ink",
-  Issued: "border-attn-line text-gold-700",
-  "Partially funded": "border-attn-line text-gold-700",
-  Scheduled: "border-attn-line text-gold-700",
-  Draft: "border-stone-200 text-stone-500",
-  Overdue: "border-neg-line text-negative",
+export type WorkspaceOptions = {
+  /** workspace tabs (default: Overview, Capital activity, Investor relations) */
+  tabs?: string[];
+  /** show the layout controls (new layout, add widget) */
+  customise?: boolean;
+  /** the portfolio selector; default: one entry per GP */
+  scopes?: { id: string; label: string }[];
+  allLabel?: string;
+  /** where a vehicle opens: `${fundBase}/${id}` */
+  fundBase?: string;
+  /** the action beside Portfolio; default: New call */
+  primaryAction?: ReactNode;
 };
 
 export function LegendWorkspace({
@@ -102,11 +109,13 @@ export function LegendWorkspace({
   calls,
   events,
   attention,
+  options = {},
 }: {
   data: { periods: string[]; fx: PeriodFx[]; funds: FundAnalytics[] };
   calls: WorkspaceCall[];
   events: WorkspaceEvent[];
   attention: WorkspaceAttention[];
+  options?: WorkspaceOptions;
 }) {
   const [tab, setTab] = useState("Overview");
   const [scope, setScope] = useState("all");
@@ -137,13 +146,16 @@ export function LegendWorkspace({
         .filter((r) => r.s.commitment > 0),
     [v.perFund, last],
   );
-  const gps = [...new Map(data.funds.map((x) => [x.gpId, x.gpName])).entries()];
+  const scopes = options.scopes ?? [...new Map(data.funds.map((x) => [x.gpId, x.gpName])).entries()].map(([id, label]) => ({ id: `gp:${id}`, label }));
+  const allLabel = options.allLabel ?? "All vehicles";
+  const fundHref = (id: string) => `${options.fundBase ?? "/admin/fund/funds"}/${id}`;
+  const customise = options.customise ?? true;
 
   return (
     <div className="-mx-2 space-y-2">
       {/* workspace bar */}
       <div className="flex flex-wrap items-center gap-2 rounded-[12px] border border-stone-200 bg-white px-2 py-1.5">
-        {["Overview", "Capital activity", "Investor relations"].map((t) => (
+        {(options.tabs ?? ["Overview", "Capital activity", "Investor relations"]).map((t) => (
           <button
             key={t}
             type="button"
@@ -157,26 +169,30 @@ export function LegendWorkspace({
             {t}
           </button>
         ))}
-        <button
-          type="button"
-          aria-label="New layout"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] text-stone-400 hover:bg-stone-100 hover:text-ink-900"
-        >
-          <Plus size={15} />
-        </button>
+        {customise && (
+          <button
+            type="button"
+            aria-label="New layout"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] text-stone-400 hover:bg-stone-100 hover:text-ink-900"
+          >
+            <Plus size={15} />
+          </button>
+        )}
         <span className="mx-auto inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3 py-1 text-[12px] text-ink-900">
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: UP }} />
           Q4 2026 · period open
         </span>
-        <button type="button" className="inline-flex h-8 items-center gap-2 rounded-[8px] px-3 text-[13px] font-semibold text-ink-900 hover:bg-stone-100">
-          Add widget <LayoutGrid size={14} />
-        </button>
+        {customise && (
+          <button type="button" className="inline-flex h-8 items-center gap-2 rounded-[8px] px-3 text-[13px] font-semibold text-ink-900 hover:bg-stone-100">
+            Add widget <LayoutGrid size={14} />
+          </button>
+        )}
         <label className="relative inline-flex h-8 items-center rounded-[8px] border border-stone-200 bg-white pl-3 pr-7 text-[13px] font-semibold text-ink-900">
           <select aria-label="Portfolio" value={scope} onChange={(e) => setScope(e.target.value)} className="appearance-none bg-transparent pr-1 focus:outline-none">
-            <option value="all">All vehicles</option>
-            {gps.map(([id, n]) => (
-              <option key={id} value={`gp:${id}`}>
-                {n}
+            <option value="all">{allLabel}</option>
+            {scopes.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.label}
               </option>
             ))}
           </select>
@@ -190,9 +206,13 @@ export function LegendWorkspace({
           title={
             <span className="flex items-center justify-between">
               Portfolio
-              <Link href="/admin/fund/capital-calls/new" className="rounded-[7px] border border-stone-200 px-2.5 py-1 text-[12px] font-semibold text-ink-900 hover:bg-stone-100">
-                New call
-              </Link>
+              {options.primaryAction !== undefined ? (
+                options.primaryAction
+              ) : (
+                <Link href="/admin/fund/capital-calls/new" className="rounded-[7px] border border-stone-200 px-2.5 py-1 text-[12px] font-semibold text-ink-900 hover:bg-stone-100">
+                  New call
+                </Link>
+              )}
             </span>
           }
           actions={
@@ -209,7 +229,7 @@ export function LegendWorkspace({
         >
           <div className="flex items-start justify-between">
             <div>
-              <div className="text-[12.5px] text-stone-500">{scope === "all" ? "All vehicles" : gps.find(([id]) => `gp:${id}` === scope)?.[1]}</div>
+              <div className="text-[12.5px] text-stone-500">{scope === "all" ? allLabel : scopes.find((o) => o.id === scope)?.label}</div>
               <div className="fig mt-1 text-[34px] leading-none text-ink-900">{mask(usd0(v.end.nav))}</div>
             </div>
           </div>
@@ -409,7 +429,7 @@ export function LegendWorkspace({
                 .map((r) => (
                   <tr key={r.f.id} className="hover:bg-stone-100/60">
                     <td className="max-w-[260px] truncate py-[9px] font-semibold text-ink-900">
-                      <Link href={`/admin/fund/funds/${r.f.id}`}>{r.f.shortName}</Link>
+                      <Link href={fundHref(r.f.id)}>{r.f.shortName}</Link>
                     </td>
                     <td className="num py-[9px] text-right text-ink-900">{mask(f(r.s.nav))}</td>
                     <td className="num py-[9px] text-right text-stone-600">{r.m.tvpi ? `${r.m.tvpi.toFixed(2)}x` : "—"}</td>
@@ -444,7 +464,7 @@ export function LegendWorkspace({
                 <th className="px-2 py-2.5 text-left font-semibold">Due</th>
                 <th className="px-2 py-2.5 text-right font-semibold">Amount</th>
                 <th className="px-2 py-2.5 text-right font-semibold">Received</th>
-                <th className="w-[120px] px-2 py-2.5 text-left font-semibold">Funded</th>
+                <th className="w-[72px] px-2 py-2.5 text-left font-semibold 2xl:w-[120px]">Funded</th>
                 <th className="px-4 py-2.5 text-left font-semibold">Status</th>
               </tr>
             </thead>
@@ -453,7 +473,7 @@ export function LegendWorkspace({
                 const pctFunded = c.amount ? c.received / c.amount : 0;
                 return (
                   <tr key={c.id} className="border-b border-stone-100 hover:bg-stone-100/60">
-                    <td className="max-w-[200px] truncate px-4 py-[9px] font-semibold text-ink-900">{c.fund}</td>
+                    <td className="max-w-[150px] truncate px-4 py-[9px] font-semibold text-ink-900 2xl:max-w-[200px]">{c.fund}</td>
                     <td className="num whitespace-nowrap px-2 py-[9px] text-stone-600">No. {c.number}</td>
                     <td className="num whitespace-nowrap px-2 py-[9px] text-stone-600">{c.due}</td>
                     <td className="num whitespace-nowrap px-2 py-[9px] text-right text-ink-900">{mask(money(c.amount, c.currency))}</td>
