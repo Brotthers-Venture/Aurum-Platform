@@ -46,10 +46,11 @@ export const solutions: Solution[] = [
     name: "Blockchain Solution",
     lines: ["Blockchain", "Solution"],
     href: "/admin/blockchain",
-    live: false,
+    live: true,
     slot: "sw",
-    summary: "Tokenized fund interests, on-chain registers and digital asset custody oversight.",
-    modules: ["Tokenized interests", "On-chain registry", "Custody oversight", "Transfer agent", "Wallet screening", "Reporting"],
+    summary:
+      "Tokenized share registers for the companies we form and administer: owners hold their shares in their own wallets, every transfer checked against the company’s rules.",
+    modules: ["Tokenized companies", "Token rules", "Transfers", "Owner wallets", "Register reconciliation", "Secondary sales"],
   },
   {
     id: "offering",

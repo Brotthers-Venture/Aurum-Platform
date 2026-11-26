@@ -1,6 +1,7 @@
 "use client";
 
 import { OFFERINGS } from "@/lib/offering/data";
+import { TOKENS } from "@/lib/blockchain/data";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
@@ -138,9 +139,11 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
           ? "Coming soon"
           : s.id === "fund"
             ? `${gps.length} GPs`
-            : s.id === "offering"
-              ? `${OFFERINGS.filter((o) => o.status !== "Preparing" && o.status !== "Closed").length} open offerings`
-              : `${formations.filter((f) => f.stage !== "Post-formation").length} in progress`,
+            : s.id === "blockchain"
+              ? `${TOKENS.filter((t) => t.status === "Live").length} companies live`
+              : s.id === "offering"
+                ? `${OFFERINGS.filter((o) => o.status !== "Preparing" && o.status !== "Closed").length} open offerings`
+                : `${formations.filter((f) => f.stage !== "Post-formation").length} in progress`,
         subTone: s.live ? "accent" : "muted",
         outline: s.live,
         ...(s.id === "fund" ? { open: () => go({ kind: "fund", from: s.slot }) } : { href: s.href }),

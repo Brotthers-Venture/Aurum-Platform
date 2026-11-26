@@ -8,7 +8,7 @@ import { FIRM, type FirmId } from "./firm-colors";
 import { firmModules } from "./firm";
 import { onboarding } from "./data";
 
-export type HexaId = "fund" | "corporate" | "multi-family" | "offering" | FirmId;
+export type HexaId = "fund" | "corporate" | "multi-family" | "offering" | "blockchain" | FirmId;
 export type HexaPage = { label: string; href: string; group?: string; badge?: number };
 export type Hexa = {
   id: HexaId;
@@ -83,6 +83,19 @@ export const HEXAS: Hexa[] = [
     ],
   },
   {
+    id: "blockchain",
+    name: "Blockchain Solution",
+    color: "var(--tenant-accent)",
+    href: "/admin/blockchain",
+    base: "/admin/blockchain",
+    pages: [
+      { label: "Tokenized companies", href: "/admin/blockchain" },
+      { label: "Tokenize a company", href: "/admin/blockchain/tokenize" },
+      { label: "Transfers", href: "/admin/blockchain/transfers" },
+      { label: "Secondary sales", href: "/admin/blockchain/secondary" },
+    ],
+  },
+  {
     id: "multi-family",
     name: "Multi-Family Office",
     color: "var(--tenant-accent)",
@@ -145,12 +158,12 @@ export const DEFAULTS: Record<PartyType, HexaId[]> = {
   lp: [],
   guest: [],
 };
-export const GRANTABLE: HexaId[] = ["fund", "corporate", "multi-family", "offering", "dataroom", "billing", "compliance", "sales", "communication", "pmo"];
+export const GRANTABLE: HexaId[] = ["fund", "corporate", "multi-family", "offering", "blockchain", "dataroom", "billing", "compliance", "sales", "communication", "pmo"];
 export const MAIN_ADMIN: RoleId = "platform_admin";
 
 export type Invitation = { email: string; hexa: HexaId; by: string; at: string; expires?: string };
 const SEED_INVITES: Invitation[] = [
-  ...(["fund", "corporate", "multi-family", "offering", "dataroom", "billing", "compliance", "sales"] as HexaId[]).map((h) => ({
+  ...(["fund", "corporate", "multi-family", "offering", "blockchain", "dataroom", "billing", "compliance", "sales"] as HexaId[]).map((h) => ({
     email: "luiza@aurumasset.us",
     hexa: h,
     by: "Thiago Brandão",

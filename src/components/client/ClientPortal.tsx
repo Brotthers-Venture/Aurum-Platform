@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, Building2, Check, FileText, ListChecks, LogOut, MessagesSquare, Users } from "lucide-react";
+import { ArrowRight, Building2, Check, Coins, FileText, ListChecks, LogOut, MessagesSquare, Users } from "lucide-react";
 import { cx } from "@/components/ui";
 import { AurumLogo } from "@/components/brand/Logo";
 import { usePreviewRole } from "@/components/admin/PreviewRole";
@@ -14,6 +14,8 @@ import { people as commsPeople } from "@/lib/comms";
 import { familyOf } from "@/lib/wealth";
 import { progress } from "@/lib/checklist";
 import { WealthPlatform } from "@/components/wealth/WealthPlatform";
+import { OwnerWallet } from "@/components/blockchain/OwnerWallet";
+import { TOKENS } from "@/lib/blockchain/data";
 import { ClientChecklist, useChecklists } from "@/components/onboarding/Checklist";
 
 const when = (iso: string) => new Date(`${iso.slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -47,7 +49,7 @@ const DOCS = [
  */
 export function ClientPortal() {
   const { member } = usePreviewRole();
-  const [tab, setTab] = useState<"overview" | "documents" | "messages" | "wealth" | "onboarding">("wealth");
+  const [tab, setTab] = useState<"overview" | "documents" | "messages" | "wealth" | "onboarding" | "shares">("wealth");
   const lists = useChecklists() ?? [];
   if (member.party !== "client")
     return (
@@ -72,7 +74,8 @@ export function ClientPortal() {
   const family = familyOf(member.org);
   const mine = lists.filter((l) => l.org === member.org);
   const openLists = mine.filter((l) => progress(l).open > 0);
-  const view = tab === "wealth" && !family ? "overview" : tab;
+  const hasShares = TOKENS.some((t) => t.clientOrg === member.org && t.status === "Live");
+  const view = tab === "wealth" && !family ? "overview" : tab === "shares" && !hasShares ? "overview" : tab;
   const entities = [
     ...(FAMILY_ENTITIES[member.org] ?? []),
     ...forms
@@ -93,7 +96,7 @@ export function ClientPortal() {
             <AurumLogo variant="dark" height={30} />
           )}
           {formed && (
-            <nav className="flex h-full items-stretch gap-1">
+            <nav className="flex h-full min-w-0 items-stretch gap-1 overflow-x-auto">
               {(
                 [
                   ...(family
@@ -102,6 +105,7 @@ export function ClientPortal() {
                         ["overview", "Overview", Building2],
                         ["documents", "Documents", FileText],
                       ] as const)),
+                  ...(hasShares ? ([["shares", "Shares", Coins]] as const) : []),
                   ...(mine.length
                     ? ([["onboarding", openLists.length ? `Onboarding · ${openLists.reduce((n, l) => n + progress(l).open, 0)}` : "Onboarding", ListChecks]] as const)
                     : []),
@@ -144,6 +148,11 @@ export function ClientPortal() {
               <ClientChecklist key={c.id} c={c} actor={member.name} />
             ))}
           />
+        ) : view === "shares" ? (
+          <div className="mx-auto max-w-[1120px]">
+            <h1 className="mb-5 text-[24px] font-semibold tracking-[-0.02em] text-ink-900">Shares</h1>
+            <OwnerWallet org={member.org} person={member.name} />
+          </div>
         ) : view === "wealth" && family ? (
           <WealthPlatform family={family} mode="client" actor={member.name} actorId={member.id} />
         ) : view === "onboarding" ? (

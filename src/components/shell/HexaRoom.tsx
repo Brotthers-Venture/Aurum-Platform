@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Building2, ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Landmark, Layers, Users, X } from "lucide-react";
+import { Building2, ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Blocks, Landmark, Layers, Users, X } from "lucide-react";
 import { cx } from "@/components/ui";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { AurumLogo, markPath } from "@/components/brand/Logo";
@@ -28,6 +28,7 @@ const SOLUTIONS: { id: HexaId; about: string; Icon: typeof Landmark }[] = [
   { id: "corporate", about: "Corporate entities and administration.", Icon: Building2 },
   { id: "multi-family", about: "Private wealth and family office services.", Icon: Users },
   { id: "offering", about: "Capital formation, investor pipeline and agreements.", Icon: Layers },
+  { id: "blockchain", about: "Tokenized share registers and owner wallets.", Icon: Blocks },
 ];
 const isSolution = (id?: string) => SOLUTIONS.some((s) => s.id === id);
 
