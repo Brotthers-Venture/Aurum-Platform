@@ -834,8 +834,8 @@ export const INTERACTIONS: Interaction[] = interactions();
  * Capital formation figures for a set of offerings. Kinds are never added together: accepted commitments come from
  * the books or a countersignature; indicative and soft amounts from the investor; potential from the relationship owner.
  */
-export function figures(offeringIds: string[], opps: Opportunity[] = OPPORTUNITIES) {
-  const os = OFFERINGS.filter((o) => offeringIds.includes(o.id));
+export function figures(offeringIds: string[], opps: Opportunity[] = OPPORTUNITIES, offerings: Offering[] = OFFERINGS) {
+  const os = offerings.filter((o) => offeringIds.includes(o.id));
   const set = opps.filter((x) => offeringIds.includes(x.offeringId));
   const open = set.filter((x) => OPEN(x.stage));
   const sum = (list: Opportunity[], k: keyof Amounts) => list.reduce((s, x) => s + (x.amounts[k] ?? 0), 0);

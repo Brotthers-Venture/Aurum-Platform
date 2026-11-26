@@ -5,25 +5,27 @@ import { useState } from "react";
 import { ArrowRight, Lock } from "lucide-react";
 import { cx } from "@/components/ui";
 import { usePreviewRole } from "@/components/admin/PreviewRole";
-import { AGREEMENTS, INTERACTIONS, PHASES, STAGES, offeringById, partyById, stageOf, type Opportunity, type StageId } from "@/lib/offering/data";
-import { gateBlock, movesFor, offering, useOfferingState } from "@/lib/offering/store";
+import { AGREEMENTS, INTERACTIONS, PHASES, STAGES, stageOf, type Opportunity, type StageId } from "@/lib/offering/data";
+import { gateBlock, movesFor, offering, useOffering } from "@/lib/offering/store";
+import { AmountsEditor, FollowUps } from "./Forms";
 import { Drawer, Illus, KV, Section, StagePill, StageTrack, amountRows, day, usd } from "./ui";
 
 export function OpportunityDrawer({ opp, onClose }: { opp: Opportunity; onClose: () => void }) {
-  const s = useOfferingState();
+  const d = useOffering();
   const { member } = usePreviewRole();
-  const party = partyById(opp.partyId)!;
-  const o = offeringById(opp.offeringId)!;
+  const party = d.party(opp.partyId)!;
+  const o = d.offering(opp.offeringId)!;
   const [picking, setPicking] = useState(false);
+  const [editAmounts, setEditAmounts] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const agreements = AGREEMENTS.filter((a) => a.offeringId === opp.offeringId && a.partyId === opp.partyId);
   const engagement = INTERACTIONS.filter((x) => x.partyId === opp.partyId && x.offeringId === opp.offeringId).slice(0, 6);
-  const history = movesFor(s, opp.id);
+  const history = movesFor(d.moves, opp.id);
   const amounts = amountRows(opp.amounts).filter(([, v]) => v !== undefined);
   const derived = opp.source !== "Recorded by hand";
 
   const move = (to: StageId) => {
-    const err = offering.move(opp, to, member.name);
+    const err = offering.move(opp, to, member.name, party);
     setMsg(err);
     if (!err) setPicking(false);
   };
@@ -71,7 +73,7 @@ export function OpportunityDrawer({ opp, onClose }: { opp: Opportunity; onClose:
                 <div className="px-1.5 pb-0.5 text-[11px] text-d-text-3">{ph.label}</div>
                 <div className="flex flex-wrap gap-1">
                   {STAGES.filter((x) => x.phase === ph.id).map((x) => {
-                    const block = x.gate ? gateBlock(opp, x.id) : null;
+                    const block = x.gate ? gateBlock(opp, x.id, party) : null;
                     return (
                       <button
                         key={x.id}
@@ -107,28 +109,50 @@ export function OpportunityDrawer({ opp, onClose }: { opp: Opportunity; onClose:
         {msg && <p className="mt-2 rounded-[8px] border border-attn-line px-3 py-2 text-[12px] text-gold-700">{msg}</p>}
       </Section>
 
-      <Section title="Amounts" aside={opp.amountsIllustrative ? <Illus title="The stage is on record; the potential ticket is an estimate" /> : undefined}>
-        <KV
-          rows={amounts.map(([k, v]) => [
-            k,
-            <span key={k} className="tnum">
-              {usd(v)}
-            </span>,
-          ])}
-        />
+      <Section
+        title="Amounts"
+        aside={
+          <span className="flex items-center gap-2">
+            {opp.amountsIllustrative && <Illus title="The stage is on record; the potential ticket is an estimate" />}
+            {!editAmounts && (
+              <button onClick={() => setEditAmounts(true)} className="text-[12px] font-semibold text-d-text-2 hover:text-d-text">
+                Record
+              </button>
+            )}
+          </span>
+        }
+      >
+        {editAmounts ? (
+          <AmountsEditor opp={opp} onDone={() => setEditAmounts(false)} />
+        ) : amounts.length ? (
+          <KV
+            rows={amounts.map(([k, v]) => [
+              k,
+              <span key={k} className="tnum">
+                {usd(v)}
+              </span>,
+            ])}
+          />
+        ) : (
+          <p className="text-d-text-3">No amounts recorded.</p>
+        )}
         <p className="mt-2 text-[11.5px] leading-relaxed text-d-text-3">
           Each kind is kept separate: only an accepted commitment binds the investor, and only the fund’s books show capital as received.
         </p>
       </Section>
 
       {opp.next && (
-        <Section title="Next action" aside={opp.next.illustrative ? <Illus short /> : undefined}>
+        <Section title="Waiting on" aside={opp.next.illustrative ? <Illus short /> : undefined}>
           <div className="flex items-start gap-3 rounded-[10px] border border-d-line px-3 py-2.5">
             <span className="flex-1 text-[13px] text-d-text">{opp.next.action}</span>
             {opp.next.date && <span className="tnum shrink-0 text-[12px] text-d-text-3">{day(opp.next.date)}</span>}
           </div>
         </Section>
       )}
+
+      <Section title="Follow-ups">
+        <FollowUps d={d} opp={opp} partyId={opp.partyId} />
+      </Section>
 
       <Section title="Agreements">
         {agreements.length ? (

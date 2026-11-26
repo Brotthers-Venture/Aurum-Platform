@@ -1,16 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 import { ArrowLeft, ArrowRight, FolderLock } from "lucide-react";
 import { cx } from "@/components/ui";
 import { PageHead } from "@/components/gp/GpKit";
 import { GpMark } from "@/components/brand/GpLogo";
 import { gpById } from "@/lib/gps";
 import { rooms, views } from "@/lib/dataroom";
-import { AGREEMENTS, INTERACTIONS, OFFERINGS, figures, offeringById, partyById, type Offering, type Opportunity } from "@/lib/offering/data";
-import { applyMoves, useOfferingState } from "@/lib/offering/store";
+import { AGREEMENTS, INTERACTIONS, type Offering, type Opportunity } from "@/lib/offering/data";
+import { useOffering } from "@/lib/offering/store";
 import { AgreementTable } from "./Agreements";
+import { AddToPipeline, OfferingForm, btnPrimary, btnSecondary } from "./Forms";
 import { OpportunityDrawer } from "./OpportunityDrawer";
 import { PipelineBoard } from "./Pipeline";
 import { Empty, Illus, KV, Ladder, LadderLegend, Seg, StagePill, day, ladderRows, usd, usdShort } from "./ui";
@@ -42,10 +45,11 @@ function Mark({ o, size = 28 }: { o: Offering; size?: number }) {
 /* ───────── register ───────── */
 
 export function OfferingRegister() {
-  const s = useOfferingState();
-  const opps = useMemo(() => applyMoves(s), [s]);
+  const d = useOffering();
+  const router = useRouter();
   const [show, setShow] = useState<"open" | "all">("open");
-  const list = OFFERINGS.filter((o) => show === "all" || o.status === "Open" || o.status === "Subsequent close");
+  const [creating, setCreating] = useState(false);
+  const list = d.offerings.filter((o) => show === "all" || o.status === "Open" || o.status === "Subsequent close");
   const th = "px-3 py-2.5 text-left text-[11.5px] font-medium text-d-text-3 first:pl-4 last:pr-4 whitespace-nowrap";
   const td = "px-3 py-3 first:pl-4 last:pr-4 align-middle";
   return (
@@ -55,17 +59,23 @@ export function OfferingRegister() {
         title="Offerings"
         meta="Every offering we coordinate, with what has been accepted and where the rest of the target stands. Amounts in USD."
         action={
-          <Seg
-            label="Show"
-            value={show}
-            onChange={setShow}
-            options={[
-              ["open", "Open"],
-              ["all", "All"],
-            ]}
-          />
+          <div className="flex items-center gap-2">
+            <Seg
+              label="Show"
+              value={show}
+              onChange={setShow}
+              options={[
+                ["open", "Open"],
+                ["all", "All"],
+              ]}
+            />
+            <button onClick={() => setCreating(true)} className={btnPrimary}>
+              <Plus size={15} /> New offering
+            </button>
+          </div>
         }
       />
+      {creating && <OfferingForm onClose={() => setCreating(false)} onSaved={(id) => router.push(`/admin/offering/offerings/${id}`)} />}
       <div className="overflow-x-auto rounded-[12px] border border-d-line bg-d-surface">
         <table className="w-full min-w-[980px] text-[13px]">
           <thead className="border-b border-d-line">
@@ -83,7 +93,7 @@ export function OfferingRegister() {
           </thead>
           <tbody>
             {list.map((o) => {
-              const f = figures([o.id], opps);
+              const f = d.figures([o.id]);
               return (
                 <tr key={o.id} className="border-b border-d-line-soft last:border-0 hover:bg-d-raise">
                   <td className={td}>
@@ -144,11 +154,13 @@ export function OfferingRegister() {
 type Tab = "overview" | "pipeline" | "commitments" | "documents" | "distribution" | "activity";
 
 export function OfferingDetail({ id }: { id: string }) {
-  const s = useOfferingState();
-  const opps = useMemo(() => applyMoves(s), [s]);
+  const d = useOffering();
+  const opps = d.opps;
   const [tab, setTab] = useState<Tab>("overview");
   const [open, setOpen] = useState<Opportunity | null>(null);
-  const o = offeringById(id);
+  const [editing, setEditing] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const o = d.offering(id);
   if (!o)
     return (
       <div className="py-16">
@@ -160,7 +172,7 @@ export function OfferingDetail({ id }: { id: string }) {
         </Empty>
       </div>
     );
-  const f = figures([o.id], opps);
+  const f = d.figures([o.id]);
   const mine = opps.filter((x) => x.offeringId === o.id);
   const committed = mine.filter((x) => x.amounts.accepted !== undefined).sort((a, b) => (b.amounts.accepted ?? 0) - (a.amounts.accepted ?? 0));
   const agreements = AGREEMENTS.filter((a) => a.offeringId === o.id);
@@ -272,7 +284,7 @@ export function OfferingDetail({ id }: { id: string }) {
                       <button onClick={() => setOpen(x)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-d-raise">
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[13px] text-d-text">{x.next!.action}</span>
-                          <span className="block truncate text-[12px] text-d-text-3">{partyById(x.partyId)?.name}</span>
+                          <span className="block truncate text-[12px] text-d-text-3">{d.party(x.partyId)?.name}</span>
                         </span>
                         <StagePill stage={x.stage} />
                         {(x.illustrative || x.next!.illustrative) && <Illus short />}
@@ -284,7 +296,12 @@ export function OfferingDetail({ id }: { id: string }) {
           </div>
           <aside className="space-y-6">
             <section className="rounded-[12px] border border-d-line bg-d-surface px-4 py-3">
-              <h2 className="mb-1 text-[13px] font-semibold text-d-text">Terms of the offering</h2>
+              <div className="mb-1 flex items-center">
+                <h2 className="flex-1 text-[13px] font-semibold text-d-text">Terms of the offering</h2>
+                <button onClick={() => setEditing(true)} className="text-[12px] font-semibold text-d-text-2 hover:text-d-text">
+                  Edit
+                </button>
+              </div>
               <KV
                 rows={[
                   ["Vehicle", o.fundId ? <Link href={`/admin/fund/funds`}>{o.name}</Link> : "Not yet set up in Fund Solution"],
@@ -322,7 +339,16 @@ export function OfferingDetail({ id }: { id: string }) {
         </div>
       )}
 
-      {tab === "pipeline" && <PipelineBoard opps={mine} onOpen={setOpen} />}
+      {tab === "pipeline" && (
+        <>
+          <div className="mb-3 flex justify-end">
+            <button onClick={() => setAdding(true)} className={btnSecondary}>
+              <Plus size={14} /> Add investor
+            </button>
+          </div>
+          <PipelineBoard opps={mine} onOpen={setOpen} />
+        </>
+      )}
 
       {tab === "commitments" && (
         <div className="overflow-x-auto rounded-[12px] border border-d-line bg-d-surface">
@@ -342,7 +368,7 @@ export function OfferingDetail({ id }: { id: string }) {
                 <tr key={x.id} className="border-b border-d-line-soft last:border-0 hover:bg-d-raise">
                   <td className={td}>
                     <button onClick={() => setOpen(x)} className="text-left font-medium text-d-text hover:underline">
-                      {partyById(x.partyId)?.name}
+                      {d.party(x.partyId)?.name}
                     </button>
                   </td>
                   <td className={td}>
@@ -394,7 +420,7 @@ export function OfferingDetail({ id }: { id: string }) {
               <span className="min-w-0 flex-1">
                 <span className="block text-[13px] text-d-text">
                   <Link href={`/admin/offering/investors/${x.partyId}`} className="font-medium hover:underline">
-                    {partyById(x.partyId)?.name}
+                    {d.party(x.partyId)?.name}
                   </Link>{" "}
                   · {x.text}
                 </span>
@@ -407,7 +433,9 @@ export function OfferingDetail({ id }: { id: string }) {
           ))}
         </ul>
       )}
-      {open && <OpportunityDrawer opp={opps.find((x) => x.id === open.id) ?? open} onClose={() => setOpen(null)} />}
+      {open && opps.some((x) => x.id === open.id) && <OpportunityDrawer opp={opps.find((x) => x.id === open.id)!} onClose={() => setOpen(null)} />}
+      {editing && <OfferingForm initial={o} onClose={() => setEditing(false)} />}
+      {adding && <AddToPipeline offeringId={o.id} onClose={() => setAdding(false)} onAdded={(oppId) => setOpen({ id: oppId } as Opportunity)} />}
     </div>
   );
 }

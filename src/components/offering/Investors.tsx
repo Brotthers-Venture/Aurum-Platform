@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Search, ShieldCheck } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, ArrowRight, Plus, Search, ShieldCheck } from "lucide-react";
 import { cx } from "@/components/ui";
 import { PageHead } from "@/components/gp/GpKit";
 import { capitalAccounts, fundById, onboarding } from "@/lib/data";
-import { AGREEMENTS, INTERACTIONS, PARTIES, headline, offeringById, partyById, type Opportunity, type Party } from "@/lib/offering/data";
-import { applyMoves, useOfferingState } from "@/lib/offering/store";
+import { AGREEMENTS, INTERACTIONS, headline, type Opportunity, type Party } from "@/lib/offering/data";
+import { useOffering } from "@/lib/offering/store";
 import { AgreementTable } from "./Agreements";
+import { AddToPipeline, FollowUps, PartyForm, btnPrimary, btnSecondary } from "./Forms";
 import { OpportunityDrawer } from "./OpportunityDrawer";
 import { Empty, Illus, KV, Seg, StagePill, StageTrack, day, dayShort, usd, usdShort } from "./ui";
 
@@ -30,11 +32,13 @@ function Kyc({ v }: { v?: string }) {
 /* ───────── register ───────── */
 
 export function InvestorRegister() {
-  const s = useOfferingState();
-  const opps = useMemo(() => applyMoves(s), [s]);
+  const d = useOffering();
+  const opps = d.opps;
+  const router = useRouter();
   const [show, setShow] = useState<"all" | "record" | "prospects">("all");
   const [q, setQ] = useState("");
-  const list = PARTIES.filter(
+  const [adding, setAdding] = useState(false);
+  const list = d.parties.filter(
     (p) => (show === "all" || (show === "record" ? !!p.investor : !p.investor)) && `${p.name} ${p.contact} ${p.jurisdiction}`.toLowerCase().includes(q.trim().toLowerCase()),
   );
   const td = "px-3 py-2.5 first:pl-4 last:pr-4 align-top";
@@ -44,7 +48,13 @@ export function InvestorRegister() {
         eyebrow="Offering Solution"
         title="Investors"
         meta="One record per investor, shared with Fund Solution. A prospect becomes the same record when it subscribes; opportunities are tracked per offering."
+        action={
+          <button onClick={() => setAdding(true)} className={btnPrimary}>
+            <Plus size={15} /> Add prospect
+          </button>
+        }
       />
+      {adding && <PartyForm onClose={() => setAdding(false)} onSaved={(id) => router.push(`/admin/offering/investors/${id}`)} />}
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <label className="flex h-8 w-full max-w-[280px] items-center gap-2 rounded-[8px] border border-d-line px-2.5 text-d-text-3">
           <Search size={13} />
@@ -99,8 +109,8 @@ export function InvestorRegister() {
                   <td className={td}>
                     <div className="flex flex-wrap gap-1">
                       {mine.map((o) => (
-                        <span key={o.id} title={offeringById(o.offeringId)?.name} className="inline-flex items-center gap-1 text-[11.5px] text-d-text-2">
-                          <span className="text-d-text-3">{offeringById(o.offeringId)?.short}</span>
+                        <span key={o.id} title={d.offering(o.offeringId)?.name} className="inline-flex items-center gap-1 text-[11.5px] text-d-text-2">
+                          <span className="text-d-text-3">{d.offering(o.offeringId)?.short}</span>
                           <StagePill stage={o.stage} />
                         </span>
                       ))}
@@ -127,11 +137,13 @@ export function InvestorRegister() {
 type Tab = "overview" | "opportunities" | "timeline" | "agreements" | "compliance" | "investments";
 
 export function InvestorProfile({ id }: { id: string }) {
-  const s = useOfferingState();
-  const opps = useMemo(() => applyMoves(s), [s]);
+  const d = useOffering();
+  const opps = d.opps;
   const [tab, setTab] = useState<Tab>("overview");
   const [open, setOpen] = useState<Opportunity | null>(null);
-  const p = partyById(id);
+  const [editing, setEditing] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const p = d.party(id);
   if (!p)
     return (
       <div className="py-16">
@@ -184,6 +196,14 @@ export function InvestorProfile({ id }: { id: string }) {
             <Kyc v={p.kyc} />
           </div>
         </div>
+        <div className="flex items-center gap-2 max-sm:order-last max-sm:w-full">
+          <button onClick={() => setEditing(true)} className={btnSecondary}>
+            {p.investor ? "Preferences" : "Edit"}
+          </button>
+          <button onClick={() => setAdding(true)} className={btnSecondary}>
+            <Plus size={14} /> Add to an offering
+          </button>
+        </div>
         <dl className="flex gap-8 max-sm:w-full sm:text-right">
           <div>
             <dt className="text-[12px] text-d-text-3">Committed with us</dt>
@@ -220,7 +240,13 @@ export function InvestorProfile({ id }: { id: string }) {
               <OppList list={mine} onOpen={setOpen} />
             </section>
             <section>
-              <h2 className="mb-2 px-1 text-[13px] font-semibold text-d-text">Next actions</h2>
+              <h2 className="mb-2 px-1 text-[13px] font-semibold text-d-text">Follow-ups</h2>
+              <div className="rounded-[12px] border border-d-line bg-d-surface px-4 py-2">
+                <FollowUps d={d} partyId={p.id} />
+              </div>
+            </section>
+            <section>
+              <h2 className="mb-2 px-1 text-[13px] font-semibold text-d-text">Waiting on</h2>
               <ul className="divide-y divide-d-line-soft overflow-hidden rounded-[12px] border border-d-line bg-d-surface">
                 {mine
                   .filter((o) => o.next)
@@ -229,7 +255,7 @@ export function InvestorProfile({ id }: { id: string }) {
                       <button onClick={() => setOpen(o)} className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-d-raise">
                         <span className="min-w-0 flex-1">
                           <span className="block text-[13px] text-d-text">{o.next!.action}</span>
-                          <span className="block text-[12px] text-d-text-3">{offeringById(o.offeringId)?.short}</span>
+                          <span className="block text-[12px] text-d-text-3">{d.offering(o.offeringId)?.short}</span>
                         </span>
                         {o.next!.illustrative && <Illus short />}
                         <span className="tnum text-[12px] text-d-text-3">{o.next!.date ? dayShort(o.next!.date) : "Waiting"}</span>
@@ -303,7 +329,7 @@ export function InvestorProfile({ id }: { id: string }) {
               <span className={cx("absolute -left-[25px] top-1.5 h-2 w-2 rounded-full", x.upcoming ? "border border-d-text-3 bg-d-surface" : "bg-d-text-3")} />
               <div className="flex flex-wrap items-center gap-2 text-[12px] text-d-text-3">
                 <span className="tnum">{day(x.at)}</span>· {x.kind}
-                {x.offeringId && <>· {offeringById(x.offeringId)?.short}</>}
+                {x.offeringId && <>· {d.offering(x.offeringId)?.short}</>}
                 {x.upcoming && <span className="text-d-text-2">· upcoming</span>}
                 {x.illustrative && <Illus short />}
               </div>
@@ -380,17 +406,20 @@ export function InvestorProfile({ id }: { id: string }) {
         ) : (
           <Empty>No investments with us yet.</Empty>
         ))}
-      {open && <OpportunityDrawer opp={opps.find((x) => x.id === open.id) ?? open} onClose={() => setOpen(null)} />}
+      {open && opps.some((x) => x.id === open.id) && <OpportunityDrawer opp={opps.find((x) => x.id === open.id)!} onClose={() => setOpen(null)} />}
+      {editing && <PartyForm initial={p} onClose={() => setEditing(false)} />}
+      {adding && <AddToPipeline partyId={p.id} onClose={() => setAdding(false)} onAdded={(oppId) => setOpen({ id: oppId } as Opportunity)} />}
     </div>
   );
 }
 
 function OppList({ list, onOpen }: { list: Opportunity[]; onOpen: (o: Opportunity) => void }) {
+  const d = useOffering();
   if (!list.length) return <Empty>No opportunities yet.</Empty>;
   return (
     <ul className="divide-y divide-d-line-soft overflow-hidden rounded-[12px] border border-d-line bg-d-surface">
       {list.map((o) => {
-        const of = offeringById(o.offeringId)!;
+        const of = d.offering(o.offeringId)!;
         const h = headline(o);
         return (
           <li key={o.id}>

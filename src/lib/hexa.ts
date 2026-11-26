@@ -75,6 +75,7 @@ export const HEXAS: Hexa[] = [
     base: "/admin/offering",
     pages: [
       { label: "Overview", href: "/admin/offering" },
+      { label: "My work", href: "/admin/offering/my-work" },
       { label: "Offerings", href: "/admin/offering/offerings", group: "Capital formation" },
       { label: "Pipeline", href: "/admin/offering/pipeline", group: "Capital formation" },
       { label: "Investors", href: "/admin/offering/investors", group: "Relationships" },

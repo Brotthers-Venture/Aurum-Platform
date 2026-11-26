@@ -7,7 +7,8 @@ import { Check, FileText, ShieldCheck } from "lucide-react";
 import { cx } from "@/components/ui";
 import { PageHead } from "@/components/gp/GpKit";
 import { rooms } from "@/lib/dataroom";
-import { AGREEMENTS, OFFERINGS, offeringById, partyById, type Agreement, type AgreementStatus } from "@/lib/offering/data";
+import { AGREEMENTS, type Agreement, type AgreementStatus } from "@/lib/offering/data";
+import { useOffering } from "@/lib/offering/store";
 import { Drawer, Illus, KV, Section, Seg, day, daysFrom } from "./ui";
 
 const OUTSTANDING: AgreementStatus[] = ["Required", "Draft", "Sent", "Viewed", "Partially signed"];
@@ -28,6 +29,7 @@ export function AgreementPill({ s }: { s: AgreementStatus }) {
 }
 
 export function AgreementTable({ list, showOffering = true }: { list: Agreement[]; showOffering?: boolean }) {
+  const d = useOffering();
   const [open, setOpen] = useState<Agreement | null>(null);
   const td = "px-3 py-2.5 first:pl-4 last:pr-4 align-top";
   return (
@@ -45,7 +47,7 @@ export function AgreementTable({ list, showOffering = true }: { list: Agreement[
           </thead>
           <tbody>
             {list.map((a) => {
-              const p = partyById(a.partyId)!;
+              const p = d.party(a.partyId)!;
               const signed = a.signatories.filter((x) => x.signed).length;
               return (
                 <tr key={a.id} onClick={() => setOpen(a)} className="cursor-pointer border-b border-d-line-soft last:border-0 hover:bg-d-raise">
@@ -54,7 +56,7 @@ export function AgreementTable({ list, showOffering = true }: { list: Agreement[
                       {p.name} {a.illustrative && <Illus short />}
                     </span>
                   </td>
-                  {showOffering && <td className={cx(td, "text-d-text-2")}>{offeringById(a.offeringId)?.short}</td>}
+                  {showOffering && <td className={cx(td, "text-d-text-2")}>{d.offering(a.offeringId)?.short}</td>}
                   <td className={cx(td, "whitespace-nowrap")}>
                     <div className="text-d-text">{a.kind}</div>
                     <div className="text-[11.5px] text-d-text-3">{a.version}</div>
@@ -87,8 +89,9 @@ export function AgreementTable({ list, showOffering = true }: { list: Agreement[
 }
 
 function AgreementDrawer({ a, onClose }: { a: Agreement; onClose: () => void }) {
-  const p = partyById(a.partyId)!;
-  const o = offeringById(a.offeringId)!;
+  const d = useOffering();
+  const p = d.party(a.partyId)!;
+  const o = d.offering(a.offeringId)!;
   const room = o.roomId ? rooms.find((r) => r.id === o.roomId) : undefined;
   const executed = a.status === "Fully executed" && !!a.evidence;
   return (
@@ -189,6 +192,7 @@ function AgreementDrawer({ a, onClose }: { a: Agreement; onClose: () => void }) 
 }
 
 export function AgreementsPage() {
+  const d = useOffering();
   const params = useSearchParams();
   const [status, setStatus] = useState<"outstanding" | "executed" | "all">(params.get("status") === "outstanding" ? "outstanding" : "all");
   const [kind, setKind] = useState<"all" | Agreement["kind"]>("all");
@@ -252,7 +256,7 @@ export function AgreementsPage() {
           className="h-8 rounded-[8px] border border-d-line bg-transparent px-2 text-[12.5px] text-d-text focus:outline-none"
         >
           <option value="all">All offerings</option>
-          {OFFERINGS.map((o) => (
+          {d.offerings.map((o) => (
             <option key={o.id} value={o.id}>
               {o.short}
             </option>

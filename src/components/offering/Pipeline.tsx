@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo, useState, type DragEvent } from "react";
+import { useState, type DragEvent } from "react";
 import { useSearchParams } from "next/navigation";
-import { ChevronDown, Lock } from "lucide-react";
+import { ChevronDown, Lock, Plus } from "lucide-react";
 import { cx } from "@/components/ui";
 import { PageHead } from "@/components/gp/GpKit";
 import { usePreviewRole } from "@/components/admin/PreviewRole";
-import { OFFERINGS, PHASES, STAGES, headline, offeringById, partyById, stageOf, type Opportunity, type PhaseId, type StageId } from "@/lib/offering/data";
-import { applyMoves, offering, useOfferingState } from "@/lib/offering/store";
+import { PHASES, STAGES, headline, stageOf, type Opportunity, type PhaseId, type StageId } from "@/lib/offering/data";
+import { offering, useOffering } from "@/lib/offering/store";
+import { AddToPipeline, btnPrimary } from "./Forms";
 import { OpportunityDrawer } from "./OpportunityDrawer";
 import { Illus, Seg, StagePill, dayShort, daysFrom, usd, usdShort } from "./ui";
 
@@ -20,9 +21,13 @@ const initials = (n: string) =>
     .join("");
 
 function Card({ o, showOffering, onOpen, onDrag }: { o: Opportunity; showOffering: boolean; onOpen: () => void; onDrag: (e: DragEvent) => void }) {
-  const p = partyById(o.partyId)!;
+  const d = useOffering();
+  const p = d.party(o.partyId)!;
   const h = headline(o);
-  const due = o.next?.date ? daysFrom(o.next.date) : null;
+  // the earliest open follow-up wins over the step the pipeline is waiting on
+  const fu = d.openFollowUps((f) => f.oppId === o.id)[0];
+  const next = fu ? { action: fu.action, date: fu.due } : o.next;
+  const due = next?.date ? daysFrom(next.date) : null;
   return (
     <button
       draggable
@@ -34,7 +39,7 @@ function Card({ o, showOffering, onOpen, onDrag }: { o: Opportunity; showOfferin
         <span className="min-w-0 flex-1 text-[12.5px] font-medium leading-snug text-d-text">{p.name}</span>
         {(o.illustrative || p.illustrative) && <Illus short />}
       </div>
-      {showOffering && <div className="mt-0.5 truncate text-[11.5px] text-d-text-3">{offeringById(o.offeringId)?.short}</div>}
+      {showOffering && <div className="mt-0.5 truncate text-[11.5px] text-d-text-3">{d.offering(o.offeringId)?.short}</div>}
       <div className="mt-1.5 flex items-baseline gap-1.5">
         <span className="tnum text-[13px] text-d-text">{usdShort(h.value)}</span>
         <span className="text-[11px] text-d-text-3">{h.label.toLowerCase()}</span>
@@ -44,8 +49,8 @@ function Card({ o, showOffering, onOpen, onDrag }: { o: Opportunity; showOfferin
         <span title={o.owner} className="flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border border-d-line text-[9px] font-semibold text-d-text-3">
           {initials(o.owner)}
         </span>
-        <span className="min-w-0 flex-1 truncate">{o.next?.action ?? (o.source === "Fund ledger" ? "In the fund books" : "No next action")}</span>
-        {due !== null && <span className={cx("tnum shrink-0", due < 0 ? "text-negative" : due <= 1 ? "text-gold-700" : "text-d-text-3")}>{dayShort(o.next!.date)}</span>}
+        <span className="min-w-0 flex-1 truncate">{next?.action ?? (o.source === "Fund ledger" ? "In the fund books" : "No next action")}</span>
+        {due !== null && <span className={cx("tnum shrink-0", due < 0 ? "text-negative" : due <= 1 ? "text-gold-700" : "text-d-text-3")}>{dayShort(next!.date)}</span>}
       </div>
     </button>
   );
@@ -53,6 +58,7 @@ function Card({ o, showOffering, onOpen, onDrag }: { o: Opportunity; showOfferin
 
 /** The four-phase board. Gated stages accept a drop only when their evidence exists; otherwise they say what’s missing. */
 export function PipelineBoard({ opps, onOpen }: { opps: Opportunity[]; onOpen: (o: Opportunity) => void }) {
+  const d = useOffering();
   const { member } = usePreviewRole();
   const [over, setOver] = useState<StageId | null>(null);
   const [notice, setNotice] = useState<{ o: Opportunity; text: string } | null>(null);
@@ -72,7 +78,7 @@ export function PipelineBoard({ opps, onOpen }: { opps: Opportunity[]; onOpen: (
       setNotice({ o, text: `${stageOf(to).label} needs evidence: ${stageOf(to).gate} Open the record to confirm it.` });
       return;
     }
-    const err = offering.move(o, to, member.name);
+    const err = offering.move(o, to, member.name, d.party(o.partyId));
     setNotice(err ? { o, text: err } : null);
   };
 
@@ -97,7 +103,7 @@ export function PipelineBoard({ opps, onOpen }: { opps: Opportunity[]; onOpen: (
         <div className="mb-3 flex flex-wrap items-center gap-3 rounded-[10px] border border-attn-line px-4 py-2.5 text-[12.5px] text-gold-700">
           <Lock size={13} />
           <span className="min-w-0 flex-1">
-            <b className="font-semibold">{partyById(notice.o.partyId)?.name}:</b> {notice.text}
+            <b className="font-semibold">{d.party(notice.o.partyId)?.name}:</b> {notice.text}
           </span>
           <button
             onClick={() => {
@@ -220,15 +226,16 @@ function StageBox({
 /* ───────── page ───────── */
 
 export function PipelinePage() {
-  const s = useOfferingState();
-  const opps = useMemo(() => applyMoves(s), [s]);
+  const d = useOffering();
+  const opps = d.opps;
   const params = useSearchParams();
   const [view, setView] = useState<"board" | "table" | "analytics">("board");
   const [scope, setScope] = useState("all");
   const [open, setOpen] = useState<Opportunity | null>(null);
+  const [adding, setAdding] = useState(false);
   const phase = params.get("phase") as PhaseId | null;
   const list = opps.filter((o) => (scope === "all" || o.offeringId === scope) && (!phase || stageOf(o.stage).phase === phase));
-  const live = OFFERINGS.filter((o) => opps.some((x) => x.offeringId === o.id));
+  const live = d.offerings.filter((o) => opps.some((x) => x.offeringId === o.id));
 
   return (
     <div>
@@ -263,18 +270,23 @@ export function PipelinePage() {
                 ["analytics", "Analytics"],
               ]}
             />
+            <button onClick={() => setAdding(true)} className={btnPrimary}>
+              <Plus size={15} /> Add investor
+            </button>
           </div>
         }
       />
       {view === "board" && <PipelineBoard opps={list} onOpen={setOpen} />}
       {view === "table" && <PipelineTable opps={list} onOpen={setOpen} />}
       {view === "analytics" && <PipelineAnalytics opps={list} />}
-      {open && <OpportunityDrawer opp={opps.find((x) => x.id === open.id) ?? open} onClose={() => setOpen(null)} />}
+      {open && opps.some((x) => x.id === open.id) && <OpportunityDrawer opp={opps.find((x) => x.id === open.id)!} onClose={() => setOpen(null)} />}
+      {adding && <AddToPipeline offeringId={scope === "all" ? undefined : scope} onClose={() => setAdding(false)} onAdded={(oppId) => setOpen({ id: oppId } as Opportunity)} />}
     </div>
   );
 }
 
 function PipelineTable({ opps, onOpen }: { opps: Opportunity[]; onOpen: (o: Opportunity) => void }) {
+  const d = useOffering();
   const sorted = [...opps].sort((a, b) => STAGES.findIndex((s) => s.id === b.stage) - STAGES.findIndex((s) => s.id === a.stage));
   const td = "px-3 py-2.5 first:pl-4 last:pr-4 align-top";
   return (
@@ -291,7 +303,7 @@ function PipelineTable({ opps, onOpen }: { opps: Opportunity[]; onOpen: (o: Oppo
         </thead>
         <tbody>
           {sorted.map((o) => {
-            const p = partyById(o.partyId)!;
+            const p = d.party(o.partyId)!;
             const h = headline(o);
             return (
               <tr key={o.id} onClick={() => onOpen(o)} className="cursor-pointer border-b border-d-line-soft last:border-0 hover:bg-d-raise">
@@ -301,7 +313,7 @@ function PipelineTable({ opps, onOpen }: { opps: Opportunity[]; onOpen: (o: Oppo
                   </span>
                   <span className="text-[12px] text-d-text-3">{p.type}</span>
                 </td>
-                <td className={cx(td, "text-d-text-2")}>{offeringById(o.offeringId)?.short}</td>
+                <td className={cx(td, "text-d-text-2")}>{d.offering(o.offeringId)?.short}</td>
                 <td className={td}>
                   <StagePill stage={o.stage} />
                 </td>
@@ -313,7 +325,7 @@ function PipelineTable({ opps, onOpen }: { opps: Opportunity[]; onOpen: (o: Oppo
                   </div>
                 </td>
                 <td className={cx(td, "whitespace-nowrap text-d-text-2")}>{o.owner}</td>
-                <td className={cx(td, "text-d-text-2")}>{o.distributor ?? offeringById(o.offeringId)?.distributors[0]?.name}</td>
+                <td className={cx(td, "text-d-text-2")}>{o.distributor ?? d.offering(o.offeringId)?.distributors[0]?.name}</td>
                 <td className={cx(td, "tnum whitespace-nowrap text-d-text-3")}>{dayShort(o.lastInteraction)}</td>
                 <td className={cx(td, "max-w-[260px] text-d-text-2")}>
                   {o.next?.action ?? "—"}
@@ -329,6 +341,7 @@ function PipelineTable({ opps, onOpen }: { opps: Opportunity[]; onOpen: (o: Oppo
 }
 
 function PipelineAnalytics({ opps }: { opps: Opportunity[] }) {
+  const d = useOffering();
   const rows = STAGES.map((s) => {
     const list = opps.filter((o) => o.stage === s.id);
     return { s, n: list.length, amount: list.reduce((a, o) => a + (headline(o).value ?? 0), 0) };
@@ -336,7 +349,7 @@ function PipelineAnalytics({ opps }: { opps: Opportunity[] }) {
   const maxN = Math.max(1, ...rows.map((r) => r.n));
   const byType = new Map<string, number>();
   for (const o of opps.filter((x) => x.amounts.accepted !== undefined)) {
-    const t = partyById(o.partyId)!.type;
+    const t = d.party(o.partyId)!.type;
     byType.set(t, (byType.get(t) ?? 0) + (o.amounts.accepted ?? 0));
   }
   const types = [...byType.entries()].sort((a, b) => b[1] - a[1]);

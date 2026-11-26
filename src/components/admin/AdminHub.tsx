@@ -139,7 +139,7 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
           : s.id === "fund"
             ? `${gps.length} GPs`
             : s.id === "offering"
-              ? `${OFFERINGS.filter((o) => o.status !== "Preparing" && o.status !== "Closed").length} open · prototype`
+              ? `${OFFERINGS.filter((o) => o.status !== "Preparing" && o.status !== "Closed").length} open offerings`
               : `${formations.filter((f) => f.stage !== "Post-formation").length} in progress`,
         subTone: s.live ? "accent" : "muted",
         outline: s.live,

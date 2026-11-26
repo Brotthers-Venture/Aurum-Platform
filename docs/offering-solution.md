@@ -1,6 +1,15 @@
 # Offering Solution — architecture assessment and prototype
 
-Status: prototype for owner approval (26 Nov 2026), on the `redesign` branch. Six screens, both themes. Nothing here moves money, signs documents or sends messages.
+Status: prototype approved; **phase 1 built** (26 Nov 2026) on the `redesign` branch. Nothing here moves money, signs documents or sends messages.
+
+## Phase 1 (built)
+
+- **Offerings register:** create an offering (linked to a vehicle in Fund Solution, which then supplies its own name, sponsor, domicile, strategy and target, or standalone); edit terms. A field someone changes stops being illustrative; untouched illustrative fields stay marked.
+- **Investor register:** add prospects; edit a prospect's identity; record stated preferences for anyone. Identity of investors on record is changed in Fund Solution, not here.
+- **Pipeline per offering:** add any investor or prospect to an offering (one opportunity per investor and offering), at a stage a person may record (Identified to Soft commitment). Subscriptions, accepted commitments and funding come from Fund Solution and the books; NDA executed needs an executed agreement.
+- **Amounts:** potential, indicated and soft amounts recorded by hand replace estimates; accepted, called and received stay with the books.
+- **Follow-ups:** schedule from an opportunity or an investor; complete and reopen; **My work** groups them by overdue, today, next seven days and later, beside what the pipeline is waiting on. Overview shows follow-ups due within three days.
+- Everything is kept in this browser (`aurum-offering-v1`) until the database is connected, and every change is written to the audit log.
 
 ## What already exists and is reused (no copies)
 

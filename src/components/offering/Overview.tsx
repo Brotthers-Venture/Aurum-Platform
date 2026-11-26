@@ -5,21 +5,22 @@ import { useMemo, useState } from "react";
 import { ArrowRight, CalendarDays, FileSignature, MessageSquare, Users } from "lucide-react";
 import { cx } from "@/components/ui";
 import { PageHead } from "@/components/gp/GpKit";
-import { AGREEMENTS, INTERACTIONS, OFFERINGS, commitmentSeries, figures, offeringById, partyById, type Opportunity } from "@/lib/offering/data";
-import { applyMoves, useOfferingState } from "@/lib/offering/store";
+import { AGREEMENTS, INTERACTIONS, commitmentSeries, type Opportunity } from "@/lib/offering/data";
+import { useOffering } from "@/lib/offering/store";
 import { questions } from "@/lib/dataroom";
+import { FollowUpRow } from "./Forms";
 import { OpportunityDrawer } from "./OpportunityDrawer";
 import { Illus, Ladder, LadderLegend, Seg, StagePill, day, dayShort, daysFrom, ladderRows, usd, usdShort } from "./ui";
 
 export function OfferingOverview() {
-  const s = useOfferingState();
-  const opps = useMemo(() => applyMoves(s), [s]);
+  const d = useOffering();
+  const opps = d.opps;
   const [scope, setScope] = useState("all");
   const [hero, setHero] = useState<"accepted" | "received">("accepted");
   const [open, setOpen] = useState<Opportunity | null>(null);
-  const active = OFFERINGS.filter((o) => o.status !== "Preparing" && o.status !== "Closed");
+  const active = d.offerings.filter((o) => o.status !== "Preparing" && o.status !== "Closed");
   const ids = scope === "all" ? active.map((o) => o.id) : [scope];
-  const f = figures(ids, opps);
+  const f = d.figures(ids);
   const rows = ladderRows(f);
   const inScope = opps.filter((o) => ids.includes(o.offeringId));
 
@@ -31,11 +32,12 @@ export function OfferingOverview() {
   ]
     .sort((a, b) => (a.date ?? "9999").localeCompare(b.date ?? "9999"))
     .slice(0, 7);
+  const myFollowUps = d.openFollowUps((f) => !f.offeringId || ids.includes(f.offeringId)).filter((f) => daysFrom(f.due) <= 3);
   const ndasOut = AGREEMENTS.filter((a) => a.kind === "NDA" && ids.includes(a.offeringId) && ["Required", "Draft", "Sent", "Viewed", "Partially signed"].includes(a.status));
   const subsPending = inScope.filter((o) => o.stage === "pending_approval" || o.stage === "subscription");
-  const openQs = questions.filter((q) => q.status !== "Answered" && OFFERINGS.some((o) => ids.includes(o.id) && o.roomId === q.roomId));
+  const openQs = questions.filter((q) => q.status !== "Answered" && d.offerings.some((o) => ids.includes(o.id) && o.roomId === q.roomId));
   const upcoming = INTERACTIONS.filter((x) => x.upcoming && (!x.offeringId || ids.includes(x.offeringId))).sort((a, b) => a.at.localeCompare(b.at));
-  const closings = OFFERINGS.filter((o) => ids.includes(o.id) && o.nextClose).sort((a, b) => a.nextClose!.date.localeCompare(b.nextClose!.date));
+  const closings = d.offerings.filter((o) => ids.includes(o.id) && o.nextClose).sort((a, b) => a.nextClose!.date.localeCompare(b.nextClose!.date));
   const recent = INTERACTIONS.filter((x) => !x.upcoming && (!x.offeringId || ids.includes(x.offeringId))).slice(0, 7);
 
   const heroValue = hero === "accepted" ? f.accepted : f.received;
@@ -141,9 +143,21 @@ export function OfferingOverview() {
               <MessageSquare size={13} className="text-d-text-3" /> {openQs.length} investor questions open
             </Link>
           </div>
+          {myFollowUps.length > 0 && (
+            <div className="mb-3 rounded-[12px] border border-d-line bg-d-surface px-4 py-1">
+              <ul className="divide-y divide-d-line-soft">
+                {myFollowUps.slice(0, 5).map((f) => (
+                  <FollowUpRow key={f.id} f={f} d={d} showContext />
+                ))}
+              </ul>
+              <Link href="/admin/offering/my-work" className="mb-2 inline-flex items-center gap-1 text-[12px] font-semibold text-d-text-2 hover:text-d-text">
+                All follow-ups <ArrowRight size={12} />
+              </Link>
+            </div>
+          )}
           <ul className="divide-y divide-d-line-soft overflow-hidden rounded-[12px] border border-d-line bg-d-surface">
             {attention.map(({ o, text, date, illustrative }) => {
-              const p = partyById(o.partyId)!;
+              const p = d.party(o.partyId)!;
               const due = date ? daysFrom(date) : null;
               return (
                 <li key={o.id}>
@@ -151,7 +165,7 @@ export function OfferingOverview() {
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] text-d-text">{text}</div>
                       <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-d-text-3">
-                        <span className="text-d-text-2">{p.name}</span>· {offeringById(o.offeringId)!.short} · <StagePill stage={o.stage} />
+                        <span className="text-d-text-2">{p.name}</span>· {d.offering(o.offeringId)!.short} · <StagePill stage={o.stage} />
                         {illustrative && <Illus short />}
                       </div>
                     </div>
@@ -183,7 +197,7 @@ export function OfferingOverview() {
                 <Users size={14} className="shrink-0 text-d-text-3" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13px] text-d-text">
-                    {x.kind} with {partyById(x.partyId)?.name}
+                    {x.kind} with {d.party(x.partyId)?.name}
                   </div>
                   <div className="truncate text-[12px] text-d-text-3">{x.text}</div>
                 </div>
@@ -206,7 +220,7 @@ export function OfferingOverview() {
           </div>
           <ul className="divide-y divide-d-line-soft overflow-hidden rounded-[12px] border border-d-line bg-d-surface">
             {active.map((o) => {
-              const fo = figures([o.id], opps);
+              const fo = d.figures([o.id]);
               return (
                 <li key={o.id}>
                   <Link href={`/admin/offering/offerings/${o.id}`} className="block px-4 py-3 hover:bg-d-raise">
@@ -234,7 +248,7 @@ export function OfferingOverview() {
               <li key={x.id} className="px-4 py-2.5">
                 <div className="flex items-center gap-2">
                   <Link href={`/admin/offering/investors/${x.partyId}`} className="min-w-0 flex-1 truncate text-[13px] text-d-text hover:underline">
-                    {partyById(x.partyId)?.name}
+                    {d.party(x.partyId)?.name}
                   </Link>
                   {x.illustrative && <Illus short />}
                   <span className="tnum text-[11.5px] text-d-text-3">{dayShort(x.at)}</span>
@@ -247,7 +261,7 @@ export function OfferingOverview() {
           </ul>
         </section>
       </div>
-      {open && <OpportunityDrawer opp={opps.find((x) => x.id === open.id) ?? open} onClose={() => setOpen(null)} />}
+      {open && opps.some((x) => x.id === open.id) && <OpportunityDrawer opp={opps.find((x) => x.id === open.id)!} onClose={() => setOpen(null)} />}
     </div>
   );
 }
