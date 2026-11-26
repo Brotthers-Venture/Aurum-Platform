@@ -5,15 +5,30 @@ import { cx } from "@/components/ui";
 import { initials, isExternal, personName, SYSTEM, type MatterStatus, type Priority } from "@/lib/chat";
 
 /** Our own status mark: an outlined ring — empty when open, half when waiting on someone, filled when resolved. */
+/** Matter status as a small hexagon (the house shape), one distinct form per state, so status reads without colour:
+ *  Open — an outline. Awaiting client — the outline half filled (the next move is theirs).
+ *  Awaiting approval — a double outline like the brand mark (a second pair of eyes). Resolved — solid, with a check. */
 export function StatusRing({ status, size = 14 }: { status: MatterStatus; size?: number }) {
-  const r = 5.25;
+  const hex = (r: number) =>
+    Array.from({ length: 6 }, (_, k) => {
+      const a = (Math.PI / 3) * k - Math.PI / 2;
+      return `${(7 + r * Math.cos(a)).toFixed(2)},${(7 + r * Math.sin(a)).toFixed(2)}`;
+    }).join(" ");
   const tone = status === "Resolved" ? "var(--d-pos)" : status === "Open" ? "var(--d-text-2)" : "var(--d-warn)";
   return (
     <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden className="shrink-0">
-      <circle cx="7" cy="7" r={r} fill="none" stroke={tone} strokeWidth="1.5" />
-      {status === "Resolved" && <circle cx="7" cy="7" r="3" fill={tone} />}
-      {(status === "Awaiting client" || status === "Awaiting approval") && <path d={`M7 ${7 - 3} A3 3 0 0 1 7 ${7 + 3} Z`} fill={tone} />}
-      {status === "Awaiting approval" && <circle cx="7" cy="7" r="0.9" fill={tone} />}
+      {status === "Resolved" ? (
+        <>
+          <polygon points={hex(6)} fill={tone} />
+          <path d="M4.5 7.2 6.3 8.9 9.6 5.4" fill="none" stroke="var(--d-bg)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </>
+      ) : (
+        <>
+          <polygon points={hex(5.4)} fill="none" stroke={tone} strokeWidth="1.4" strokeLinejoin="round" />
+          {status === "Awaiting client" && <polygon points={`7,${(7 - 5.4).toFixed(2)} ${hex(5.4).split(" ").slice(1, 3).join(" ")} 7,${(7 + 5.4).toFixed(2)}`} fill={tone} />}
+          {status === "Awaiting approval" && <polygon points={hex(2.6)} fill="none" stroke={tone} strokeWidth="1.4" strokeLinejoin="round" />}
+        </>
+      )}
     </svg>
   );
 }

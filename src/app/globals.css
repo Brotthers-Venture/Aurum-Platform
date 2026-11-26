@@ -1033,3 +1033,5 @@ html[data-theme="light"] .eco-stage[data-hub] {
 }
 @keyframes picker-in { from { opacity: 0; transform: translateX(-6px) scale(0.98); } to { opacity: 1; transform: none; } }
 @keyframes drawer-left { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* Row hover inside the workstation: a tonal lift, never a light wash that hides the text. */
+.ws .data-table tbody tr.row-link:hover td { background: color-mix(in oklab, var(--d-raise) 75%, transparent); }
