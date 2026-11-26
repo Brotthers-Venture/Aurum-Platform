@@ -267,13 +267,16 @@ export function PortalShell({
               onClick={() => setOpen((o) => (o === "bell" ? null : "bell"))}
               aria-label={`${noticesTitle}, ${notices.length}`}
               aria-expanded={open === "bell"}
-              className="relative flex h-10 w-10 items-center justify-center rounded-[6px] text-d-text-2 hover:bg-d-raise hover:text-d-text"
+              className="relative flex h-10 items-center gap-2 rounded-[8px] px-2.5 text-d-text-2 hover:bg-d-raise hover:text-d-text"
             >
               <Bell size={19} />
               {notices.length > 0 && (
-                <span className="tnum absolute right-0.5 top-0.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-d-text px-1 text-[9.5px] font-semibold text-d-bg">
-                  {notices.length}
-                </span>
+                <>
+                  <span className="tnum whitespace-nowrap rounded-[6px] bg-d-raise px-1.5 py-0.5 text-[11.5px] font-semibold text-d-text max-md:hidden">{notices.length} new</span>
+                  <span className="tnum absolute right-0.5 top-0.5 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-d-text px-1 text-[9.5px] font-semibold text-d-bg md:hidden">
+                    {notices.length}
+                  </span>
+                </>
               )}
             </button>
             {open === "bell" && (
@@ -295,9 +298,13 @@ export function PortalShell({
               onClick={() => setOpen((o) => (o === "account" ? null : "account"))}
               aria-label={`Account: ${user.name}`}
               aria-expanded={open === "account"}
-              className="flex items-center gap-1 rounded-full p-0.5 pr-1.5 hover:bg-d-raise"
+              className="flex items-center gap-2 rounded-full p-0.5 pr-1.5 hover:bg-d-raise"
             >
               <span className="flex h-9 w-9 items-center justify-center rounded-full border border-d-line-strong bg-d-raise text-[12.5px] font-semibold">{initials}</span>
+              <span className="hidden max-w-[180px] text-left leading-tight xl:block">
+                <span className="block truncate text-[12.5px] font-semibold text-d-text">{user.name}</span>
+                <span className="block truncate text-[11px] text-d-text-3">{user.title}</span>
+              </span>
               <ChevronDown size={13} className="text-d-text-3" />
             </button>
             {open === "account" && (

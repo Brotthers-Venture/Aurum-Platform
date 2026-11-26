@@ -52,7 +52,11 @@ export function Legend({ items }: { items: { name: string; color: string; line?:
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11.5px] text-stone-600">
       {items.map((i) => (
         <span key={i.name} className="inline-flex items-center gap-1.5">
-          {i.line ? <span className="h-[2px] w-3.5 rounded-full" style={{ background: i.color }} /> : <span className="h-2.5 w-2.5 rounded-[2px]" style={{ background: i.color }} />}
+          {i.line ? (
+            <span className="h-[2px] w-3.5 rounded-full" style={{ background: i.color }} />
+          ) : (
+            <span className="h-2.5 w-2.5 rounded-[2px]" style={{ background: i.color }} />
+          )}
           {i.name}
         </span>
       ))}
@@ -63,7 +67,10 @@ export function Legend({ items }: { items: { name: string; color: string; line?:
 function Tooltip({ x, y, w, children }: { x: number; y: number; w: number; children: ReactNode }) {
   const left = Math.min(Math.max(x + 12, 0), w - 190);
   return (
-    <div className="pointer-events-none absolute z-10 min-w-[170px] rounded-[3px] border border-stone-200 bg-white px-3 py-2 text-[11.5px] shadow-[0_6px_20px_-8px_rgba(11,21,25,0.25)]" style={{ left: x + 200 > w ? x - 190 : left, top: Math.max(0, y - 10) }}>
+    <div
+      className="pointer-events-none absolute z-10 min-w-[170px] rounded-[3px] border border-stone-200 bg-white px-3 py-2 text-[11.5px] shadow-[0_6px_20px_-8px_rgba(11,21,25,0.25)]"
+      style={{ left: x + 200 > w ? x - 190 : left, top: Math.max(0, y - 10) }}
+    >
       {children}
     </div>
   );
@@ -81,7 +88,17 @@ const TipRow = ({ color, label, value, line }: { color?: string; label: string; 
 
 /* ------------------------------------------------------------------ */
 /** Grouped columns; values may be negative. */
-export function Columns({ categories, series, fmt, height = 240 }: { categories: string[]; series: { name: string; color: string; values: number[] }[]; fmt: Fmt; height?: number }) {
+export function Columns({
+  categories,
+  series,
+  fmt,
+  height = 240,
+}: {
+  categories: string[];
+  series: { name: string; color: string; values: number[] }[];
+  fmt: Fmt;
+  height?: number;
+}) {
   const [ref, W] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
   const pad = { l: 52, r: 8, t: 10, b: 26 };
@@ -151,7 +168,22 @@ export function Columns({ categories, series, fmt, height = 240 }: { categories:
 
 /* ------------------------------------------------------------------ */
 /** Time-series lines; the first series can be drawn as a soft area. Crosshair tooltip. */
-export function Lines({ categories, series, fmt, height = 240, area = true }: { categories: string[]; series: { name: string; color: string; values: number[] }[]; fmt: Fmt; height?: number; area?: boolean }) {
+export function Lines({
+  categories,
+  series,
+  fmt,
+  height = 240,
+  area = true,
+  note,
+}: {
+  categories: string[];
+  series: { name: string; color: string; values: number[] }[];
+  fmt: Fmt;
+  height?: number;
+  area?: boolean;
+  /** an extra line in the hover tooltip, e.g. the change over the period */
+  note?: (i: number) => ReactNode;
+}) {
   const [ref, W] = useWidth<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
   const pad = { l: 52, r: 86, t: 12, b: 26 };
@@ -237,6 +269,7 @@ export function Lines({ categories, series, fmt, height = 240, area = true }: { 
           {series.map((s) => (
             <TipRow key={s.name} color={s.color} line label={s.name} value={fmt(s.values[hover] ?? 0)} />
           ))}
+          {note && note(hover)}
         </Tooltip>
       )}
     </div>

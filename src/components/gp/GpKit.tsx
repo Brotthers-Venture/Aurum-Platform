@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { AlertCircle, CheckCircle2, Clock3 } from "lucide-react";
 import { cx } from "@/components/ui";
 import { pill } from "@/components/workspace/status";
 
@@ -17,8 +18,19 @@ export function PageHead({ eyebrow, title, meta, action }: { eyebrow?: ReactNode
   );
 }
 
+const DONE = new Set(["Paid", "Funded", "Countersigned", "Approved", "Published"]);
+const WAITING = new Set(["Due", "Part paid", "Issued", "Partially funded", "Scheduled", "Submitted", "In review", "Waiting for you", "Your approval", "With the manager"]);
+const PROBLEM = new Set(["Overdue", "Changes requested"]);
+
+/** Status with an icon as well as a colour, so it reads without colour. */
 export function StatusPill({ value }: { value: string }) {
-  return <span className={cx("inline-flex whitespace-nowrap rounded-[6px] border px-2 py-0.5 text-[11.5px]", pill[value] ?? "border-stone-200 text-stone-500")}>{value}</span>;
+  const Icon = DONE.has(value) ? CheckCircle2 : WAITING.has(value) ? Clock3 : PROBLEM.has(value) ? AlertCircle : null;
+  return (
+    <span className={cx("inline-flex items-center gap-1 whitespace-nowrap rounded-[6px] border px-2 py-0.5 text-[11.5px]", pill[value] ?? "border-stone-200 text-stone-500")}>
+      {Icon && <Icon size={12} strokeWidth={2} aria-hidden />}
+      {value}
+    </span>
+  );
 }
 
 export function Meter({ value }: { value: number }) {

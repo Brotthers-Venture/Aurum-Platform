@@ -7,7 +7,7 @@ import { cx } from "@/components/ui";
 import { Panel } from "@/components/workspace/LegendWorkspace";
 import { StatusPill } from "@/components/gp/GpKit";
 import { FigureStrip, InvHead } from "@/components/portal/InvestorKit";
-import { InvestmentCards, InvestmentsTable, ValueChart, pct1, tvpi } from "@/components/portal/InvestorWorkspace";
+import { FundMark, InvestmentCards, InvestmentsTable, ValueChart, pct1, tvpi } from "@/components/portal/InvestorWorkspace";
 import type { InvCall, InvDistribution, InvDocument, InvestorView } from "@/lib/investor-portal";
 import { date, money } from "@/lib/format";
 
@@ -231,7 +231,14 @@ function CallsPanel({ calls, title, showFund }: { calls: InvCall[]; title: strin
             <tbody>
               {calls.map((c) => (
                 <tr key={c.id} className={tr}>
-                  {showFund && <td className={cx(td, "font-semibold text-ink-900")}>{c.fund}</td>}
+                  {showFund && (
+                    <td className={td}>
+                      <span className="flex items-center gap-2.5 font-semibold text-ink-900">
+                        <FundMark name={c.fund} />
+                        {c.fund}
+                      </span>
+                    </td>
+                  )}
                   <td className={cx(td, "whitespace-nowrap", !showFund && "font-semibold text-ink-900")}>No. {c.number}</td>
                   <td className={cx(td, "num whitespace-nowrap text-stone-600")}>{date(c.notice)}</td>
                   <td className={cx(td, "num whitespace-nowrap text-stone-600")}>{date(c.due)}</td>
@@ -278,7 +285,14 @@ function DistributionsPanel({ dists, showFund }: { dists: InvDistribution[]; sho
               {dists.map((d) => (
                 <tr key={d.id} className={tr}>
                   <td className={cx(td, "num whitespace-nowrap text-stone-600")}>{date(d.date)}</td>
-                  {showFund && <td className={cx(td, "font-semibold text-ink-900")}>{d.fund}</td>}
+                  {showFund && (
+                    <td className={td}>
+                      <span className="flex items-center gap-2.5 font-semibold text-ink-900">
+                        <FundMark name={d.fund} />
+                        {d.fund}
+                      </span>
+                    </td>
+                  )}
                   <td className={cx(td, "text-stone-600")}>{d.type === "Mixed" ? "Income and capital" : d.type}</td>
                   <td className={cx(td, "num whitespace-nowrap text-right")} style={{ color: UP }}>
                     +{money(d.amount, d.currency)}
