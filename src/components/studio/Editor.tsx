@@ -17,6 +17,8 @@ import {
   Link2,
   Lock,
   Maximize2,
+  MessageSquare,
+  MonitorSmartphone,
   Minimize2,
   PanelLeft,
   PanelRight,
@@ -48,6 +50,7 @@ import {
   type Design,
   type Page,
   type Report,
+  type ReportComment,
   type TableKind,
 } from "@/lib/studio/model";
 import { dataFor, getReport, liveData, studio, useStudio } from "@/lib/studio/store";
@@ -177,6 +180,8 @@ export function ReportEditor({ id }: { id: string }) {
         right={right}
         onLeft={() => setLeft((v) => !v)}
         onRight={() => setRight((v) => !v)}
+        zoom={zoom}
+        onZoom={setZoom}
       />
       <div className="flex min-h-0 flex-1">
         {showLeft && (
@@ -196,21 +201,7 @@ export function ReportEditor({ id }: { id: string }) {
           />
         )}
         <div ref={canvas} className="scroll-quiet relative min-w-0 flex-1 overflow-auto bg-[color-mix(in_oklab,var(--d-bg)_88%,#000)]" onClick={() => setSel({ kind: "report" })}>
-          <div className="sticky top-3 z-10 ml-auto mr-3 flex w-fit items-center gap-1 rounded-[9px] border border-d-line bg-d-surface p-0.5 text-[12px] text-d-text-2">
-            {[0.6, 0.8, 1].map((z) => (
-              <button
-                key={z}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setZoom(z);
-                }}
-                className={cx("h-7 rounded-[7px] px-2 font-semibold", zoom === z ? "bg-d-raise text-d-text" : "hover:text-d-text")}
-              >
-                {Math.round(z * 100)}%
-              </button>
-            ))}
-          </div>
-          <div className="-mt-6 flex flex-col items-center gap-8 px-6 pb-16 pt-4">
+          <div className="flex flex-col items-center gap-8 px-6 pb-16 pt-6">
             {report.pages.map((p, i) => (
               <div key={p.id} data-page={p.id} style={{ width: PAGE_W * zoom }}>
                 <div className="mb-2 flex items-center gap-2 text-[11.5px] text-d-text-3">
@@ -229,6 +220,7 @@ export function ReportEditor({ id }: { id: string }) {
                       <AlertTriangle size={12} /> Content runs past the page — move a block to the next page
                     </span>
                   )}
+                  <PageReviewBar report={report} pageId={p.id} who={who} />
                 </div>
                 <div style={{ width: PAGE_W * zoom, height: PAGE_H * zoom }} className="shadow-[0_1px_2px_rgba(0,0,0,0.25),0_18px_50px_-24px_rgba(0,0,0,0.6)]">
                   <div style={{ transform: `scale(${zoom})`, transformOrigin: "0 0", width: PAGE_W, height: PAGE_H }}>
@@ -244,6 +236,7 @@ export function ReportEditor({ id }: { id: string }) {
                       onDuplicate={(b) => duplicateBlock(p.id, b)}
                       onDelete={(b) => deleteBlock(p.id, b)}
                       onOverflow={(v) => setOverflow((o) => (o[p.id] === v ? o : { ...o, [p.id]: v }))}
+                      comments={(report.comments ?? []).filter((c) => c.pageId === p.id && !c.resolved)}
                     />
                   </div>
                 </div>
@@ -257,6 +250,9 @@ export function ReportEditor({ id }: { id: string }) {
               <FigurePanel mt={data.metrics[sel.key]} frozen={!!report.snapshot} onClose={() => setSel({ kind: "report" })} />
             ) : sel.kind === "block" && selBlock ? (
               <BlockInspector
+                report={report}
+                pageId={sel.pageId}
+                who={who}
                 block={selBlock}
                 data={data}
                 editable={editable}
@@ -310,6 +306,7 @@ function CanvasPage({
   onDuplicate,
   onDelete,
   onOverflow,
+  comments,
 }: {
   report: Report;
   data: ReportData;
@@ -322,6 +319,7 @@ function CanvasPage({
   onDuplicate: (b: string) => void;
   onDelete: (b: string) => void;
   onOverflow: (v: boolean) => void;
+  comments: ReportComment[];
 }) {
   const look = useLook(report);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -369,6 +367,15 @@ function CanvasPage({
             style={b.type === "cover" ? { position: "absolute", inset: 0, outlineOffset: -3 } : undefined}
           >
             {node}
+            {comments.some((c) => c.blockId === b.id) && (
+              <span
+                className="absolute -right-[46px] top-0 flex h-6 min-w-6 items-center justify-center gap-0.5 rounded-full bg-[#f6e3b4] px-1.5 font-sans text-[11px] font-semibold text-[#6b4a00]"
+                aria-label={`${comments.filter((c) => c.blockId === b.id).length} open comments`}
+              >
+                <MessageSquare size={11} />
+                {comments.filter((c) => c.blockId === b.id).length}
+              </span>
+            )}
             {editable && b.type !== "cover" && (
               <div
                 className={cx(
@@ -419,7 +426,11 @@ function TopBar({
   right,
   onLeft,
   onRight,
+  zoom,
+  onZoom,
 }: {
+  zoom: number;
+  onZoom: (z: number) => void;
   report: Report;
   who: string;
   focus: boolean;
@@ -470,6 +481,18 @@ function TopBar({
         )}
       </span>
       <div className="ml-auto flex items-center gap-1">
+        <div className="mr-1 hidden items-center rounded-[8px] border border-d-line p-0.5 text-[11.5px] text-d-text-3 xl:flex" role="group" aria-label="Zoom">
+          {[0.6, 0.8, 1].map((z) => (
+            <button
+              key={z}
+              onClick={() => onZoom(z)}
+              aria-pressed={zoom === z}
+              className={cx("h-6 rounded-[6px] px-1.5 font-semibold", zoom === z ? "bg-d-raise text-d-text" : "hover:text-d-text")}
+            >
+              {Math.round(z * 100)}%
+            </button>
+          ))}
+        </div>
         <button onClick={onHistory} aria-label="Version history" title="Version history" className={icon}>
           <History size={16} />
         </button>
@@ -488,6 +511,15 @@ function TopBar({
           className="inline-flex h-8 items-center gap-1.5 rounded-[7px] px-2.5 text-[12.5px] font-semibold text-d-text-2 hover:bg-d-raise hover:text-d-text"
         >
           <Eye size={14} /> Preview
+        </a>
+        <a
+          href={`/report-studio/${report.id}/digital`}
+          target="_blank"
+          rel="noreferrer"
+          title="The interactive edition investors see in their portal"
+          className="hidden h-8 items-center gap-1.5 rounded-[7px] px-2.5 text-[12.5px] font-semibold text-d-text-2 hover:bg-d-raise hover:text-d-text lg:inline-flex"
+        >
+          <MonitorSmartphone size={14} /> Digital
         </a>
         <a
           href={`/report-studio/${report.id}?print=1`}
@@ -520,8 +552,32 @@ const STEPS: { s: Report["status"]; l: string }[] = [
   { s: "published", l: "Published" },
 ];
 
+const allReviewed = (r: Report) => r.pages.every((p) => r.review?.[p.id]?.state === "ok");
+
+function ReviewSummary({ report }: { report: Report }) {
+  const ok = report.pages.filter((p) => report.review?.[p.id]?.state === "ok").length;
+  const changes = report.pages.filter((p) => report.review?.[p.id]?.state === "changes");
+  return (
+    <div className="text-d-text-2">
+      <p>
+        {ok} of {report.pages.length} sections reviewed. Mark each page on the canvas; approval needs every section reviewed.
+      </p>
+      {changes.length > 0 && (
+        <ul className="mt-2 space-y-1 text-[12px] text-gold-700">
+          {changes.map((p) => (
+            <li key={p.id}>
+              {p.title}: {report.review![p.id].note}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function PublishPanel({ report, who, onClose }: { report: Report; who: string; onClose: () => void }) {
   const closes = useReporting();
+  const { can } = usePreviewRole();
   const ref = useDismiss(true, onClose);
   const [note, setNote] = useState("");
   const idx = STEPS.findIndex((x) => x.s === report.status);
@@ -546,17 +602,27 @@ function PublishPanel({ report, who, onClose }: { report: Report; who: string; o
       {report.status === "draft" && (
         <>
           <p className="text-d-text-2">Sending for review freezes the data snapshot, so reviewers approve exactly the figures investors will see.</p>
-          <button onClick={act(() => studio.sendForReview(report, who, closes))} className={cx(b, "mt-3 bg-brand text-brand-ink")}>
+          <button
+            disabled={!can("reports.prepare")}
+            title={can("reports.prepare") ? undefined : "Your role can’t prepare reports"}
+            onClick={act(() => studio.sendForReview(report, who, closes))}
+            className={cx(b, "mt-3 bg-brand text-brand-ink disabled:opacity-40")}
+          >
             Send for review
           </button>
         </>
       )}
       {report.status === "in_review" && (
         <>
-          <p className="text-d-text-2">Approve the report, or return it to draft with a note for the preparer.</p>
+          <ReviewSummary report={report} />
           <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="Note for the preparer (to return it)" aria-label="Note" className={field} />
           <div className="mt-2 flex gap-2">
-            <button onClick={act(() => studio.approve(report, who))} className={cx(b, "bg-brand text-brand-ink")}>
+            <button
+              disabled={!allReviewed(report) || !can("reports.review")}
+              title={!can("reports.review") ? "Your role can’t approve reports" : !allReviewed(report) ? "Mark every section reviewed first" : undefined}
+              onClick={act(() => studio.approve(report, who))}
+              className={cx(b, "bg-brand text-brand-ink disabled:opacity-40")}
+            >
               Approve
             </button>
             <button disabled={!note.trim()} onClick={act(() => studio.returnToDraft(report, who, note.trim()))} className={cx(b, "border border-d-line disabled:opacity-40")}>
@@ -568,7 +634,12 @@ function PublishPanel({ report, who, onClose }: { report: Report; who: string; o
       {report.status === "approved" && (
         <>
           <p className="text-d-text-2">Publishing makes this version available to the fund’s investors. It can’t be edited afterwards — only corrected with a new version.</p>
-          <button onClick={act(() => studio.publish(report, who))} className={cx(b, "mt-3 bg-brand text-brand-ink")}>
+          <button
+            disabled={!can("reports.publish")}
+            title={can("reports.publish") ? undefined : "Your role can’t publish reports"}
+            onClick={act(() => studio.publish(report, who))}
+            className={cx(b, "mt-3 bg-brand text-brand-ink disabled:opacity-40")}
+          >
             Publish to investors
           </button>
         </>
@@ -631,6 +702,8 @@ function Outline({
                 <span className="tnum w-4 text-d-text-3">{pi + 1}</span>
                 <span className={cx("truncate", pageOn ? "font-semibold text-d-text" : "text-d-text-2")}>{p.title}</span>
                 {overflow[p.id] && <AlertTriangle size={12} className="shrink-0 text-gold-700" aria-label="Content runs past the page" />}
+                {report.review?.[p.id]?.state === "ok" && <Check size={12} className="ml-auto shrink-0 text-up-ink" aria-label="Reviewed" />}
+                {report.review?.[p.id]?.state === "changes" && <AlertTriangle size={12} className="ml-auto shrink-0 text-gold-700" aria-label="Changes asked" />}
               </button>
               {editable && pi > 0 && (
                 <span className="flex opacity-0 transition-opacity group-hover:opacity-100">
@@ -983,6 +1056,9 @@ function FigurePanel({ mt, frozen, onClose }: { mt?: Metric; frozen: boolean; on
 }
 
 function BlockInspector({
+  report,
+  pageId,
+  who,
   block: b,
   data,
   editable,
@@ -991,6 +1067,9 @@ function BlockInspector({
   onDelete,
   onFigure,
 }: {
+  report: Report;
+  pageId: string;
+  who: string;
   block: Block;
   data: ReportData;
   editable: boolean;
@@ -1308,6 +1387,155 @@ function BlockInspector({
       {bound.length > 0 && (
         <Section title="Linked data">{[...new Set(bound)].map((k) => data.metrics[k] && <MetricRow key={k} mt={data.metrics[k]} onClick={() => onFigure(k)} />)}</Section>
       )}
+      <BlockComments report={report} pageId={pageId} blockId={b.id} who={who} />
     </div>
+  );
+}
+
+/** Internal comments on a block: for the team preparing and reviewing the report; never printed or published. */
+function BlockComments({ report, pageId, blockId, who }: { report: Report; pageId: string; blockId: string; who: string }) {
+  const [text, setText] = useState("");
+  const [reply, setReply] = useState<Record<string, string>>({});
+  const list = (report.comments ?? []).filter((c) => c.blockId === blockId && c.pageId === pageId);
+  return (
+    <Section title="Comments" aside={<span className="text-[11px] text-d-text-3">Internal · never published</span>}>
+      <ul className="space-y-2">
+        {list.map((c) => (
+          <li key={c.id} className={cx("rounded-[8px] border border-d-line px-3 py-2 text-[12px]", c.resolved && "opacity-60")}>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-d-text">{c.author}</span>
+              <span className="ml-auto text-[11px] text-d-text-3">{date(c.at.slice(0, 10))}</span>
+            </div>
+            <p className="mt-0.5 leading-relaxed text-d-text-2">{c.text}</p>
+            {c.replies.map((x, i) => (
+              <div key={i} className="mt-1.5 border-l-2 border-d-line pl-2">
+                <span className="font-semibold text-d-text">{x.author}</span> <span className="text-d-text-2">{x.text}</span>
+              </div>
+            ))}
+            {c.resolved ? (
+              <div className="mt-1 inline-flex items-center gap-1 text-[11px] text-up-ink">
+                <Check size={11} /> Resolved
+              </div>
+            ) : (
+              <div className="mt-1.5 flex gap-1.5">
+                <input
+                  value={reply[c.id] ?? ""}
+                  onChange={(e) => setReply({ ...reply, [c.id]: e.target.value })}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && reply[c.id]?.trim()) {
+                      studio.reply(report, who, c.id, reply[c.id].trim());
+                      setReply({ ...reply, [c.id]: "" });
+                    }
+                  }}
+                  placeholder="Reply and press Enter"
+                  aria-label="Reply"
+                  className="h-7 min-w-0 flex-1 rounded-[6px] border border-d-line bg-transparent px-2 text-[12px] text-d-text placeholder:text-d-text-3 focus:outline-none"
+                />
+                <button
+                  onClick={() => studio.resolveComment(report, who, c.id)}
+                  className="h-7 rounded-[6px] border border-d-line px-2 text-[11.5px] font-semibold text-d-text hover:bg-d-raise"
+                >
+                  Resolve
+                </button>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={2}
+        placeholder="Comment for the team"
+        aria-label="New comment"
+        className={cx(field, list.length ? "mt-2" : "mt-0", "resize-none")}
+      />
+      <button
+        disabled={!text.trim()}
+        onClick={() => {
+          studio.comment(report, who, pageId, blockId, text.trim());
+          setText("");
+        }}
+        className="mt-1.5 h-7 rounded-[6px] bg-brand px-2.5 text-[12px] font-semibold text-brand-ink disabled:opacity-40"
+      >
+        Add comment
+      </button>
+    </Section>
+  );
+}
+
+/** Section review: in review, each page is marked reviewed or sent back with a note; in draft, notes stay visible. */
+function PageReviewBar({ report, pageId, who }: { report: Report; pageId: string; who: string }) {
+  const [asking, setAsking] = useState(false);
+  const [note, setNote] = useState("");
+  const rv = report.review?.[pageId];
+  const chip = "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold";
+  if (report.status === "draft")
+    return rv?.state === "changes" ? (
+      <span className={cx(chip, "ml-auto max-w-[70%] truncate bg-[color-mix(in_oklab,var(--color-gold-500)_16%,transparent)] text-gold-700")} title={rv.note}>
+        <AlertTriangle size={11} className="shrink-0" /> Changes asked: {rv.note}
+      </span>
+    ) : null;
+  if (report.status !== "in_review") return null;
+  if (asking)
+    return (
+      <span className="ml-auto flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+        <input
+          autoFocus
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="What should change on this page?"
+          aria-label="Change requested"
+          className="h-7 w-[260px] rounded-[6px] border border-d-line bg-d-surface px-2 text-[12px] text-d-text placeholder:text-d-text-3 focus:outline-none"
+        />
+        <button
+          disabled={!note.trim()}
+          onClick={() => {
+            studio.reviewPage(report, who, pageId, "changes", note.trim());
+            setAsking(false);
+            setNote("");
+          }}
+          className="h-7 rounded-[6px] bg-brand px-2 text-[11.5px] font-semibold text-brand-ink disabled:opacity-40"
+        >
+          Send
+        </button>
+        <button onClick={() => setAsking(false)} className="h-7 rounded-[6px] px-1.5 text-[11.5px] text-d-text-3 hover:text-d-text">
+          Cancel
+        </button>
+      </span>
+    );
+  return (
+    <span className="ml-auto flex min-w-0 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+      {rv?.state === "ok" && (
+        <span className={cx(chip, "text-up-ink")}>
+          <Check size={11} /> Reviewed by {rv.by}
+        </span>
+      )}
+      {rv?.state === "changes" && (
+        <span className={cx(chip, "min-w-0 truncate bg-[color-mix(in_oklab,var(--color-gold-500)_16%,transparent)] text-gold-700")} title={rv.note}>
+          <AlertTriangle size={11} className="shrink-0" /> Changes: {rv.note}
+        </span>
+      )}
+      {rv ? (
+        <button onClick={() => studio.clearPageReview(report, who, pageId)} className="shrink-0 text-[11px] text-d-text-3 hover:text-d-text">
+          Undo
+        </button>
+      ) : (
+        <>
+          <button
+            onClick={() => setAsking(true)}
+            className="h-6 rounded-[6px] border border-d-line px-2 text-[11px] font-semibold text-d-text-2 hover:bg-d-raise hover:text-d-text"
+          >
+            Needs changes
+          </button>
+          <button
+            onClick={() => studio.reviewPage(report, who, pageId, "ok")}
+            className="inline-flex h-6 items-center gap-1 rounded-[6px] bg-brand px-2 text-[11px] font-semibold text-brand-ink"
+          >
+            <Check size={11} /> Mark reviewed
+          </button>
+        </>
+      )}
+    </span>
   );
 }

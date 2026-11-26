@@ -64,7 +64,8 @@ function seedReport(id: string, fundId: string, period: Period, status: ReportSt
   const data = liveData(fundId, period);
   const at = (d: string, t = "10:00") => `${d}T${t}:00`;
   const versions = [{ n: 1, at: at(days[0]), by: "Rafaela Duarte", note: "Created from the Quarterly Fund Report template", status: "draft" as ReportStatus }];
-  if (status !== "draft") versions.push({ n: 2, at: at(days[1]), by: "Rafaela Duarte", note: "Sent for review", status: "in_review" });
+  if (status !== "draft") versions.push({ n: 2, at: at(days[1]), by: "Rafaela Duarte", note: "Sent for review with a frozen data snapshot", status: "in_review" });
+  if (status === "approved") versions.push({ n: 3, at: at(days[2], "11:30"), by: "Luiza Andrade", note: "Approved", status: "approved" });
   if (status === "published" || status === "archived")
     versions.push(
       { n: 3, at: at(days[2], "11:30"), by: signerOf(fundId), note: "Approved by the manager", status: "approved" },
@@ -80,7 +81,7 @@ function seedReport(id: string, fundId: string, period: Period, status: ReportSt
     archivedFrom: status === "archived" ? "published" : undefined,
     design: { ...DESIGN, ...design },
     pages: quarterlyFundReport(fundId, period, data, signerOf(fundId)),
-    snapshot: status === "published" || status === "archived" ? { at: at(days[2], "15:55"), by: "Luiza Andrade", data } : undefined,
+    snapshot: status !== "draft" ? { at: at(days[1]), by: "Rafaela Duarte", data } : undefined,
     versions,
     created: at(days[0]),
     modified: at(days[days.length - 1], "16:00"),
@@ -88,12 +89,37 @@ function seedReport(id: string, fundId: string, period: Period, status: ReportSt
   };
 }
 
+/** A report half-way through section review, with an open comment, to show the review flow. */
+function atlanticoInReview(): Report {
+  const r = seedReport("r-atlantico-q3", "atlantico-vp-ii", CURRENT_PERIOD, "in_review", ["2026-11-19", "2026-11-25"], { typography: "modern", cover: "light" });
+  const [, summary, overview, performance] = r.pages;
+  r.review = {
+    [r.pages[0].id]: { state: "ok", by: "Luiza Andrade", at: "2026-11-26T09:10:00" },
+    [summary.id]: { state: "ok", by: "Luiza Andrade", at: "2026-11-26T09:24:00" },
+    [overview.id]: { state: "changes", by: "Luiza Andrade", at: "2026-11-26T09:41:00", note: "Target size should read as approved in the LPA once terms are final." },
+  };
+  r.comments = [
+    {
+      id: "c-seed-1",
+      pageId: performance.id,
+      blockId: performance.blocks[2].id,
+      author: "Luiza Andrade",
+      text: "Net IRR is young for this fund — should we add a note that it is not meaningful before the first full year?",
+      at: "2026-11-26T09:52:00",
+      replies: [],
+    },
+  ];
+  return r;
+}
+
 let seedCache: Record<string, Report> | null = null;
 function seeds(): Record<string, Report> {
   if (seedCache) return seedCache;
   const list = [
     seedReport("r-stx-brazil-q3", "stx-brazil-housing", CURRENT_PERIOD, "draft", ["2026-11-20", "2026-11-26"]),
-    seedReport("r-stx-anchor-q3", "stx-anchor", CURRENT_PERIOD, "in_review", ["2026-11-18", "2026-11-24"]),
+    seedReport("r-stx-anchor-q3", "stx-anchor", CURRENT_PERIOD, "approved", ["2026-11-18", "2026-11-21", "2026-11-23"]),
+    seedReport("r-horizonte-q3", "fip-horizonte", CURRENT_PERIOD, "approved", ["2026-11-10", "2026-11-19", "2026-11-24"], { cover: "minimal" }),
+    atlanticoInReview(),
     seedReport("r-cordillera-q3", "cordillera-infra-i", CURRENT_PERIOD, "published", ["2026-10-28", "2026-11-12", "2026-11-18"], { cover: "light" }),
     seedReport("r-horizonte-q2", "fip-horizonte", prevPeriod(CURRENT_PERIOD), "published", ["2026-07-22", "2026-08-04", "2026-08-12"], { cover: "minimal" }),
     seedReport("r-serra-q2", "serra-re-spv", prevPeriod(CURRENT_PERIOD), "archived", ["2026-07-24", "2026-08-05", "2026-08-12"], { typography: "modern" }),
@@ -107,6 +133,11 @@ export function allReports(s: State): Report[] {
   for (const id of s.removed) delete merged[id];
   return Object.values(merged).sort((a, b) => b.modified.localeCompare(a.modified));
 }
+/** The quarterly report a fund's quarter close uses: the latest non-archived Quarterly Fund Report for the fund and period. */
+export function quarterlyFor(s: State, fundId: string, period: Period): Report | null {
+  return allReports(s).find((r) => r.template === "quarterly-fund" && r.fundId === fundId && r.period === period && r.status !== "archived") ?? null;
+}
+
 export const getReport = (s: State, id: string): Report | null => (s.removed.includes(id) ? null : (s.reports[id] ?? seeds()[id] ?? null));
 
 /* ───────── actions ───────── */
@@ -178,16 +209,43 @@ export const studio = {
   },
   sendForReview(r: Report, who: string, closes?: Record<string, Close>) {
     const frozen = r.snapshot ?? { at: now(), by: who, data: liveData(r.fundId, r.period, closes) };
-    put({ ...version(r, who, "Sent for review with a frozen data snapshot", "in_review"), snapshot: frozen }, who, "Sent a report for review");
+    put({ ...version(r, who, "Sent for review with a frozen data snapshot", "in_review"), snapshot: frozen, review: {} }, who, "Sent a report for review");
   },
   returnToDraft(r: Report, who: string, note: string) {
-    put(version(r, who, `Returned to draft: ${note}`, "draft"), who, "Returned a report to draft");
+    // section notes stay visible to the preparer; the ticks are cleared for the next review round
+    const notes = Object.fromEntries(Object.entries(r.review ?? {}).filter(([, v]) => v.state === "changes"));
+    put({ ...version(r, who, `Returned to draft: ${note}`, "draft"), review: notes }, who, "Returned a report to draft");
   },
   approve(r: Report, who: string) {
     put(version(r, who, "Approved", "approved"), who, "Approved a report");
   },
-  publish(r: Report, who: string) {
-    put(version(r, who, "Published to the investor portal", "published"), who, "Published a report");
+  publish(r: Report, who: string, note = "Published to the investor portal") {
+    put(version(r, who, note, "published"), who, "Published a report");
+  },
+  /* ───── section-level review ───── */
+  reviewPage(r: Report, who: string, pageId: string, state: "ok" | "changes", note?: string) {
+    if (r.status !== "in_review") return;
+    put(
+      { ...r, review: { ...(r.review ?? {}), [pageId]: { state, by: who, at: now(), note } } },
+      who,
+      state === "ok" ? "Marked a report section as reviewed" : "Asked for changes to a report section",
+    );
+  },
+  clearPageReview(r: Report, who: string, pageId: string) {
+    const review = { ...(r.review ?? {}) };
+    delete review[pageId];
+    put({ ...r, review }, who);
+  },
+  /* ───── internal comments (any status; never published) ───── */
+  comment(r: Report, who: string, pageId: string, blockId: string, text: string) {
+    const c = { id: newId("c"), pageId, blockId, author: who, text, at: now(), replies: [] };
+    put({ ...r, comments: [...(r.comments ?? []), c] }, who);
+  },
+  reply(r: Report, who: string, id: string, text: string) {
+    put({ ...r, comments: (r.comments ?? []).map((c) => (c.id === id ? { ...c, replies: [...c.replies, { author: who, text, at: now() }] } : c)) }, who);
+  },
+  resolveComment(r: Report, who: string, id: string) {
+    put({ ...r, comments: (r.comments ?? []).map((c) => (c.id === id ? { ...c, resolved: true } : c)) }, who, "Resolved a report comment");
   },
   /** A correction never edits the published version: it opens a new draft that keeps the history. */
   correct(r: Report, who: string, note: string) {

@@ -104,7 +104,7 @@ export function Linked({ text, data, onFigure }: { text: string; data: ReportDat
 /* ───────── blocks ───────── */
 
 export type Mode = "edit" | "print";
-type Ctx = { report: Report; data: ReportData; look: Look; mode: Mode; pages: Page[]; onFigure?: (k: string) => void };
+export type Ctx = { report: Report; data: ReportData; look: Look; mode: Mode; pages: Page[]; onFigure?: (k: string) => void };
 
 const label = (look: Look): CSSProperties => ({ fontFamily: look.sans, fontSize: 9.5, color: look.muted, letterSpacing: "0.01em" });
 const th: CSSProperties = { textAlign: "left", fontWeight: 600, padding: "6px 8px 6px 0", fontSize: 9.5 };
@@ -180,7 +180,7 @@ function usedKeys(pages: Page[]) {
   return [...keys];
 }
 
-function BlockView({ b, c }: { b: Block; c: Ctx }) {
+export function BlockView({ b, c }: { b: Block; c: Ctx }) {
   const { data, look, mode } = c;
   const cur = data.currency;
   const m = (v: number) => money(v, cur);

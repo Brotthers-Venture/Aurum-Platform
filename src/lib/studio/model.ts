@@ -40,9 +40,31 @@ export type Design = {
   cover: "field" | "light" | "minimal";
 };
 
+export type Locale = "en" | "pt";
+export type PageReview = { state: "ok" | "changes"; by: string; at: string; note?: string };
+export type ReportComment = {
+  id: string;
+  pageId: string;
+  blockId: string;
+  author: string;
+  text: string;
+  at: string;
+  resolved?: boolean;
+  replies: { author: string; text: string; at: string }[];
+};
+
 export type Report = {
   id: string;
   template: TemplateId;
+  /** what the report is about: a fund (fundId) or a family (fundId holds the family id) */
+  subject?: "fund" | "family";
+  /** the partner a capital account statement is for */
+  investorId?: string;
+  locale?: Locale;
+  /** section-level review while in review, by page */
+  review?: Record<string, PageReview>;
+  /** internal comments; never published */
+  comments?: ReportComment[];
   name: string;
   fundId: string;
   period: Period;

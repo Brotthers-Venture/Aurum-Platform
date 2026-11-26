@@ -15,6 +15,8 @@ import { STATUS_LABEL, actions, getClose, useReporting } from "@/lib/reporting/s
 import { LetterEditor, LetterView } from "./Letter";
 import { StatementPaper } from "./Statement";
 import { deriveClose, useClose, type Step, type StepState } from "./useClose";
+import { REPORT_STATUS } from "@/lib/studio/model";
+import { studio, useStudio } from "@/lib/studio/store";
 
 const TODAY = "2026-11-26";
 const daysTo = (d: string) => Math.round((Date.parse(d) - Date.parse(TODAY)) / 86_400_000);
@@ -35,6 +37,7 @@ function useWho() {
 
 export function QuarterBoard() {
   const s = useReporting();
+  const st = useStudio();
   const router = useRouter();
   const params = useSearchParams();
   const who = useWho();
@@ -42,10 +45,10 @@ export function QuarterBoard() {
   const rows = useMemo(
     () =>
       funds
-        .map((f) => deriveClose(s, f.id, period))
+        .map((f) => deriveClose(s, f.id, period, st))
         .filter((r) => r.close)
         .sort((a, b) => order(a.close!.status) - order(b.close!.status) || a.fund.name.localeCompare(b.fund.name)),
-    [s, period],
+    [s, st, period],
   );
   const count = (st: string) => rows.filter((r) => r.close!.status === st).length;
   const due = periodDue(period);
@@ -303,6 +306,8 @@ type D = ReturnType<typeof deriveClose>;
 
 /** The one thing to do next, stated plainly, with the button that does it. */
 function NextAction({ d, who, onTab }: { d: D; who: string; onTab: (t: Tab) => void }) {
+  const router = useRouter();
+  const { can } = usePreviewRole();
   const { close, gp, fund } = d;
   const c = close!;
   const [note, setNote] = useState("");
@@ -350,7 +355,12 @@ function NextAction({ d, who, onTab }: { d: D; who: string; onTab: (t: Tab) => v
         <button onClick={() => setAsking(true)} className={secondary}>
           Request changes
         </button>
-        <button onClick={() => actions.approveReview(fund.id, p, who)} className={primary} disabled={d.openComments.length > 0}>
+        <button
+          onClick={() => actions.approveReview(fund.id, p, who)}
+          className={primary}
+          disabled={d.openComments.length > 0 || !can("reports.review")}
+          title={can("reports.review") ? undefined : "Your role can’t review reporting packages"}
+        >
           Approve and send to {gp.shortName}
         </button>
       </>
@@ -366,7 +376,15 @@ function NextAction({ d, who, onTab }: { d: D; who: string; onTab: (t: Tab) => v
   } else if (c.status === "approved") {
     text = `Approved by ${c.gpApproved!.by} on ${date(c.gpApproved!.at.slice(0, 10))}. Publishing sends the letter, the report and every statement to the investor portal together.`;
     buttons = (
-      <button onClick={() => actions.publish(fund.id, p, who)} className={primary} disabled={d.failing.length > 0}>
+      <button
+        onClick={() => {
+          actions.publish(fund.id, p, who);
+          if (d.report && d.report.status === "approved") studio.publish(d.report, who, `Published with the ${periodName(p)} quarterly package`);
+        }}
+        className={primary}
+        disabled={d.failing.length > 0 || !can("reports.publish")}
+        title={can("reports.publish") ? undefined : "Your role can’t publish to investors"}
+      >
         Publish to investors
       </button>
     );
@@ -423,6 +441,20 @@ function NextAction({ d, who, onTab }: { d: D; who: string; onTab: (t: Tab) => v
     buttons = (
       <button onClick={() => actions.generateStatements(fund.id, p, who, d.partners.length)} className={primary}>
         Generate {d.partners.length} statements
+      </button>
+    );
+  } else if (!d.reportReady) {
+    const rep = d.report;
+    text = rep
+      ? `The quarterly report is ${REPORT_STATUS[rep.status].toLowerCase()} in Report Studio. It must be approved before the package goes to review.`
+      : "Create the quarterly report in Report Studio. It starts from the fund’s books for the quarter and goes into this package once approved.";
+    buttons = rep ? (
+      <Link href={`/admin/report-studio/${rep.id}`} className={primary}>
+        Open the report <ArrowRight size={14} />
+      </Link>
+    ) : (
+      <button onClick={() => router.push(`/admin/report-studio/${studio.create(fund.id, p, who)}`)} className={primary}>
+        Create the quarterly report
       </button>
     );
   } else if (d.openComments.length) {
@@ -573,7 +605,13 @@ function Overview({ d, who, onTab }: { d: D; who: string; onTab: (t: Tab) => voi
           <ul>
             {[
               { label: "Investor letter", detail: `${d.figures.nav.label} ${m(figures.nav.value as number)} · linked figures`, onClick: () => onTab("letter") },
-              { label: "Quarterly report", detail: "Performance, NAV and cash flows", href: `/report/${fund.id}` },
+              d.report
+                ? {
+                    label: "Quarterly report",
+                    detail: `${REPORT_STATUS[d.report.status]} in Report Studio · ${d.report.pages.length} pages`,
+                    href: `/admin/report-studio/${d.report.id}`,
+                  }
+                : { label: "Quarterly report", detail: "Not created yet — create it in Report Studio", href: "/admin/fund/reports?tab=templates" },
               {
                 label: "Capital account statements",
                 detail: c.statements ? `${d.partners.length} generated` : `${d.partners.length} partners · not generated yet`,

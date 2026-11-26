@@ -11,6 +11,7 @@ import { useReporting } from "@/lib/reporting/store";
 import { LetterView } from "./Letter";
 import { StatementPaper } from "./Statement";
 import { deriveClose, useClose } from "./useClose";
+import { useInvestorReports } from "@/components/studio/Digital";
 
 const PERIODS: Period[] = [CURRENT_PERIOD, prevPeriod(CURRENT_PERIOD)];
 
@@ -28,11 +29,26 @@ export function InvestorPublished({ gpId, investorId }: { gpId: string; investor
       ),
     [s, gpId, investorId],
   );
-  if (!rows.length) return null;
+  const reports = useInvestorReports(gpId, investorId);
+  if (!rows.length && !reports.length) return null;
   return (
     <section className="mt-8">
       <h2 className="text-[15px] font-semibold">Quarterly reporting</h2>
       <ul className="mt-3 divide-y divide-stone-200 overflow-hidden rounded-[10px] border border-stone-200 bg-white">
+        {reports.map((r) => (
+          <li key={r.id}>
+            <Link href={`/investor/${gpId}/documents/report?id=${r.id}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-stone-50">
+              <FileText size={15} strokeWidth={1.5} className="shrink-0 text-stone-400" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13.5px] font-semibold">{r.name}</span>
+                <span className="block text-[12px] text-stone-500">
+                  Interactive report and PDF · published {date((r.versions.findLast((v) => v.status === "published")?.at ?? r.modified).slice(0, 10))}
+                </span>
+              </span>
+              <ArrowRight size={15} className="text-stone-400" />
+            </Link>
+          </li>
+        ))}
         {rows.map(({ d, p }) => (
           <li key={`${d.fund.id}-${p}`}>
             <Link href={`/investor/${gpId}/documents/quarterly?fund=${d.fund.id}&period=${p}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-stone-50">
@@ -63,6 +79,7 @@ export function InvestorQuarterly({ gpId, investorId }: { gpId: string; investor
 function Quarterly({ fundId, period, gpId, investorId }: { fundId: string; period: Period; gpId: string; investorId: string }) {
   const d = useClose(fundId, period);
   const row = d.partners.find((p) => p.investorId === investorId);
+  const report = d.report && d.report.status === "published" ? d.report : null;
   if (!d.close || d.close.status !== "published" || !row) return <Missing gpId={gpId} />;
   return (
     <main className="mx-auto max-w-[900px] px-6 py-10">
@@ -75,6 +92,16 @@ function Quarterly({ fundId, period, gpId, investorId }: { fundId: string; perio
       </p>
       <h2 className="mb-3 mt-8 text-[15px] font-semibold">Investor letter</h2>
       <LetterView close={d.close} gp={d.gp} figures={d.figures} side="investor" />
+      {report && (
+        <Link
+          href={`/investor/${gpId}/documents/report?id=${report.id}`}
+          className="mt-6 flex items-center gap-3 rounded-[10px] border border-stone-200 bg-white px-5 py-3.5 hover:bg-stone-50"
+        >
+          <FileText size={15} strokeWidth={1.5} className="text-stone-400" />
+          <span className="flex-1 text-[13.5px] font-semibold">Open the full quarterly report</span>
+          <ArrowRight size={15} className="text-stone-400" />
+        </Link>
+      )}
       <h2 className="mb-3 mt-10 text-[15px] font-semibold">Your capital account statement</h2>
       <StatementPaper gp={d.gp} fundName={d.fund.name} currency={d.fund.currency} period={period} row={row} />
     </main>

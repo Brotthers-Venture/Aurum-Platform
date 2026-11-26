@@ -5,6 +5,8 @@ import { fundById } from "@/lib/data";
 import { gpById } from "@/lib/gps";
 import { computeFigures, partnerRows, prevPeriod, runChecks, periodName, type Period } from "@/lib/reporting/figures";
 import { fundAdjustments, getClose, staleKeys, useReporting, type Close } from "@/lib/reporting/store";
+import { REPORT_STATUS, type Report } from "@/lib/studio/model";
+import { quarterlyFor, useStudio } from "@/lib/studio/store";
 
 export type StepState = "done" | "current" | "waiting" | "todo" | "blocked";
 export type Step = { id: string; title: string; detail: string; state: StepState; owner: "Aurum" | "Manager" };
@@ -14,10 +16,11 @@ const BOOK_CHECKS = ["capital", "called", "distributions", "ledger", "fees"];
 /** Everything about one fund's close, derived once: figures, partners, checks, staleness, steps and the next action. */
 export function useClose(fundId: string, period: Period) {
   const s = useReporting();
-  return useMemo(() => deriveClose(s, fundId, period), [s, fundId, period]);
+  const st = useStudio();
+  return useMemo(() => deriveClose(s, fundId, period, st), [s, fundId, period, st]);
 }
 
-export function deriveClose(s: ReturnType<typeof useReporting>, fundId: string, period: Period) {
+export function deriveClose(s: ReturnType<typeof useReporting>, fundId: string, period: Period, studioState?: ReturnType<typeof useStudio>) {
   const fund = fundById(fundId)!;
   const gp = gpById(fund.gpId)!;
   const close = getClose(s, fundId, period);
@@ -36,12 +39,18 @@ export function deriveClose(s: ReturnType<typeof useReporting>, fundId: string, 
   const bookChecksPass = checks.filter((c) => BOOK_CHECKS.includes(c.id)).every((c) => c.status === "pass");
   const failing = checks.filter((c) => c.status === "fail");
   const openComments = close?.comments.filter((c) => !c.resolved) ?? [];
-  const steps = close ? stepsFor(close, gp.shortName, bookChecksPass, partners.length, openComments.length) : [];
-  const readyForReview = !!close && close.status === "preparing" && steps.slice(0, 5).every((x) => x.state === "done") && openComments.length === 0;
-  return { fund, gp, close, figures, prevFigures, partners, checks, failing, stale, bookChecksPass, openComments, steps, readyForReview, adjustments };
+  const report = studioState ? quarterlyFor(studioState, fundId, period) : null;
+  const reportReady = !!report && (report.status === "approved" || report.status === "published");
+  const steps = close ? stepsFor(close, gp.shortName, bookChecksPass, partners.length, openComments.length, studioState ? report : undefined) : [];
+  const readyForReview =
+    !!close &&
+    close.status === "preparing" &&
+    steps.filter((x) => x.id !== "review" && x.id !== "approval" && x.id !== "publish").every((x) => x.state === "done") &&
+    openComments.length === 0;
+  return { fund, gp, close, figures, prevFigures, partners, checks, failing, stale, bookChecksPass, openComments, steps, readyForReview, adjustments, report, reportReady };
 }
 
-function stepsFor(c: Close, gpName: string, checksPass: boolean, lps: number, openComments: number): Step[] {
+function stepsFor(c: Close, gpName: string, checksPass: boolean, lps: number, openComments: number, report?: Report | null): Step[] {
   const after = (s: Close["status"]) => ["in_review", "with_gp", "approved", "published"].indexOf(c.status) >= ["in_review", "with_gp", "approved", "published"].indexOf(s);
   const r = c.request.status;
   const list: Step[] = [
@@ -80,6 +89,21 @@ function stepsFor(c: Close, gpName: string, checksPass: boolean, lps: number, op
       state: c.statements ? "done" : "current",
       owner: "Aurum",
     },
+    ...(report === undefined
+      ? []
+      : [
+          {
+            id: "report",
+            title: "Quarterly report",
+            detail: !report
+              ? "Create it in Report Studio from the Quarterly Fund Report template."
+              : report.status === "approved" || report.status === "published"
+                ? `${REPORT_STATUS[report.status]} in Report Studio`
+                : `${REPORT_STATUS[report.status]} in Report Studio — it must be approved before the package goes to review.`,
+            state: (report && (report.status === "approved" || report.status === "published") ? "done" : after("in_review") ? "done" : "current") as StepState,
+            owner: "Aurum" as const,
+          },
+        ]),
     {
       id: "letter",
       title: "Investor letter",
@@ -110,6 +134,7 @@ function stepsFor(c: Close, gpName: string, checksPass: boolean, lps: number, op
     },
   ];
   // Before the letter step has been reached, it is not yet "done" in a meaningful sense: keep it neutral.
-  if (c.status === "preparing" && !openComments) list[4].state = list.slice(0, 4).every((x) => x.state === "done") ? "done" : "todo";
+  const li = list.findIndex((x) => x.id === "letter");
+  if (c.status === "preparing" && !openComments) list[li].state = list.slice(0, li).every((x) => x.state === "done") ? "done" : "todo";
   return list;
 }

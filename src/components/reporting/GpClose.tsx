@@ -347,10 +347,10 @@ export function GpCloseReview({ gpId, fundId }: { gpId: string; fundId: string }
           </Panel>
         </div>
         <p className="flex items-center gap-1.5 px-2 pt-2 text-[12px] text-d-text-3">
-          <FileText size={13} /> The quarterly report with performance and cash flows is included:{" "}
-          <Link href={`/report/${fundId}`} className="underline underline-offset-2 hover:text-d-text">
+          <FileText size={13} /> The quarterly report is part of the package:{" "}
+          <a href={d.report ? `/report-studio/${d.report.id}` : `/report/${fundId}`} target="_blank" rel="noreferrer" className="underline underline-offset-2 hover:text-d-text">
             open it
-          </Link>
+          </a>
           .
         </p>
       </div>

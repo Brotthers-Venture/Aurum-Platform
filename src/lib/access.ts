@@ -26,6 +26,10 @@ export type Permission =
   | "kyc.decide"
   | "investors.view_all"
   | "investors.change_review"
+  | "reports.prepare"
+  | "reports.review"
+  | "reports.publish"
+  | "reports.approve_gp"
   | "banking.view"
   | "banking.connect"
   | "portal.view_own"
@@ -65,6 +69,15 @@ export const permissionGroups: { label: string; items: { key: Permission; label:
       { key: "calls.approve_gp", label: "Approve calls as GP" },
       { key: "distributions.prepare", label: "Prepare distributions" },
       { key: "distributions.approve_gp", label: "Approve distributions as GP" },
+    ],
+  },
+  {
+    label: "Reporting",
+    items: [
+      { key: "reports.prepare", label: "Prepare reports and quarter closes" },
+      { key: "reports.review", label: "Review and approve reports" },
+      { key: "reports.publish", label: "Publish reports to investors" },
+      { key: "reports.approve_gp", label: "Approve reporting packages as the manager" },
     ],
   },
   {
@@ -139,7 +152,7 @@ export const roles: Role[] = [
     audience: "Aurum staff",
     scope: "Assigned funds",
     description: "Runs the books: prepares calls, distributions and entries, runs LPA reviews. Cannot approve own work.",
-    permissions: ["fund.view", "economics.prepare", "ledger.view", "ledger.post", "calls.prepare", "calls.review", "distributions.prepare", "investors.view_all", "banking.view"],
+    permissions: ["fund.view", "economics.prepare", "ledger.view", "ledger.post", "calls.prepare", "calls.review", "distributions.prepare", "investors.view_all", "banking.view", "reports.prepare"],
   },
   {
     id: "compliance_officer",
@@ -171,7 +184,7 @@ export const roles: Role[] = [
     audience: "Client (GP)",
     scope: "Own funds",
     description: "Fund manager signatory. Final approval of capital calls, distributions and the fund economics Aurum prepares.",
-    permissions: ["fund.view", "economics.approve", "ledger.view", "calls.approve_gp", "distributions.approve_gp", "investors.view_all", "banking.view"],
+    permissions: ["fund.view", "economics.approve", "ledger.view", "calls.approve_gp", "distributions.approve_gp", "investors.view_all", "banking.view", "reports.approve_gp"],
   },
   {
     id: "gp_staff",
