@@ -326,6 +326,17 @@ function NextAction({ d, who, onTab }: { d: D; who: string; onTab: (t: Tab) => v
         View as an investor <ArrowRight size={14} />
       </Link>
     );
+  } else if (d.report && d.reportStale.length && d.report.status !== "draft" && (c.status !== "preparing" || d.report.status === "approved")) {
+    tone = "warn";
+    const nav = d.reportStale.includes("nav")
+      ? ` Net asset value in the report: ${money(Number(d.report.snapshot?.data.metrics.nav?.value ?? 0), d.fund.currency)}; in the books: ${money(Number(d.figures.nav.value), d.fund.currency)}.`
+      : "";
+    text = `The quarterly report was ${REPORT_STATUS[d.report.status].toLowerCase()} on figures that have since changed (${d.reportStale.length} of them).${nav} Return it to draft in Report Studio so it picks up the current figures, then approve it again.`;
+    buttons = (
+      <Link href={`/admin/report-studio/${d.report.id}`} className={primary}>
+        Open the report <ArrowRight size={14} />
+      </Link>
+    );
   } else if (d.stale.length && c.snapshot && c.status !== "preparing") {
     tone = "warn";
     text = `${d.stale.length} linked figure${d.stale.length > 1 ? "s" : ""} changed after the package was reviewed. Check them before it goes further${c.status === "approved" ? " — the manager will need to approve again" : ""}.`;
@@ -382,7 +393,7 @@ function NextAction({ d, who, onTab }: { d: D; who: string; onTab: (t: Tab) => v
           if (d.report && d.report.status === "approved") studio.publish(d.report, who, `Published with the ${periodName(p)} quarterly package`);
         }}
         className={primary}
-        disabled={d.failing.length > 0 || !can("reports.publish")}
+        disabled={d.failing.length > 0 || d.reportStale.length > 0 || !can("reports.publish")}
         title={can("reports.publish") ? undefined : "Your role can’t publish to investors"}
       >
         Publish to investors
@@ -453,7 +464,7 @@ function NextAction({ d, who, onTab }: { d: D; who: string; onTab: (t: Tab) => v
         Open the report <ArrowRight size={14} />
       </Link>
     ) : (
-      <button onClick={() => router.push(`/admin/report-studio/${studio.create(fund.id, p, who)}`)} className={primary}>
+      <button onClick={() => router.push(`/admin/report-studio/${studio.create("quarterly-fund", fund.id, p, who)}`)} className={primary}>
         Create the quarterly report
       </button>
     );

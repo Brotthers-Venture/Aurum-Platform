@@ -9,11 +9,15 @@ import { usePreviewRole } from "@/components/admin/PreviewRole";
 import { PageHead, StatusPill } from "@/components/gp/GpKit";
 import { useDismiss } from "@/components/shell/WorkstationTopBar";
 import { fundById, funds } from "@/lib/data";
+import { partnerRows } from "@/lib/reporting/figures";
+import { FAMILIES } from "@/lib/wealth";
+import { LOCALES, type Locale } from "@/lib/studio/i18n";
+import { buildTemplate } from "@/lib/studio/templates";
 import { date } from "@/lib/format";
 import { CURRENT_PERIOD, periodName, prevPeriod, reportable, type Period } from "@/lib/reporting/figures";
 import { useReporting } from "@/lib/reporting/store";
 import { REPORT_STATUS, TEMPLATES, type Design, type Report, type ReportStatus, type Template } from "@/lib/studio/model";
-import { allReports, dataFor, studio, useStudio } from "@/lib/studio/store";
+import { allReports, dataFor, liveData, studio, subjectLongName, subjectName, useStudio } from "@/lib/studio/store";
 import { PAGE_H, PAGE_W, ReportPage, useLook } from "./Render";
 
 const btn = "inline-flex h-9 items-center gap-2 rounded-[8px] px-3.5 text-[13px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40";
@@ -89,7 +93,8 @@ export function StudioHome() {
 
 function Library() {
   const s = useStudio();
-  const who = usePreviewRole().member.name;
+  const { member, can } = usePreviewRole();
+  const who = member.name;
   const router = useRouter();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"active" | ReportStatus>("active");
@@ -100,7 +105,7 @@ function Library() {
     (r) =>
       (status === "active" ? r.status !== "archived" : r.status === status) &&
       (fund === "all" || r.fundId === fund) &&
-      `${r.name} ${fundById(r.fundId)?.name}`.toLowerCase().includes(q.trim().toLowerCase()),
+      `${r.name} ${subjectLongName(r.fundId)}`.toLowerCase().includes(q.trim().toLowerCase()),
   );
   const fundsInUse = [...new Set(reports.map((r) => r.fundId))];
   const sel = "h-9 rounded-[8px] border border-stone-200 bg-transparent px-2.5 text-[13px] text-ink-900 focus:outline-none";
@@ -126,11 +131,11 @@ function Library() {
             </option>
           ))}
         </select>
-        <select value={fund} onChange={(e) => setFund(e.target.value)} aria-label="Fund" className={sel}>
-          <option value="all">All funds</option>
+        <select value={fund} onChange={(e) => setFund(e.target.value)} aria-label="Fund or family" className={sel}>
+          <option value="all">All funds and families</option>
           {fundsInUse.map((id) => (
             <option key={id} value={id}>
-              {fundById(id)?.shortName}
+              {subjectName(id)}
             </option>
           ))}
         </select>
@@ -152,6 +157,7 @@ function Library() {
                 onDuplicate={() => router.push(`/admin/report-studio/${studio.duplicate(r, who)}`)}
                 onArchive={() => (r.status === "archived" ? studio.restore(r, who) : studio.archive(r, who))}
                 onHistory={() => setHistory(r)}
+                prepare={can("reports.prepare")}
               />
             </li>
           ))}
@@ -162,7 +168,21 @@ function Library() {
   );
 }
 
-function ReportCard({ r, onOpen, onDuplicate, onArchive, onHistory }: { r: Report; onOpen: () => void; onDuplicate: () => void; onArchive: () => void; onHistory: () => void }) {
+function ReportCard({
+  r,
+  onOpen,
+  onDuplicate,
+  onArchive,
+  onHistory,
+  prepare,
+}: {
+  r: Report;
+  onOpen: () => void;
+  onDuplicate: () => void;
+  onArchive: () => void;
+  onHistory: () => void;
+  prepare: boolean;
+}) {
   const [menu, setMenu] = useState(false);
   const ref = useDismiss(menu, () => setMenu(false));
   return (
@@ -195,9 +215,11 @@ function ReportCard({ r, onOpen, onDuplicate, onArchive, onHistory }: { r: Repor
             <div className="picker-in absolute right-0 top-8 z-20 w-[200px] rounded-[10px] border border-stone-200 bg-white p-1 text-[13px] shadow-lift" role="menu">
               {[
                 { l: "Open", i: <ArrowRight size={14} />, f: onOpen },
-                { l: "Duplicate", i: <Copy size={14} />, f: onDuplicate },
+                ...(prepare ? [{ l: "Duplicate", i: <Copy size={14} />, f: onDuplicate }] : []),
                 { l: "Version history", i: <History size={14} />, f: onHistory },
-                { l: r.status === "archived" ? "Restore" : "Archive", i: r.status === "archived" ? <RotateCcw size={14} /> : <Archive size={14} />, f: onArchive },
+                ...(prepare
+                  ? [{ l: r.status === "archived" ? "Restore" : "Archive", i: r.status === "archived" ? <RotateCcw size={14} /> : <Archive size={14} />, f: onArchive }]
+                  : []),
               ].map((x) => (
                 <button
                   key={x.l}
@@ -259,6 +281,31 @@ export function VersionDrawer({ r, onClose }: { r: Report; onClose: () => void }
 /* ───────── templates ───────── */
 
 const SAMPLE_FUND = "stx-brazil-housing";
+const SAMPLE_FAMILY = "halvorsen";
+
+/** Each template's first page, built from a sample fund (or family) exactly as a new report would be. */
+function TemplateThumb({ t, brand, i }: { t: Template; brand: Design["brand"]; i: number }) {
+  const subjectId = t.subject === "family" ? SAMPLE_FAMILY : SAMPLE_FUND;
+  const report = useMemo(() => {
+    const data = liveData(subjectId, CURRENT_PERIOD);
+    const investorId = t.perInvestor ? data.partners[0]?.investorId : undefined;
+    const pages = buildTemplate(t.id, { subjectId, period: CURRENT_PERIOD, data, signer: "", locale: "en", investorId });
+    return {
+      fundId: subjectId,
+      period: CURRENT_PERIOD,
+      template: t.id,
+      subject: t.subject,
+      investorId,
+      design: {
+        brand: t.subject === "family" ? ("administrator" as const) : brand,
+        typography: i % 3 === 2 ? ("modern" as const) : ("editorial" as const),
+        cover: (["field", "light", "minimal"] as const)[i % 3],
+      },
+      pages: [pages[0]],
+    };
+  }, [t, brand, i, subjectId]);
+  return <Cover width={210} report={report} />;
+}
 
 function Gallery() {
   const [brand, setBrand] = useState<Design["brand"]>("manager");
@@ -284,37 +331,28 @@ function Gallery() {
             </button>
           ))}
         </div>
-        <span className="text-stone-500">Shown with {sample.shortName}. Each manager’s logo, colours and legal details come from their brand settings.</span>
+        <span className="text-stone-500">
+          First pages shown with {sample.shortName} (the family report with a sample family). Each manager’s logo, colours and legal details come from their brand settings.
+        </span>
       </div>
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-x-6 gap-y-9">
         {TEMPLATES.map((t, i) => (
           <li key={t.id}>
-            <div className="relative w-fit">
-              <Cover
-                width={210}
-                report={{
-                  fundId: SAMPLE_FUND,
-                  period: CURRENT_PERIOD,
-                  design: { brand, typography: i % 3 === 2 ? "modern" : "editorial", cover: (["field", "light", "minimal"] as const)[i % 3] },
-                  pages: [{ id: "c", title: "Cover", blocks: [{ id: "c", type: "cover", title: t.name.replace(/^Investor /, ""), subtitle: periodName(CURRENT_PERIOD) }] }],
-                }}
-              />
-            </div>
-            <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="text-[13.5px] font-semibold text-ink-900">{t.name}</span>
-              {!t.ready && <StatusPill value="In design" />}
-            </div>
+            <button
+              onClick={() => setUse(t)}
+              className="block rounded-[4px] outline-offset-4 transition-transform duration-200 hover:-translate-y-0.5"
+              aria-label={`Use ${t.name}`}
+            >
+              <TemplateThumb t={t} brand={brand} i={i} />
+            </button>
+            <div className="mt-3 text-[13.5px] font-semibold text-ink-900">{t.name}</div>
             <p className="mt-0.5 text-[12px] leading-relaxed text-stone-500">{t.description}</p>
             <div className="mt-1 text-[11.5px] text-stone-500">
               {t.pages} {t.pages === 1 ? "page" : "pages"} · {t.audience}
             </div>
-            {t.ready ? (
-              <button onClick={() => setUse(t)} className={cx(primary, "mt-3 h-8 px-3 text-[12.5px]")}>
-                Use this template
-              </button>
-            ) : (
-              <div className="mt-3 text-[12px] text-stone-500">Available after the first template is approved.</div>
-            )}
+            <button onClick={() => setUse(t)} className={cx(secondary, "mt-3 h-8 px-3 text-[12.5px]")}>
+              Use this template
+            </button>
           </li>
         ))}
       </ul>
@@ -325,13 +363,21 @@ function Gallery() {
 
 function UseTemplate({ t, onClose }: { t: Template; onClose: () => void }) {
   const router = useRouter();
-  const who = usePreviewRole().member.name;
+  const { member, can } = usePreviewRole();
+  const who = member.name;
   const closes = useReporting();
+  const family = t.subject === "family";
   const options = funds.filter((f) => reportable(f.id, CURRENT_PERIOD));
-  const [fundId, setFundId] = useState(SAMPLE_FUND);
+  const [subjectId, setSubjectId] = useState(family ? SAMPLE_FAMILY : SAMPLE_FUND);
   const [period, setPeriod] = useState<Period>(CURRENT_PERIOD);
-  const ok = reportable(fundId, period);
+  const [locale, setLocale] = useState<Locale>(fundById(SAMPLE_FUND)?.currency === "BRL" && !family ? "pt" : "en");
+  const partners = useMemo(() => (t.perInvestor ? partnerRows(subjectId, period) : []), [t.perInvestor, subjectId, period]);
+  const [investorId, setInvestorId] = useState("");
+  const investor = partners.some((p) => p.investorId === investorId) ? investorId : (partners[0]?.investorId ?? "");
+  const allowed = can("reports.prepare");
+  const ok = allowed && (family || (reportable(subjectId, period) && (!t.perInvestor || !!investor)));
   const sel = "mt-1 h-9 w-full rounded-[8px] border border-stone-200 bg-transparent px-2.5 text-[13px] text-ink-900 focus:outline-none";
+  const create = () => router.push(`/admin/report-studio/${studio.create(t.id, subjectId, period, who, closes, { locale, investorId: t.perInvestor ? investor : undefined })}`);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" onClick={onClose}>
       <div
@@ -342,34 +388,78 @@ function UseTemplate({ t, onClose }: { t: Template; onClose: () => void }) {
       >
         <div className="text-[15px] font-semibold text-ink-900">New {t.name}</div>
         <p className="mt-1 text-[12.5px] text-stone-500">
-          The report is built from the fund’s books for the quarter. You can change any wording, reorder sections and choose the look afterwards.
+          {family
+            ? "The report is built from the family’s records: assets, entities and borrowing, consolidated in US dollars."
+            : "The report is built from the fund’s books for the quarter."}{" "}
+          You can change any wording, reorder sections and choose the look afterwards.
         </p>
         <label className="mt-4 block text-[12.5px] font-semibold text-ink-900">
-          Fund
-          <select value={fundId} onChange={(e) => setFundId(e.target.value)} className={sel}>
-            {options.map((f) => (
-              <option key={f.id} value={f.id}>
-                {f.name}
-              </option>
-            ))}
+          {family ? "Family" : "Fund"}
+          <select
+            value={subjectId}
+            onChange={(e) => {
+              setSubjectId(e.target.value);
+              if (!family) setLocale(fundById(e.target.value)?.currency === "BRL" ? "pt" : "en");
+            }}
+            className={sel}
+          >
+            {family
+              ? FAMILIES.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))
+              : options.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
           </select>
         </label>
+        {!family && (
+          <label className="mt-3 block text-[12.5px] font-semibold text-ink-900">
+            Quarter
+            <select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className={sel}>
+              {[CURRENT_PERIOD, prevPeriod(CURRENT_PERIOD)].map((p) => (
+                <option key={p} value={p}>
+                  {periodName(p)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {t.perInvestor && (
+          <label className="mt-3 block text-[12.5px] font-semibold text-ink-900">
+            Partner
+            <select value={investor} onChange={(e) => setInvestorId(e.target.value)} className={sel} disabled={!partners.length}>
+              {partners.map((p) => (
+                <option key={p.investorId} value={p.investorId}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="mt-3 block text-[12.5px] font-semibold text-ink-900">
-          Quarter
-          <select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className={sel}>
-            {[CURRENT_PERIOD, prevPeriod(CURRENT_PERIOD)].map((p) => (
-              <option key={p} value={p}>
-                {periodName(p)}
+          Language
+          <select value={locale} onChange={(e) => setLocale(e.target.value as Locale)} className={sel}>
+            {LOCALES.map(([k, l]) => (
+              <option key={k} value={k}>
+                {l}
               </option>
             ))}
           </select>
+          <span className="mt-1 block text-[11.5px] font-normal text-stone-500">
+            Headings, labels, numbers and dates follow the language. Values from the records are shown as recorded.
+          </span>
         </label>
-        {!ok && <p className="mt-2 text-[12.5px] text-negative">This fund had no capital called by the end of {periodName(period)}, so there is nothing to report.</p>}
+        {!allowed && <p className="mt-2 text-[12.5px] text-negative">Your role can’t prepare reports. A fund accountant or the Head of Fund Services can.</p>}
+        {allowed && !ok && <p className="mt-2 text-[12.5px] text-negative">This fund had no capital called by the end of {periodName(period)}, so there is nothing to report.</p>}
         <div className="mt-5 flex justify-end gap-2">
           <button onClick={onClose} className={secondary}>
             Cancel
           </button>
-          <button disabled={!ok} onClick={() => router.push(`/admin/report-studio/${studio.create(fundId, period, who, closes)}`)} className={primary}>
+          <button disabled={!ok} onClick={create} className={primary}>
             Create report
           </button>
         </div>

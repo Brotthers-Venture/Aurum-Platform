@@ -20,6 +20,9 @@ export function useClose(fundId: string, period: Period) {
   return useMemo(() => deriveClose(s, fundId, period, st), [s, fundId, period, st]);
 }
 
+/** Figures the quarterly report and the package must agree on. */
+const REPORT_KEYS = ["nav", "commitments", "called", "distributed", "tvpi", "dpi", "q_called", "q_distributed", "q_pnl"];
+
 export function deriveClose(s: ReturnType<typeof useReporting>, fundId: string, period: Period, studioState?: ReturnType<typeof useStudio>) {
   const fund = fundById(fundId)!;
   const gp = gpById(fund.gpId)!;
@@ -40,14 +43,41 @@ export function deriveClose(s: ReturnType<typeof useReporting>, fundId: string, 
   const failing = checks.filter((c) => c.status === "fail");
   const openComments = close?.comments.filter((c) => !c.resolved) ?? [];
   const report = studioState ? quarterlyFor(studioState, fundId, period) : null;
-  const reportReady = !!report && (report.status === "approved" || report.status === "published");
+  // an approved report shows its frozen snapshot; if the close's figures moved since, it must be refreshed and approved again
+  const reportStale =
+    report && report.status !== "published" && report.snapshot
+      ? REPORT_KEYS.filter((k) => {
+          const a = report.snapshot!.data.metrics[k]?.value;
+          const b = current[k];
+          return typeof a === "number" && typeof b === "number" ? Math.abs(a - b) > 0.005 : a !== b;
+        })
+      : [];
+  const reportReady = !!report && (report.status === "approved" || report.status === "published") && reportStale.length === 0;
   const steps = close ? stepsFor(close, gp.shortName, bookChecksPass, partners.length, openComments.length, studioState ? report : undefined) : [];
   const readyForReview =
     !!close &&
     close.status === "preparing" &&
     steps.filter((x) => x.id !== "review" && x.id !== "approval" && x.id !== "publish").every((x) => x.state === "done") &&
     openComments.length === 0;
-  return { fund, gp, close, figures, prevFigures, partners, checks, failing, stale, bookChecksPass, openComments, steps, readyForReview, adjustments, report, reportReady };
+  return {
+    fund,
+    gp,
+    close,
+    figures,
+    prevFigures,
+    partners,
+    checks,
+    failing,
+    stale,
+    bookChecksPass,
+    openComments,
+    steps,
+    readyForReview,
+    adjustments,
+    report,
+    reportReady,
+    reportStale,
+  };
 }
 
 function stepsFor(c: Close, gpName: string, checksPass: boolean, lps: number, openComments: number, report?: Report | null): Step[] {

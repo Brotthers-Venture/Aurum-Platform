@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
+  Bold,
+  Italic,
+  Superscript,
   ArrowDown,
   ArrowLeft,
   ArrowUp,
@@ -52,8 +55,11 @@ import {
   type Report,
   type ReportComment,
   type TableKind,
+  templateById,
 } from "@/lib/studio/model";
-import { dataFor, getReport, liveData, studio, useStudio } from "@/lib/studio/store";
+import type { Locale } from "@/lib/studio/i18n";
+import { syncMode } from "@/lib/studio/persist";
+import { dataFor, getReport, liveData, reportName, studio, subjectName, useStudio } from "@/lib/studio/store";
 import { PAGE_H, PAGE_W, ReportPage, useLook } from "./Render";
 import { VersionDrawer } from "./Studio";
 
@@ -66,7 +72,8 @@ const lbl = "block text-[12px] font-medium text-d-text-2";
 export function ReportEditor({ id }: { id: string }) {
   const s = useStudio();
   const closes = useReporting();
-  const who = usePreviewRole().member.name;
+  const { member, can } = usePreviewRole();
+  const who = member.name;
   const report = getReport(s, id);
   const [sel, setSel] = useState<Sel>({ kind: "report" });
   const [left, setLeft] = useState(true);
@@ -100,9 +107,19 @@ export function ReportEditor({ id }: { id: string }) {
       </div>
     );
 
-  const editable = report.status === "draft";
+  // content changes need a draft and the right to prepare reports; reviewers comment and mark sections instead
+  const editable = report.status === "draft" && can("reports.prepare");
   const set = (pages: Page[]) => studio.setPages(report, who, pages);
   const setDesign = (d: Partial<Design>) => studio.edit(report, who, { design: { ...report.design, ...d } });
+  // the library name follows the language or partner only while it is still the generated one
+  const autoName = reportName(report.template, report.fundId, report.period, report.locale ?? "en", report.investorId);
+  const setLocale = (locale: Locale) =>
+    studio.edit(report, who, { locale, ...(report.name === autoName ? { name: reportName(report.template, report.fundId, report.period, locale, report.investorId) } : {}) });
+  const setInvestor = (investorId: string) =>
+    studio.edit(report, who, {
+      investorId,
+      ...(report.name === autoName ? { name: reportName(report.template, report.fundId, report.period, report.locale ?? "en", investorId) } : {}),
+    });
   const changed = live ? Object.keys(live.metrics).filter((k) => live.metrics[k].value !== data.metrics[k]?.value).length : 0;
 
   /* ───── page and block operations ───── */
@@ -271,7 +288,17 @@ export function ReportEditor({ id }: { id: string }) {
                 onDelete={() => deletePage(sel.pageId)}
               />
             ) : (
-              <ReportInspector report={report} data={data} editable={editable} changed={changed} onDesign={setDesign} who={who} closes={closes} />
+              <ReportInspector
+                report={report}
+                data={data}
+                editable={editable}
+                changed={changed}
+                onDesign={setDesign}
+                onLocale={setLocale}
+                onInvestor={setInvestor}
+                who={who}
+                closes={closes}
+              />
             )}
           </aside>
         )}
@@ -441,10 +468,9 @@ function TopBar({
   onLeft: () => void;
   onRight: () => void;
 }) {
-  const [name, setName] = useState(report.name);
   const [publish, setPublish] = useState(false);
-  const fund = fundById(report.fundId)!;
-  const editable = report.status === "draft";
+  const { can } = usePreviewRole();
+  const editable = report.status === "draft" && can("reports.prepare");
   const icon = "flex h-8 w-8 items-center justify-center rounded-[7px] text-d-text-3 hover:bg-d-raise hover:text-d-text";
   return (
     <div className="flex h-12 shrink-0 items-center gap-2 border-b border-d-line bg-d-chrome px-3">
@@ -457,26 +483,30 @@ function TopBar({
         </button>
       )}
       <input
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        onBlur={() => name.trim() && name !== report.name && studio.edit(report, who, { name: name.trim() })}
+        key={report.name}
+        defaultValue={report.name}
+        onBlur={(e) => {
+          const name = e.target.value.trim();
+          if (name && name !== report.name) studio.edit(report, who, { name });
+        }}
         onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
         readOnly={!editable}
         aria-label="Report name"
         className="min-w-0 max-w-[420px] flex-1 truncate rounded-[6px] bg-transparent px-2 py-1 text-[14px] font-semibold text-d-text hover:bg-d-raise focus:bg-d-raise focus:outline-none read-only:hover:bg-transparent"
       />
       <span className="hidden shrink-0 text-[12.5px] text-d-text-3 lg:inline">
-        {periodName(report.period)} · {fund.shortName}
+        {templateById(report.template).subject === "family" ? "Family" : periodName(report.period)} · {subjectName(report.fundId)}
       </span>
       <StatusPill value={REPORT_STATUS[report.status]} />
       <span className="hidden shrink-0 items-center gap-1 text-[12px] text-d-text-3 xl:inline-flex">
         {editable ? (
-          <>
+          <span title={syncMode() === "database" ? "Saved to the database" : "Saved in this browser until the database is connected"} className="inline-flex items-center gap-1">
             <Check size={12} /> Saved {report.modified.slice(11, 16)}
-          </>
+            {syncMode() === "browser" && " in this browser"}
+          </span>
         ) : (
           <>
-            <Lock size={12} /> Read-only while {REPORT_STATUS[report.status].toLowerCase()}
+            <Lock size={12} /> {report.status === "draft" ? "Read-only for your role" : `Read-only while ${REPORT_STATUS[report.status].toLowerCase()}`}
           </>
         )}
       </span>
@@ -642,6 +672,18 @@ function PublishPanel({ report, who, onClose }: { report: Report; who: string; o
           >
             Publish to investors
           </button>
+          <div className="mt-4 border-t border-d-line pt-3">
+            <p className="text-[12px] leading-relaxed text-d-text-3">
+              If the books changed after approval, return the report to draft: it picks up the current figures and goes through review again.
+            </p>
+            <button
+              disabled={!can("reports.prepare") && !can("reports.review")}
+              onClick={act(() => studio.reopen(report, who, "figures changed after approval"))}
+              className={cx(b, "mt-2 border border-d-line disabled:opacity-40")}
+            >
+              Return to draft
+            </button>
+          </div>
         </>
       )}
       {report.status === "published" && (
@@ -835,9 +877,13 @@ function Seg<T extends string>({ value, options, onChange, disabled }: { value: 
 }
 
 function Locked() {
+  const { can } = usePreviewRole();
   return (
     <p className="mx-4 mt-4 flex gap-2 rounded-[8px] border border-d-line px-3 py-2 text-[12px] leading-relaxed text-d-text-2">
-      <Lock size={13} className="mt-0.5 shrink-0" /> The report is read-only outside Draft. Return it to draft, or open a correction if it’s published.
+      <Lock size={13} className="mt-0.5 shrink-0" />
+      {can("reports.prepare")
+        ? "The report is read-only outside Draft. Return it to draft, or open a correction if it’s published."
+        : "Your role can read, comment and review this report, not change its content."}
     </p>
   );
 }
@@ -848,6 +894,8 @@ function ReportInspector({
   editable,
   changed,
   onDesign,
+  onLocale,
+  onInvestor,
   who,
   closes,
 }: {
@@ -856,30 +904,64 @@ function ReportInspector({
   editable: boolean;
   changed: number;
   onDesign: (d: Partial<Design>) => void;
+  onLocale: (l: Locale) => void;
+  onInvestor: (id: string) => void;
   who: string;
   closes: ReturnType<typeof useReporting>;
 }) {
-  const fund = fundById(report.fundId)!;
+  const fund = fundById(report.fundId);
+  const family = data.subject === "family";
+  const tpl = templateById(report.template);
   return (
     <div>
       <div className="px-4 pb-1 pt-4 text-[12px] text-d-text-3">Report</div>
       <div className="px-4 text-[14px] font-semibold text-d-text">{report.name}</div>
       {!editable && <Locked />}
-      <Section title="Identity">
-        <Seg<Design["brand"]>
-          value={report.design.brand}
+      <Section title="Language">
+        <Seg<Locale>
+          value={report.locale ?? "en"}
           disabled={!editable}
-          onChange={(v) => onDesign({ brand: v })}
+          onChange={(v) => onLocale(v)}
           options={[
-            ["manager", "Fund manager"],
-            ["administrator", "Administrator"],
+            ["en", "English"],
+            ["pt", "Português"],
           ]}
         />
         <p className="mt-2 text-[11.5px] leading-relaxed text-d-text-3">
-          {report.design.brand === "manager" ? `Published in ${fund.manager}’s logo and colours, administered by Aurum.` : "Published in the administrator’s identity."} Logos,
-          colours and legal details come from the brand settings.
+          Page headers, figure labels, tables, charts, numbers and dates switch at once. Text you or the template wrote stays as written; a new report from the template is written
+          in the chosen language.
         </p>
       </Section>
+      {tpl.perInvestor && (
+        <Section title="Addressed to">
+          <select disabled={!editable} value={report.investorId ?? ""} onChange={(e) => onInvestor(e.target.value)} aria-label="Partner" className={field}>
+            {!report.investorId && <option value="">Choose a partner</option>}
+            {data.partners.map((p) => (
+              <option key={p.investorId} value={p.investorId}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-2 text-[11.5px] leading-relaxed text-d-text-3">Only this partner sees the statement in the investor portal once it is published.</p>
+        </Section>
+      )}
+      {!family && (
+        <Section title="Identity">
+          <Seg<Design["brand"]>
+            value={report.design.brand}
+            disabled={!editable}
+            onChange={(v) => onDesign({ brand: v })}
+            options={[
+              ["manager", "Fund manager"],
+              ["administrator", "Administrator"],
+            ]}
+          />
+          <p className="mt-2 text-[11.5px] leading-relaxed text-d-text-3">
+            {report.design.brand === "manager" ? `Published in ${fund?.manager}’s logo and colours, administered by Aurum.` : "Published in the administrator’s identity."} Logos,
+            colours and legal details come from the brand settings.
+          </p>
+        </Section>
+      )}
       <Section title="Typography">
         <Seg<Design["typography"]>
           value={report.design.typography}
@@ -906,11 +988,18 @@ function ReportInspector({
       <Section title="Data">
         <dl className="space-y-1.5 text-[12px]">
           {[
-            ["Fund", fund.name],
-            ["Period", `${periodName(report.period)} · as of ${date(data.asOf)}`],
-            ["Currency", data.currency],
-            ["Status", `${STATUS_TEXT[data.status]}${data.status === "preliminary" ? " — the quarter isn’t closed yet" : ""}`],
-            ["Source", report.snapshot ? `Snapshot frozen ${date(report.snapshot.at.slice(0, 10))} by ${report.snapshot.by}` : "Live from the books"],
+            [family ? "Family" : "Fund", data.name],
+            ["Period", family ? `As of ${date(data.asOf)}` : `${periodName(report.period)} · as of ${date(data.asOf)}`],
+            ["Currency", family ? "USD, converted at indicative rates" : data.currency],
+            ["Status", `${STATUS_TEXT[data.status]}${data.status === "preliminary" ? (family ? " — valuations are unaudited" : " — the quarter isn’t closed yet") : ""}`],
+            [
+              "Source",
+              report.snapshot
+                ? `Snapshot frozen ${date(report.snapshot.at.slice(0, 10))} by ${report.snapshot.by}`
+                : family
+                  ? "Live from the family office records"
+                  : "Live from the books",
+            ],
           ].map(([k, v]) => (
             <div key={k} className="flex gap-3">
               <dt className="w-16 shrink-0 text-d-text-3">{k}</dt>
@@ -1039,7 +1128,7 @@ function FigurePanel({ mt, frozen, onClose }: { mt?: Metric; frozen: boolean; on
             ["As of", date(mt.asOf)],
             ["Currency", mt.kind === "money" ? mt.currency : "—"],
             ["Source", mt.source],
-            ["Data", frozen ? "Frozen snapshot" : "Live from the books"],
+            ["Data", frozen ? "Frozen snapshot" : "Live from the records"],
           ].map(([k, v]) => (
             <div key={k} className="flex gap-3">
               <dt className="w-16 shrink-0 text-d-text-3">{k}</dt>
@@ -1083,6 +1172,34 @@ function BlockInspector({
     if (b.type !== "paragraph") return;
     const pos = ta.current?.selectionStart ?? b.text.length;
     onChange({ text: `${b.text.slice(0, pos)}{{${k}}}${b.text.slice(pos)}` } as Partial<Block>);
+  };
+  /** Wrap the selection in **bold** or *italic*, or add a ^[footnote] after it; the inserted text is selected for typing. */
+  const format = (kind: "bold" | "italic" | "note") => {
+    if (b.type !== "paragraph") return;
+    const el = ta.current;
+    const a = el?.selectionStart ?? b.text.length;
+    const z = el?.selectionEnd ?? a;
+    const picked = b.text.slice(a, z);
+    let next: string;
+    let from: number;
+    let to: number;
+    if (kind === "note") {
+      const ph = "Footnote text";
+      next = `${b.text.slice(0, z)}^[${ph}]${b.text.slice(z)}`;
+      from = z + 2;
+      to = from + ph.length;
+    } else {
+      const mark = kind === "bold" ? "**" : "*";
+      const inner = picked || (kind === "bold" ? "bold text" : "italic text");
+      next = `${b.text.slice(0, a)}${mark}${inner}${mark}${b.text.slice(z)}`;
+      from = a + mark.length;
+      to = from + inner.length;
+    }
+    onChange({ text: next } as Partial<Block>);
+    requestAnimationFrame(() => {
+      ta.current?.focus();
+      ta.current?.setSelectionRange(from, to);
+    });
   };
   const dis = !editable;
   const bound = b.type === "kpis" ? b.keys : b.type === "paragraph" ? [...b.text.matchAll(/\{\{(\w+)\}\}/g)].map((m) => m[1]) : [];
@@ -1133,6 +1250,29 @@ function BlockInspector({
       {b.type === "paragraph" && (
         <>
           <Section title="Text">
+            {editable && (
+              <div className="mb-1.5 flex items-center gap-0.5" role="toolbar" aria-label="Formatting">
+                {(
+                  [
+                    ["bold", "Bold", <Bold key="b" size={14} />],
+                    ["italic", "Italic", <Italic key="i" size={14} />],
+                    ["note", "Add a footnote", <Superscript key="n" size={14} />],
+                  ] as const
+                ).map(([k, l, icon]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => format(k)}
+                    aria-label={l}
+                    title={l}
+                    className="flex h-7 w-7 items-center justify-center rounded-[6px] text-d-text-2 hover:bg-d-raise hover:text-d-text"
+                  >
+                    {icon}
+                  </button>
+                ))}
+              </div>
+            )}
             <textarea
               ref={ta}
               disabled={dis}
@@ -1142,7 +1282,10 @@ function BlockInspector({
               className={cx(field, "resize-y leading-relaxed")}
               aria-label="Paragraph text"
             />
-            <p className="mt-1.5 text-[11.5px] leading-relaxed text-d-text-3">Linked figures appear as {"{{name}}"} here and as live values on the page.</p>
+            <p className="mt-1.5 text-[11.5px] leading-relaxed text-d-text-3">
+              Linked figures appear as {"{{name}}"} here and as live values on the page. **Bold**, *italic* and ^[footnotes] show formatted; footnotes are numbered at the foot of
+              the page.
+            </p>
           </Section>
           {editable && (
             <Section title="Insert a linked figure">
@@ -1236,11 +1379,13 @@ function BlockInspector({
               onChange={(e) => onChange({ chart: e.target.value as ChartKind, title: CHART_NAME[e.target.value as ChartKind] })}
               className={field}
             >
-              {(Object.keys(CHART_NAME) as ChartKind[]).map((k) => (
-                <option key={k} value={k}>
-                  {CHART_NAME[k]}
-                </option>
-              ))}
+              {(Object.keys(CHART_NAME) as ChartKind[])
+                .filter((k) => data.subject !== "family" || k === "allocation" || k === b.chart)
+                .map((k) => (
+                  <option key={k} value={k}>
+                    {CHART_NAME[k]}
+                  </option>
+                ))}
             </select>
           </label>
           <label className={cx(lbl, "mt-3")}>
@@ -1252,7 +1397,8 @@ function BlockInspector({
             <textarea disabled={dis} value={b.caption ?? ""} onChange={(e) => onChange({ caption: e.target.value })} rows={2} className={cx(field, "resize-y")} />
           </label>
           <p className="mt-2 text-[11.5px] leading-relaxed text-d-text-3">
-            Drawn from the fund ledger, quarter by quarter, in {data.currency}. The source line is added under the caption automatically.
+            {data.subject === "family" ? "Drawn from the family’s recorded assets, in US dollars." : `Drawn from the fund ledger, quarter by quarter, in ${data.currency}.`} The
+            source line is added under the caption automatically.
           </p>
         </Section>
       )}
@@ -1266,11 +1412,13 @@ function BlockInspector({
               onChange={(e) => onChange({ table: e.target.value as TableKind, title: TABLE_NAME[e.target.value as TableKind] })}
               className={field}
             >
-              {(Object.keys(TABLE_NAME) as TableKind[]).map((k) => (
-                <option key={k} value={k}>
-                  {TABLE_NAME[k]}
-                </option>
-              ))}
+              {(Object.keys(TABLE_NAME) as TableKind[])
+                .filter((k) => k === b.table || k === "sources" || (data.subject === "family") === ["classes", "entities", "liabilities"].includes(k))
+                .map((k) => (
+                  <option key={k} value={k}>
+                    {TABLE_NAME[k]}
+                  </option>
+                ))}
             </select>
           </label>
           <label className={cx(lbl, "mt-3")}>
@@ -1312,7 +1460,9 @@ function BlockInspector({
             ]}
           />
           <p className="mt-2 text-[11.5px] leading-relaxed text-d-text-3">
-            Aurum doesn’t hold this classification for the fund’s investments yet, so nothing is invented: the block is hidden in the published report until the data is recorded.
+            {data.subject === "family"
+              ? "Currency and region come from each asset’s record. Sector isn’t recorded for every asset, so a sector block stays hidden until it is."
+              : "Aurum doesn’t hold this classification for the fund’s investments yet, so nothing is invented: the block is hidden in the published report until the data is recorded."}
           </p>
         </Section>
       )}
@@ -1376,6 +1526,14 @@ function BlockInspector({
               <Plus size={13} /> Add a signer
             </button>
           )}
+        </Section>
+      )}
+      {b.type === "statement" && (
+        <Section title="Capital account">
+          <p className="text-[12px] leading-relaxed text-d-text-2">
+            The partner’s opening and closing capital, contributions, distributions and allocated result for the quarter, with commitment and share of the fund, from the capital
+            accounts. Choose the partner on the report (select the canvas background).
+          </p>
         </Section>
       )}
       {b.type === "toc" && (

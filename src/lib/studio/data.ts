@@ -9,8 +9,10 @@ import { trialBalance } from "@/lib/accounting/engine";
 import { xirr } from "@/lib/analytics";
 import { fundById, funds } from "@/lib/data";
 import { gpById } from "@/lib/gps";
-import { date, money, moneyShort, multiple, pct } from "@/lib/format";
-import { computeFigures, periodEnd, periodName, periodStart, prevPeriod, type Adjustment, type Period } from "@/lib/reporting/figures";
+import { moneyShort } from "@/lib/format";
+import { formatter, type Fmt } from "./i18n";
+import { computeFigures, partnerRows, periodEnd, periodName, periodStart, prevPeriod, type Adjustment, type Period } from "@/lib/reporting/figures";
+import { FAMILIES, REPORT_DATE, entityName, groupBy, heldBy, totals } from "@/lib/wealth";
 
 export type ValueStatus = "final" | "preliminary" | "estimated" | "unavailable" | "illustrative";
 export const STATUS_TEXT: Record<ValueStatus, string> = {
@@ -34,7 +36,19 @@ export type Metric = {
   asOf: string;
 };
 
-export type SeriesPoint = { period: Period; label: string; nav: number; paidIn: number; distributed: number; called: number; distributedQ: number; commitments: number };
+export type SeriesPoint = {
+  period: Period;
+  label: string;
+  nav: number;
+  paidIn: number;
+  distributed: number;
+  called: number;
+  distributedQ: number;
+  commitments: number;
+  /** management fees and fund expenses charged in the quarter */
+  fees: number;
+  expenses: number;
+};
 export type Holding = { name: string; cost: number; first: string; share: number };
 export type CallRow = { ref: string; notice: string; due: string; amount: number; purpose: string; status: string };
 export type DistRow = { ref: string; date: string; amount: number; type: string; source: string };
@@ -51,6 +65,26 @@ export type ReportData = {
   calls: CallRow[];
   distributions: DistRow[];
   terms: [string, string][];
+  /** what the data describes: a fund, or a family's consolidated wealth */
+  subject: "fund" | "family";
+  name: string;
+  partners: PartnerRow[];
+  /** statement lines from the ledger; keys are translated by the renderer */
+  balance: StatementLine[];
+  operations: StatementLine[];
+  family?: FamilyData;
+};
+
+export type PartnerRow = ReturnType<typeof partnerRows>[number];
+export type StatementLine = { key: string; ytd: number | null; itd: number; total?: boolean };
+export type FamilyData = {
+  classes: { name: string; usd: number; share: number; ytd: number }[];
+  byCurrency: { name: string; usd: number; share: number }[];
+  byRegion: { name: string; usd: number; share: number }[];
+  entities: { name: string; kind: string; where: string; net: number }[];
+  liabilities: { name: string; lender: string; rate: string; matures: string; usd: number }[];
+  principal: string;
+  rm: string;
 };
 
 const qOf = (d: string): Period => `${d.slice(0, 4)}-Q${Math.ceil(Number(d.slice(5, 7)) / 3)}` as Period;
@@ -179,6 +213,8 @@ export function reportData(fundId: string, period: Period, adjustments: Adjustme
     const bb = buildBooks(fundId, e);
     const a = adjustments.filter((x) => x.period <= p).reduce((s, x) => s + x.amount, 0);
     const s = periodStart(p);
+    const qtb = trialBalance(bb.journal, s, e);
+    const qb = (code: string) => Math.abs(qtb.find((r) => r.account === code)?.balance ?? 0);
     series.push({
       period: p,
       label: periodName(p),
@@ -188,6 +224,8 @@ export function reportData(fundId: string, period: Period, adjustments: Adjustme
       commitments: bb.partners.reduce((acc, x) => acc + x.commitment, 0),
       called: bb.calls.filter((c) => c.status !== "Draft" && c.noticeDate >= s && c.noticeDate <= e).reduce((acc, c) => acc + c.amount, 0),
       distributedQ: bb.distributions.filter((d) => d.status === "Paid" && d.date >= s && d.date <= e).reduce((acc, d) => acc + d.amount, 0),
+      fees: qb("5000"),
+      expenses: qb("5100") + qb("5200"),
     });
   }
 
@@ -217,7 +255,42 @@ export function reportData(fundId: string, period: Period, adjustments: Adjustme
     ["Administrator", "Aurum Asset Management"],
   ];
 
+  // statements from the ledger: year to date (from 1 January of the period's year) and since inception
+  const ytb = trialBalance(b.journal, `${period.slice(0, 4)}-01-01`, end);
+  const ybal = (code: string) => ytb.find((r) => r.account === code)?.balance ?? 0;
+  const assets = bal("1000") + bal("1100") + bal("1150") + adj + bal("1200");
+  const liabilities = -bal("2300");
+  const balance: StatementLine[] = [
+    { key: "cash", ytd: null, itd: bal("1000") },
+    { key: "investments_cost", ytd: null, itd: bal("1100") },
+    { key: "unrealized", ytd: null, itd: bal("1150") + adj },
+    { key: "receivable", ytd: null, itd: bal("1200") },
+    { key: "total_assets", ytd: null, itd: assets, total: true },
+    { key: "liabilities", ytd: null, itd: liabilities },
+    { key: "partners_capital", ytd: null, itd: assets - liabilities, total: true },
+  ];
+  const adjY = adjustments.filter((a) => a.period.slice(0, 4) === period.slice(0, 4) && a.period <= period).reduce((s, a) => s + a.amount, 0);
+  const line = (key: string, codes: string[], sign: 1 | -1, extraY = 0, extraI = 0): StatementLine => ({
+    key,
+    ytd: sign * codes.reduce((s, c) => s + ybal(c), 0) + extraY,
+    itd: sign * codes.reduce((s, c) => s + bal(c), 0) + extraI,
+  });
+  const ops = [
+    line("income", ["4000"], -1),
+    line("realized", ["4100"], -1),
+    line("unrealized_change", ["4200"], -1, adjY, adj),
+    line("fees", ["5000"], -1),
+    line("expenses", ["5100"], -1),
+    line("organizational", ["5200"], -1),
+  ];
+  const operations: StatementLine[] = [...ops, { key: "net_result", ytd: ops.reduce((s, l) => s + (l.ytd ?? 0), 0), itd: ops.reduce((s, l) => s + l.itd, 0), total: true }];
+
   return {
+    subject: "fund",
+    name: f.name,
+    partners: partnerRows(fundId, period, adjustments),
+    balance,
+    operations,
     fundId,
     period,
     asOf: end,
@@ -238,27 +311,104 @@ export function reportData(fundId: string, period: Period, adjustments: Adjustme
   };
 }
 
+/**
+ * A family's consolidated wealth, in US dollars, from the family office records. Valuations carry their own dates;
+ * the report is as of the family office's reporting date.
+ */
+export function familyData(familyId: string, period: Period): ReportData {
+  const fam = FAMILIES.find((x) => x.id === familyId)!;
+  const t = totals(fam);
+  const src = "Custodian statements and recorded valuations";
+  const m = (key: string, label: string, kind: MetricKind, value: number | string | null, method: string): Metric => ({
+    key,
+    label,
+    kind,
+    value,
+    currency: "USD",
+    asOf: REPORT_DATE,
+    status: value === null ? "unavailable" : kind === "text" ? "final" : "preliminary",
+    source: kind === "text" ? "Family record" : src,
+    method,
+  });
+  const share = (v: number) => (t.gross ? v / t.gross : 0);
+  const group = (g: "cls" | "ccy" | "region") => groupBy(fam, t.assets, g).map((x) => ({ name: x.key, usd: x.usd, share: share(x.usd), ytd: x.ytd }));
+  const classes = group("cls");
+  const metrics: Record<string, Metric> = Object.fromEntries(
+    [
+      m("fund", "Family", "text", fam.name, "The family's name, from the family record."),
+      m("gp", "Family office", "text", fam.rm.title, "The relationship lead's role."),
+      m("period_end", "Reporting date", "date", REPORT_DATE, "Every value is as of this date or the valuation date shown."),
+      m("net_worth", "Net worth", "money", t.net, "Total assets less liabilities, in US dollars at indicative rates."),
+      m("gross_assets", "Total assets", "money", t.gross, "Sum of every asset, in US dollars at indicative rates."),
+      m("liabilities_total", "Liabilities", "money", t.debt, "Sum of recorded borrowing."),
+      m("liquid", "Liquid assets", "money", t.liquid, "Assets that can be sold within a month."),
+      m("liquid_pct", "Liquid share", "percent", t.gross ? t.liquid / t.gross : null, "Liquid assets ÷ total assets."),
+      m("cash", "Cash", "money", t.cash, "Cash and deposits."),
+      m("ytd_return", "Investment result this year", "money", t.investmentReturn, "Price, income and currency result of the holdings since 1 January."),
+      m("ytd_flows", "Contributions and withdrawals this year", "money", fam.ytd.flows, "Money added to or taken from the family's accounts since 1 January."),
+      m("ytd_fx", "Currency effect this year", "money", fam.ytd.fx, "Effect of converting holdings into US dollars."),
+      m("ytd_change", "Change this year", "money", t.change, "Investment result + contributions and withdrawals + currency effect."),
+      m("entities", "Entities", "count", fam.entities.length, "Trusts, companies and accounts that hold the family's assets."),
+      m("assets_count", "Assets", "count", fam.assets.length, "Positions recorded for the family."),
+    ].map((x) => [x.key, x]),
+  );
+  return {
+    subject: "family",
+    name: fam.name,
+    fundId: familyId,
+    period,
+    asOf: REPORT_DATE,
+    currency: "USD",
+    status: "preliminary",
+    metrics,
+    series: [],
+    holdings: classes.map((c) => ({ name: c.name, cost: c.usd, share: c.share, first: "" })),
+    calls: [],
+    distributions: [],
+    terms: [],
+    partners: [],
+    balance: [],
+    operations: [],
+    family: {
+      classes,
+      byCurrency: group("ccy"),
+      byRegion: group("region"),
+      entities: fam.entities.map((e) => ({ name: e.name, kind: e.kind, where: e.where, net: heldBy(t, e.id) })),
+      liabilities: t.liabs.map((l) => ({ name: l.name, lender: l.lender, rate: l.rate, matures: l.matures, usd: l.usd })),
+      principal: fam.people[0]?.name ?? fam.name,
+      rm: `${fam.rm.name}, ${fam.rm.title}`,
+    },
+  };
+}
+export const isFamily = (id: string) => FAMILIES.some((x) => x.id === id);
+export { entityName };
+
 function nextQ(p: Period): Period {
   const [y, q] = p.split("-Q").map(Number);
   return (q === 4 ? `${y + 1}-Q1` : `${y}-Q${q + 1}`) as Period;
 }
 export { prevPeriod };
 
-/** A metric as text for the page. Unavailable values never print as zero. */
-export function fmt(mt: Metric | undefined, opts: { short?: boolean } = {}) {
+/** A metric as text for the page, in the report's language. Unavailable values never print as zero. */
+export function fmt(mt: Metric | undefined, opts: { short?: boolean; f?: Fmt } = {}) {
   if (!mt) return "—";
   if (mt.value === null) return "n/a";
+  const f = opts.f ?? formatter("en");
   const v = mt.value;
   switch (mt.kind) {
     case "money":
-      return opts.short ? moneyShort(v as number, mt.currency) : money(v as number, mt.currency);
+      return opts.short ? f.short(v as number, mt.currency) : f.money(v as number, mt.currency);
     case "multiple":
-      return (v as number) === 0 ? "0.00x" : multiple(v as number);
+      return (v as number) === 0 ? f.mult(0) : f.mult(v as number);
     case "percent":
-      return pct(v as number, 1);
+      return f.pct(v as number, 1);
     case "date":
-      return date(v as string);
+      return f.dateLong(v as string);
+    case "count":
+      return f.num(v as number);
     default:
+      if (f.locale !== "en" && mt.key === "quarter") return f.quarterWords(qOf(mt.asOf));
+      if (f.locale !== "en" && mt.key === "period_name") return f.period(qOf(mt.asOf));
       return String(v);
   }
 }
@@ -269,5 +419,9 @@ export const METRIC_GROUPS: { label: string; keys: string[] }[] = [
   { label: "Performance", keys: ["net_irr", "tvpi", "dpi", "rvpi", "moic", "gross_irr", "benchmark"] },
   { label: "This quarter", keys: ["q_called", "q_distributed", "q_pnl", "q_unrealized", "q_fees"] },
   { label: "Balance sheet", keys: ["cash", "investments_cost", "unrealized", "fees_total", "expenses_total"] },
+  {
+    label: "Family",
+    keys: ["net_worth", "gross_assets", "liabilities_total", "liquid", "liquid_pct", "ytd_return", "ytd_flows", "ytd_fx", "ytd_change", "entities", "assets_count"],
+  },
   { label: "Text", keys: ["fund", "gp", "quarter", "period_name", "period_end", "lps"] },
 ];

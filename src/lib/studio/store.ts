@@ -7,10 +7,15 @@
 import { useSyncExternalStore } from "react";
 import { recordAudit } from "@/lib/audit-local";
 import { fundById } from "@/lib/data";
-import { CURRENT_PERIOD, periodName, prevPeriod, type Period } from "@/lib/reporting/figures";
+import { CURRENT_PERIOD, prevPeriod, type Period } from "@/lib/reporting/figures";
 import { fundAdjustments, getClose, type Close } from "@/lib/reporting/store";
-import { reportData, type ReportData } from "./data";
-import { newId, quarterlyFundReport, type Design, type Page, type Report, type ReportStatus } from "./model";
+import { investorById } from "@/lib/data";
+import { FAMILIES } from "@/lib/wealth";
+import { familyData, isFamily, reportData, type ReportData } from "./data";
+import { formatter, type Locale } from "./i18n";
+import { pull, push, syncMode } from "./persist";
+import { newId, templateById, type Design, type Page, type Report, type ReportStatus, type TemplateId } from "./model";
+import { buildTemplate, templateTitle } from "./templates";
 
 const KEY = "aurum-studio-v1";
 type State = { reports: Record<string, Report>; removed: string[] };
@@ -36,8 +41,16 @@ const save = (next: State) => {
   }
   listeners.forEach((l) => l());
 };
+let pulled = false;
 const subscribe = (l: () => void) => {
   listeners.add(l);
+  // with a database connected, reports this user may read replace the browser copies once per session
+  if (!pulled && syncMode() === "database") {
+    pulled = true;
+    pull()
+      .then((rows) => rows.length && save({ ...load(), reports: { ...load().reports, ...Object.fromEntries(rows.map((r) => [r.id, r])) } }))
+      .catch((e) => console.warn("Report Studio: could not load reports from the database", e));
+  }
   return () => listeners.delete(l);
 };
 export const useStudio = () => useSyncExternalStore(subscribe, load, () => EMPTY);
@@ -46,10 +59,22 @@ export const useStudio = () => useSyncExternalStore(subscribe, load, () => EMPTY
 
 /** The data a report shows: its frozen snapshot if it has one, otherwise live from the books. */
 export function dataFor(r: Pick<Report, "fundId" | "period" | "snapshot">, closes?: Record<string, Close>): ReportData {
-  if (r.snapshot) return r.snapshot.data;
+  if (r.snapshot) return normalize(r.snapshot.data);
   return liveData(r.fundId, r.period, closes);
 }
+/** Snapshots frozen before a field existed get safe empty values, never invented ones. */
+function normalize(d: ReportData): ReportData {
+  return {
+    ...d,
+    subject: d.subject ?? "fund",
+    name: d.name ?? subjectLongName(d.fundId),
+    partners: d.partners ?? [],
+    balance: d.balance ?? [],
+    operations: d.operations ?? [],
+  };
+}
 export function liveData(fundId: string, period: Period, closes: Record<string, Close> = {}) {
+  if (isFamily(fundId)) return familyData(fundId, period);
   const close = getClose(closes, fundId, period);
   return reportData(fundId, period, fundAdjustments(closes, fundId, period), close?.status === "published");
 }
@@ -57,13 +82,37 @@ export function liveData(fundId: string, period: Period, closes: Record<string, 
 /* ───────── seeds ───────── */
 
 const DESIGN: Design = { brand: "manager", typography: "editorial", cover: "field" };
-const signerOf = (fundId: string) => (fundById(fundId)!.gpId === "strlex" ? "Lucas Prado" : fundById(fundId)!.manager);
+const signerOf = (id: string) => {
+  const fam = FAMILIES.find((x) => x.id === id);
+  if (fam) return fam.rm.name;
+  return fundById(id)!.gpId === "strlex" ? "Lucas Prado" : fundById(id)!.manager;
+};
+/** The subject's short name: a fund's short name or a family's name. */
+export const subjectName = (id: string) => fundById(id)?.shortName ?? FAMILIES.find((x) => x.id === id)?.name ?? id;
+export const subjectLongName = (id: string) => fundById(id)?.name ?? FAMILIES.find((x) => x.id === id)?.name ?? id;
 
-function seedReport(id: string, fundId: string, period: Period, status: ReportStatus, days: string[], design: Partial<Design> = {}): Report {
-  const f = fundById(fundId)!;
+/** A report's name in the library: subject, period and document. */
+export function reportName(t: TemplateId, subjectId: string, period: Period, locale: Locale = "en", investorId?: string) {
+  const f = formatter(locale);
+  const who = investorId ? ` — ${investorById(investorId)?.name ?? investorId}` : "";
+  const when = templateById(t).subject === "family" ? "" : ` ${f.period(period)}`;
+  return `${subjectName(subjectId)} —${when} ${templateTitle(t, locale)}${who}`;
+}
+
+function seedReport(
+  id: string,
+  fundId: string,
+  period: Period,
+  status: ReportStatus,
+  days: string[],
+  design: Partial<Design> = {},
+  template: TemplateId = "quarterly-fund",
+  locale: Locale = "en",
+): Report {
   const data = liveData(fundId, period);
+  const tpl = templateById(template);
   const at = (d: string, t = "10:00") => `${d}T${t}:00`;
-  const versions = [{ n: 1, at: at(days[0]), by: "Rafaela Duarte", note: "Created from the Quarterly Fund Report template", status: "draft" as ReportStatus }];
+  const versions = [{ n: 1, at: at(days[0]), by: "Rafaela Duarte", note: `Created from the ${tpl.name} template`, status: "draft" as ReportStatus }];
   if (status !== "draft") versions.push({ n: 2, at: at(days[1]), by: "Rafaela Duarte", note: "Sent for review with a frozen data snapshot", status: "in_review" });
   if (status === "approved") versions.push({ n: 3, at: at(days[2], "11:30"), by: "Luiza Andrade", note: "Approved", status: "approved" });
   if (status === "published" || status === "archived")
@@ -73,14 +122,16 @@ function seedReport(id: string, fundId: string, period: Period, status: ReportSt
     );
   return {
     id,
-    template: "quarterly-fund",
-    name: `${f.shortName} — ${periodName(period)} Quarterly Report`,
+    template,
+    subject: tpl.subject,
+    locale,
+    name: reportName(template, fundId, period, locale),
     fundId,
     period,
     status,
     archivedFrom: status === "archived" ? "published" : undefined,
-    design: { ...DESIGN, ...design },
-    pages: quarterlyFundReport(fundId, period, data, signerOf(fundId)),
+    design: { ...DESIGN, ...(tpl.subject === "family" ? { brand: "administrator" as const } : {}), ...design },
+    pages: buildTemplate(template, { subjectId: fundId, period, data, signer: signerOf(fundId), locale }),
     snapshot: status !== "draft" ? { at: at(days[1]), by: "Rafaela Duarte", data } : undefined,
     versions,
     created: at(days[0]),
@@ -123,6 +174,8 @@ function seeds(): Record<string, Report> {
     seedReport("r-cordillera-q3", "cordillera-infra-i", CURRENT_PERIOD, "published", ["2026-10-28", "2026-11-12", "2026-11-18"], { cover: "light" }),
     seedReport("r-horizonte-q2", "fip-horizonte", prevPeriod(CURRENT_PERIOD), "published", ["2026-07-22", "2026-08-04", "2026-08-12"], { cover: "minimal" }),
     seedReport("r-serra-q2", "serra-re-spv", prevPeriod(CURRENT_PERIOD), "archived", ["2026-07-24", "2026-08-05", "2026-08-12"], { typography: "modern" }),
+    seedReport("r-stx-brazil-letter-pt", "stx-brazil-housing", CURRENT_PERIOD, "draft", ["2026-11-24", "2026-11-25"], {}, "investor-letter", "pt"),
+    seedReport("r-halvorsen-wealth", "halvorsen", CURRENT_PERIOD, "draft", ["2026-11-24", "2026-11-25"], { cover: "light", typography: "modern" }, "family-wealth"),
   ];
   seedCache = Object.fromEntries(list.map((r) => [r.id, r]));
   return seedCache;
@@ -146,7 +199,11 @@ const now = () => new Date().toISOString().slice(0, 19);
 
 function put(r: Report, who: string, audit?: string) {
   const s = load();
-  save({ ...s, reports: { ...s.reports, [r.id]: { ...r, modified: now(), modifiedBy: who } } });
+  const prev = s.reports[r.id] ?? seeds()[r.id];
+  const next = { ...r, modified: now(), modifiedBy: who };
+  save({ ...s, reports: { ...s.reports, [r.id]: next } });
+  // the database, when connected, has the last word: a change it refuses is reported, not hidden
+  push(next, prev).catch((e) => console.warn(`Report Studio: the database refused a change to “${r.name}”`, e));
   if (audit) recordAudit({ user: who, action: audit, object: r.name });
 }
 
@@ -155,19 +212,30 @@ function version(r: Report, who: string, note: string, status: ReportStatus = r.
 }
 
 export const studio = {
-  create(fundId: string, period: Period, who: string, closes?: Record<string, Close>) {
-    const f = fundById(fundId)!;
-    const data = liveData(fundId, period, closes);
+  create(
+    template: TemplateId,
+    subjectId: string,
+    period: Period,
+    who: string,
+    closes?: Record<string, Close>,
+    opts: { locale?: Locale; investorId?: string; brand?: Design["brand"] } = {},
+  ) {
+    const tpl = templateById(template);
+    const locale = opts.locale ?? "en";
+    const data = liveData(subjectId, period, closes);
     const r: Report = {
       id: newId("r-"),
-      template: "quarterly-fund",
-      name: `${f.shortName} — ${periodName(period)} Quarterly Report`,
-      fundId,
+      template,
+      subject: tpl.subject,
+      locale,
+      investorId: opts.investorId,
+      name: reportName(template, subjectId, period, locale, opts.investorId),
+      fundId: subjectId,
       period,
       status: "draft",
-      design: DESIGN,
-      pages: quarterlyFundReport(fundId, period, data, signerOf(fundId)),
-      versions: [{ n: 1, at: now(), by: who, note: "Created from the Quarterly Fund Report template", status: "draft" }],
+      design: { ...DESIGN, brand: tpl.subject === "family" ? "administrator" : (opts.brand ?? DESIGN.brand) },
+      pages: buildTemplate(template, { subjectId, period, data, signer: signerOf(subjectId), locale, investorId: opts.investorId }),
+      versions: [{ n: 1, at: now(), by: who, note: `Created from the ${tpl.name} template`, status: "draft" }],
       created: now(),
       modified: now(),
       modifiedBy: who,
@@ -176,7 +244,7 @@ export const studio = {
     return r.id;
   },
   /** Content edits: saved continuously, no new version. Published or archived reports are never edited silently. */
-  edit(r: Report, who: string, change: Partial<Pick<Report, "pages" | "design" | "name">>) {
+  edit(r: Report, who: string, change: Partial<Pick<Report, "pages" | "design" | "name" | "locale" | "investorId">>) {
     if (r.status === "published" || r.status === "archived" || r.status === "approved") return;
     put({ ...r, ...change }, who);
   },
@@ -215,6 +283,11 @@ export const studio = {
     // section notes stay visible to the preparer; the ticks are cleared for the next review round
     const notes = Object.fromEntries(Object.entries(r.review ?? {}).filter(([, v]) => v.state === "changes"));
     put({ ...version(r, who, `Returned to draft: ${note}`, "draft"), review: notes }, who, "Returned a report to draft");
+  },
+  /** An approved report goes back to draft on live figures (e.g. the books moved after approval); it is reviewed again. */
+  reopen(r: Report, who: string, note: string) {
+    if (r.status !== "approved") return;
+    put({ ...version(r, who, `Returned to draft: ${note}`, "draft"), snapshot: undefined, review: {} }, who, "Returned an approved report to draft");
   },
   approve(r: Report, who: string) {
     put(version(r, who, "Approved", "approved"), who, "Approved a report");
