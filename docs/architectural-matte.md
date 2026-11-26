@@ -94,7 +94,7 @@ optional C drift (transform on a composited layer). No new dependencies or libra
   hidden on phones. A static grain (soft-light, 9%) dithers the gradients so no bands show.
 - **B · Atmosphere:** the light breathes over 18 s (opacity and scale only), paused when the page is hidden, off
   with reduced motion, the user's motion setting, or Brand Studio's Off. **A · Pure matte:** a faint static light.
-  **C · Depth:** stronger graphite layering, very faint static light. Compare with `/admin?hub=pure|atmos|depth`.
+  **C · Depth:** stronger graphite layering, very faint static light. B was chosen and made permanent on 26 Nov 2026; the preview option was removed (A and C remain as CSS for reference).
 - Surrounding workspaces rest at a desaturated derivative of their colour and return to full colour on hover or
   keyboard focus, when the label appears; badges are smaller outlined counters. Geometry, positions, the central
   mark and the entrance sequence are unchanged.
