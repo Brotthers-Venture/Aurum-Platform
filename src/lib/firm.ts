@@ -32,12 +32,12 @@ export const firmModules: FirmModule[] = [
     badge: s.leads,
     badgeLabel: "new leads",
     ring: [
-      { id: "pipeline", label: ["Pipeline"], sub: `${s.open} OPEN`, alert: true, href: "/admin/sales?tab=pipeline" },
-      { id: "new", label: ["New deal"], sub: "ADD A LEAD", href: "/admin/sales?tab=new" },
-      { id: "leads", label: ["Leads"], sub: `${s.leads} NEW`, href: "/admin/sales?tab=leads" },
-      { id: "proposals", label: ["Proposals"], sub: `${s.proposals} OUT`, href: "/admin/sales?tab=proposals" },
-      { id: "forecast", label: ["Forecast"], sub: "WEIGHTED", href: "/admin/sales?tab=forecast" },
-      { id: "activities", label: ["Activities"], sub: `${s.activities} THIS WEEK`, href: "/admin/sales?tab=activities" },
+      { id: "pipeline", label: ["Pipeline"], sub: `${s.open} open`, alert: true, href: "/admin/sales?tab=pipeline" },
+      { id: "new", label: ["New deal"], sub: "Add a lead", href: "/admin/sales?tab=new" },
+      { id: "leads", label: ["Leads"], sub: `${s.leads} new`, href: "/admin/sales?tab=leads" },
+      { id: "proposals", label: ["Proposals"], sub: `${s.proposals} out`, href: "/admin/sales?tab=proposals" },
+      { id: "forecast", label: ["Forecast"], sub: "Weighted", href: "/admin/sales?tab=forecast" },
+      { id: "activities", label: ["Activities"], sub: `${s.activities} this week`, href: "/admin/sales?tab=activities" },
     ],
   },
   {
@@ -48,12 +48,12 @@ export const firmModules: FirmModule[] = [
     badge: p.atRisk,
     badgeLabel: "projects need attention",
     ring: [
-      { id: "portfolio", label: ["Projects"], sub: `${p.active} ACTIVE`, href: "/admin/pmo?tab=portfolio" },
-      { id: "new", label: ["New", "project"], sub: "START", href: "/admin/pmo?tab=new" },
-      { id: "timeline", label: ["Timeline"], sub: `${p.milestones} MILESTONES`, href: "/admin/pmo?tab=timeline" },
-      { id: "tasks", label: ["Tasks"], sub: `${p.dueWeek} THIS WEEK`, alert: p.dueWeek > 0, href: "/admin/pmo?tab=tasks" },
-      { id: "risks", label: ["Risks"], sub: `${p.risks} OPEN`, alert: p.risks > 0, href: "/admin/pmo?tab=risks" },
-      { id: "capacity", label: ["Capacity"], sub: p.over ? `${p.over} OVER 100%` : "BALANCED", alert: p.over > 0, href: "/admin/pmo?tab=capacity" },
+      { id: "portfolio", label: ["Projects"], sub: `${p.active} active`, href: "/admin/pmo?tab=portfolio" },
+      { id: "new", label: ["New", "project"], sub: "Start", href: "/admin/pmo?tab=new" },
+      { id: "timeline", label: ["Timeline"], sub: `${p.milestones} milestones`, href: "/admin/pmo?tab=timeline" },
+      { id: "tasks", label: ["Tasks"], sub: `${p.dueWeek} this week`, alert: p.dueWeek > 0, href: "/admin/pmo?tab=tasks" },
+      { id: "risks", label: ["Risks"], sub: `${p.risks} open`, alert: p.risks > 0, href: "/admin/pmo?tab=risks" },
+      { id: "capacity", label: ["Capacity"], sub: p.over ? `${p.over} over 100%` : "Balanced", alert: p.over > 0, href: "/admin/pmo?tab=capacity" },
     ],
   },
   {
@@ -65,7 +65,7 @@ export const firmModules: FirmModule[] = [
     badgeLabel: "unread",
     ring: solutions.map((sol) => {
       const u = spaceUnreadCount(sol.id);
-      return { id: sol.id, label: sol.lines, sub: u ? `${u} UNREAD` : "ALL READ", alert: u > 0, href: `/admin/communication?space=${sol.id}` };
+      return { id: sol.id, label: sol.lines, sub: u ? `${u} unread` : "All read", alert: u > 0, href: `/admin/communication?space=${sol.id}` };
     }),
   },
   {
@@ -76,12 +76,12 @@ export const firmModules: FirmModule[] = [
     badge: d.questions,
     badgeLabel: "open questions",
     ring: [
-      { id: "rooms", label: ["Rooms"], sub: `${d.rooms} OPEN`, href: "/admin/dataroom?tab=rooms" },
-      { id: "new", label: ["New room"], sub: "CREATE", href: "/admin/dataroom?tab=new" },
-      { id: "qa", label: ["Q&A"], sub: `${d.questions} TO ANSWER`, alert: d.questions > 0, href: "/admin/dataroom?tab=qa" },
-      { id: "activity", label: ["Activity"], sub: `${d.viewsToday} TODAY`, href: "/admin/dataroom?tab=activity" },
-      { id: "ndas", label: ["NDAs"], sub: `${d.ndas} PENDING`, alert: d.ndas > 0, href: "/admin/dataroom?tab=access" },
-      { id: "access", label: ["Access"], sub: plural(d.users, "PERSON", "PEOPLE"), href: "/admin/dataroom?tab=access" },
+      { id: "rooms", label: ["Rooms"], sub: `${d.rooms} open`, href: "/admin/dataroom?tab=rooms" },
+      { id: "new", label: ["New room"], sub: "Create", href: "/admin/dataroom?tab=new" },
+      { id: "qa", label: ["Q&A"], sub: `${d.questions} to answer`, alert: d.questions > 0, href: "/admin/dataroom?tab=qa" },
+      { id: "activity", label: ["Activity"], sub: `${d.viewsToday} today`, href: "/admin/dataroom?tab=activity" },
+      { id: "ndas", label: ["NDAs"], sub: `${d.ndas} pending`, alert: d.ndas > 0, href: "/admin/dataroom?tab=access" },
+      { id: "access", label: ["Access"], sub: plural(d.users, "person", "people"), href: "/admin/dataroom?tab=access" },
     ],
   },
   {
@@ -92,12 +92,12 @@ export const firmModules: FirmModule[] = [
     badge: b.overdue,
     badgeLabel: "overdue invoices",
     ring: [
-      { id: "invoices", label: ["Invoices"], sub: `${b.open} OPEN`, alert: true, href: "/admin/treasury?tab=invoices" },
-      { id: "new", label: ["New", "invoice"], sub: `${b.drafts} IN DRAFT`, href: "/admin/treasury?tab=new" },
-      { id: "payments", label: ["Payments"], sub: `${b.payments} THIS MONTH`, href: "/admin/treasury?tab=payments" },
-      { id: "subscriptions", label: ["Subscriptions"], sub: `${b.subscriptions} ACTIVE`, href: "/admin/treasury?tab=subscriptions" },
-      { id: "fees", label: ["Administration", "fees"], sub: `${b.schedules} SCHEDULES`, href: "/admin/treasury?tab=fees" },
-      { id: "overdue", label: ["Overdue"], sub: b.overdue ? `${b.overdue} TO CHASE` : "NONE", alert: b.overdue > 0, href: "/admin/treasury?tab=invoices&filter=overdue" },
+      { id: "invoices", label: ["Invoices"], sub: `${b.open} open`, alert: true, href: "/admin/treasury?tab=invoices" },
+      { id: "new", label: ["New", "invoice"], sub: `${b.drafts} in draft`, href: "/admin/treasury?tab=new" },
+      { id: "payments", label: ["Payments"], sub: `${b.payments} this month`, href: "/admin/treasury?tab=payments" },
+      { id: "subscriptions", label: ["Subscriptions"], sub: `${b.subscriptions} active`, href: "/admin/treasury?tab=subscriptions" },
+      { id: "fees", label: ["Administration", "fees"], sub: `${b.schedules} schedules`, href: "/admin/treasury?tab=fees" },
+      { id: "overdue", label: ["Overdue"], sub: b.overdue ? `${b.overdue} to chase` : "None", alert: b.overdue > 0, href: "/admin/treasury?tab=invoices&filter=overdue" },
     ],
   },
   {
@@ -108,12 +108,18 @@ export const firmModules: FirmModule[] = [
     badge: c.overdue + c.alerts,
     badgeLabel: "items need attention",
     ring: [
-      { id: "calendar", label: ["Calendar"], sub: `${c.due30} DUE IN 30 DAYS`, alert: c.overdue > 0, href: "/admin/compliance?tab=calendar" },
-      { id: "screening", label: ["Screening"], sub: `${c.alerts} TO REVIEW`, alert: c.alerts > 0, href: "/admin/compliance?tab=screening" },
-      { id: "policies", label: ["Policies"], sub: c.policies ? `${c.policies} TO REVIEW` : "UP TO DATE", alert: c.policies > 0, href: "/admin/compliance?tab=policies" },
-      { id: "training", label: ["Training"], sub: c.trainingOverdue ? `${c.trainingOverdue} OVERDUE` : "ON TRACK", alert: c.trainingOverdue > 0, href: "/admin/compliance?tab=training" },
-      { id: "reviews", label: ["Access", "reviews"], sub: `${c.reviewsDone} OF ${c.reviews} DONE`, href: "/admin/compliance?tab=reviews" },
-      { id: "audit", label: ["Audit log"], sub: "APPEND-ONLY", href: "/admin/compliance?tab=audit" },
+      { id: "calendar", label: ["Calendar"], sub: `${c.due30} due in 30 days`, alert: c.overdue > 0, href: "/admin/compliance?tab=calendar" },
+      { id: "screening", label: ["Screening"], sub: `${c.alerts} to review`, alert: c.alerts > 0, href: "/admin/compliance?tab=screening" },
+      { id: "policies", label: ["Policies"], sub: c.policies ? `${c.policies} to review` : "Up to date", alert: c.policies > 0, href: "/admin/compliance?tab=policies" },
+      {
+        id: "training",
+        label: ["Training"],
+        sub: c.trainingOverdue ? `${c.trainingOverdue} overdue` : "On track",
+        alert: c.trainingOverdue > 0,
+        href: "/admin/compliance?tab=training",
+      },
+      { id: "reviews", label: ["Access", "reviews"], sub: `${c.reviewsDone} of ${c.reviews} done`, href: "/admin/compliance?tab=reviews" },
+      { id: "audit", label: ["Audit log"], sub: "Append-only", href: "/admin/compliance?tab=audit" },
     ],
   },
 ];

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { Band, BrandCenter, FRAME, DarkCenter, MarkCenter, R, hexPoints, offset, ringOrder, type Slot } from "./HexNav";
+import { BrandCenter, FRAME, DarkCenter, MarkCenter, R, hexPoints, offset, ringOrder, type Slot } from "./HexNav";
 import { GpLogo } from "@/components/brand/GpLogo";
 import { markPath } from "@/components/brand/Logo";
 import { useBrand } from "@/components/brand/BrandProvider";
@@ -121,7 +121,6 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
   let center: ReactNode;
   let centerFrom: Pt | null = null;
   let accent = CREAM; // Aurum levels: the theme's light cell; GP levels use the GP's own colour
-  let outlineColor = "var(--eco-mark)";
   let bandOn = "var(--eco-mark)"; // frame colour on hover
   let tint: string | undefined; // the background light leans toward the selected application
   let ringShown = true;
@@ -134,7 +133,7 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
         id: s.id,
         slot: s.slot,
         label: s.lines,
-        sub: !s.live ? "COMING SOON" : s.id === "fund" ? `${gps.length} GPS` : `${formations.filter((f) => f.stage !== "Post-formation").length} IN PROGRESS`,
+        sub: !s.live ? "Coming soon" : s.id === "fund" ? `${gps.length} GPs` : `${formations.filter((f) => f.stage !== "Post-formation").length} in progress`,
         subTone: s.live ? "accent" : "muted",
         outline: s.live,
         ...(s.id === "fund" ? { open: () => go({ kind: "fund", from: s.slot }) } : { href: s.href }),
@@ -148,20 +147,19 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
         id: g.id,
         slot: ringOrder[i],
         label: [g.shortName],
-        sub: t.funds ? `${t.funds} FUND${t.funds > 1 ? "S" : ""}` : "ONBOARDING",
+        sub: t.funds ? `${t.funds} fund${t.funds > 1 ? "s" : ""}` : "Onboarding",
         accent: g.brand.primary,
         band: g.brand.secondary,
-        art: (on: boolean) => <GpLogo gp={g} height={tallLogo(g) ? 50 : 20} tone={on ? "dark" : "light"} compact />,
+        art: (on: boolean) => <GpLogo gp={g} height={tallLogo(g) ? 50 : 20} tone={on ? "dark" : "auto"} compact />,
         open: () => go({ kind: "gp", gpId: g.id, from: ringOrder[i] }),
       };
     });
-    nodes.push({ id: "all", slot: ringOrder[5], label: ["All GPs"], sub: `${gps.length} CLIENTS`, subTone: "accent", outline: true, href: "/admin/fund/gps" });
+    nodes.push({ id: "all", slot: ringOrder[5], label: ["All GPs"], sub: `${gps.length} clients`, subTone: "accent", outline: true, href: "/admin/fund/gps" });
     center = <DarkCenter lines={["Fund", "Solution"]} />;
   } else if (level.kind === "module") {
     const m = firmById(level.id)!;
     centerFrom = level.from;
     accent = m.color;
-    outlineColor = "var(--eco-cell-hover)";
     bandOn = "var(--eco-cell-hover)";
     tint = m.color;
     nodes = m.ring.map((r, i) => ({
@@ -179,21 +177,20 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
     const t = gpTotals(gp.id, INDICATIVE_BRL_USD); // counts only; no amounts shown
     centerFrom = offset(level.from);
     accent = gp.brand.primary;
-    outlineColor = gp.brand.secondary;
     bandOn = gp.brand.secondary;
     tint = gp.brand.secondary;
     const subs: Record<string, string> = {
-      funds: `${t.funds} VEHICLE${t.funds === 1 ? "" : "S"}`,
-      investors: `${t.investors} INVESTORS`,
-      onboarding: `${t.onboarding} OPEN`,
-      capital: `${t.openCalls} OPEN`,
-      reports: "DOCUMENTS",
-      portal: gp.status === "Live" ? "LIVE" : "SETTING UP",
+      funds: `${t.funds} vehicle${t.funds === 1 ? "" : "s"}`,
+      investors: `${t.investors} investors`,
+      onboarding: `${t.onboarding} open`,
+      capital: `${t.openCalls} open`,
+      reports: "Documents",
+      portal: gp.status === "Live" ? "Live" : "Setting up",
     };
     nodes = gpModules.map((m, i) => ({ id: m.id, slot: ringOrder[i], label: m.label, sub: subs[m.id], href: `/admin/fund/gps/${gp.id}/${m.path}` }));
     center = (
       <BrandCenter color={gp.brand.primary} secondary={gp.brand.secondary}>
-        <GpLogo gp={gp} height={tallLogo(gp) ? 52 : 26} compact />
+        <GpLogo gp={gp} height={tallLogo(gp) ? 52 : 26} compact tone="light" />
       </BrandCenter>
     );
   }
@@ -230,8 +227,9 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
    * when a ring opens they move out into the notches between its cells, so they stay reachable.
    * Resting on one opens its ring (it glides to the centre); clicking goes straight in.
    */
-  const ORBIT_IN = 182;
-  const ORBIT_OUT = 238;
+  // At rest the workspaces sit on the mark's vertex lines; open, they move to the notches of the ring, clear of every cell.
+  const ORBIT_IN = 184;
+  const ORBIT_OUT = 262;
   const orbitShown = level.kind === "root" || level.kind === "module";
   const orbitR = level.kind === "root" && !revealed ? ORBIT_IN : ORBIT_OUT;
   const orbit = firmModules.flatMap((m, i) => {
@@ -340,13 +338,42 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
                 onClick={() => activate(n)}
                 onKeyDown={(e) => e.key === "Enter" && activate(n)}
               >
-                <polygon points={hexPoints(R)} fill={on ? (n.accent ?? accent) : "var(--eco-cell)"} style={{ transition: "fill 220ms" }} />
-                <Band w={FRAME.outer} color={on ? (n.band ?? bandOn) : n.outline ? outlineColor : "var(--eco-cell-line)"} style={{ transition: "fill 220ms" }} />
-                <Band
-                  r={R - FRAME.outer - FRAME.gap}
-                  w={FRAME.inner}
-                  color={n.band ?? bandOn}
-                  style={{ opacity: on ? 1 : 0, transform: `scale(${on ? 1 : 0.94})`, transition: "opacity 220ms, transform 260ms cubic-bezier(.2,.8,.2,1)" }}
+                {/* matte surface; on hover a lit layer fades in (opacity only) */}
+                <polygon className="eco-cell" points={hexPoints(R)} fill="var(--eco-cell)" />
+                <polygon
+                  points={hexPoints(R)}
+                  fill={(n.accent ?? accent) === CREAM ? "url(#eco-cell-lit)" : (n.accent ?? accent)}
+                  className="eco-fade"
+                  style={{ opacity: on ? 1 : 0 }}
+                />
+                {/* hairline frame: live cells carry the champagne line, others the neutral one; hover brings the accent */}
+                <polygon
+                  points={hexPoints(R - 0.75)}
+                  fill="none"
+                  stroke={n.outline ? "var(--eco-cell-live)" : "var(--eco-cell-line)"}
+                  strokeWidth={1.25}
+                  vectorEffect="non-scaling-stroke"
+                  strokeLinejoin="miter"
+                />
+                <polygon
+                  points={hexPoints(R - 0.75)}
+                  fill="none"
+                  stroke={n.band ?? bandOn}
+                  strokeWidth={1.5}
+                  vectorEffect="non-scaling-stroke"
+                  strokeLinejoin="miter"
+                  className="eco-fade"
+                  style={{ opacity: on ? 1 : 0 }}
+                />
+                {/* the mark's inner line, echoed faintly on hover */}
+                <polygon
+                  points={hexPoints(R - FRAME.outer - FRAME.gap)}
+                  fill="none"
+                  stroke={n.band ?? bandOn}
+                  strokeWidth={1}
+                  vectorEffect="non-scaling-stroke"
+                  className="eco-fade eco-echo"
+                  style={{ opacity: on ? 0.45 : 0 }}
                 />
                 {n.art && (
                   <foreignObject x={-66} y={-46} width={132} height={70} style={{ pointerEvents: "none" }}>
@@ -355,28 +382,28 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
                 )}
                 <text textAnchor="middle" fill={on && (n.accent ?? accent) !== CREAM ? "#FFFFFF" : "var(--eco-label)"} style={{ transition: "fill 200ms" }}>
                   {!n.art && (
-                    <tspan x={0} y={n.label[1] ? -4 : 6} fontSize={16} fontWeight={600} letterSpacing="-0.01em">
+                    <tspan x={0} y={n.label[1] ? -5 : 5} fontSize={17} fontWeight={500} letterSpacing="-0.012em" className="eco-t-label">
                       {n.label[0]}
                     </tspan>
                   )}
                   {!n.art && n.label[1] && (
-                    <tspan x={0} y={16} fontSize={16} fontWeight={600} letterSpacing="-0.01em">
+                    <tspan x={0} y={16} fontSize={17} fontWeight={500} letterSpacing="-0.012em" className="eco-t-label">
                       {n.label[1]}
                     </tspan>
                   )}
                   <tspan
                     x={0}
-                    y={44}
-                    fontSize={9.5}
-                    fontWeight={600}
-                    letterSpacing="0.16em"
+                    y={42}
+                    fontSize={11.5}
+                    fontWeight={500}
+                    letterSpacing="0.01em"
+                    className="eco-t-sub tabular-nums"
+                    opacity={n.sub === "Coming soon" ? 0.8 : 1}
                     fill={
-                      n.subTone === "accent"
-                        ? on && (n.accent ?? accent) !== CREAM
-                          ? outlineColor
-                          : (n.subColor ?? "var(--eco-sub-accent)")
-                        : on && (n.accent ?? accent) !== CREAM
-                          ? "rgba(255,255,255,0.65)"
+                      on && (n.accent ?? accent) !== CREAM
+                        ? "rgba(255,255,255,0.72)"
+                        : n.subColor && n.subTone === "accent"
+                          ? `color-mix(in oklab, ${n.subColor} 70%, var(--eco-label))`
                           : "var(--eco-sub)"
                     }
                   >
@@ -405,11 +432,15 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
         <defs>
           {orbit.map((o) => (
             <radialGradient key={o.id} id={`orbit-glow-${o.id}`}>
-              <stop offset="0%" stopColor={o.color} stopOpacity="0.45" />
-              <stop offset="55%" stopColor={o.color} stopOpacity="0.12" />
+              <stop offset="0%" stopColor={o.color} stopOpacity="0.22" />
+              <stop offset="55%" stopColor={o.color} stopOpacity="0.06" />
               <stop offset="100%" stopColor={o.color} stopOpacity="0" />
             </radialGradient>
           ))}
+          <linearGradient id="eco-cell-lit" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--eco-cell-hover-top)" />
+            <stop offset="100%" stopColor="var(--eco-cell-hover)" />
+          </linearGradient>
           <radialGradient id="eco-tx">
             <stop offset="0%" stopColor="var(--eco-mark)" stopOpacity="0.9" />
             <stop offset="45%" stopColor="var(--eco-mark)" stopOpacity="0.25" />
@@ -454,25 +485,57 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
               <circle className="orbit-glow" r={58} fill={`url(#orbit-glow-${o.id})`} style={{ pointerEvents: "none" }} />
               {transmission?.i === oi && <circle key={transmission.key} className="eco-arrive" r={52} fill={`url(#orbit-glow-${o.id})`} style={{ pointerEvents: "none" }} />}
               <circle r={34} fill="transparent" />
-              <polygon className="orbit-ring" points={hexPoints(36)} fill="none" stroke="var(--eco-label)" strokeWidth={1.5} />
+              <polygon
+                className="orbit-ring"
+                points={hexPoints(36)}
+                fill="none"
+                stroke={`color-mix(in oklab, ${o.color} 70%, var(--eco-label))`}
+                strokeWidth={1}
+                vectorEffect="non-scaling-stroke"
+              />
               <g className="orbit-inner">
                 {/* resting: a desaturated derivative of the workspace colour; hover or focus restores it */}
                 <path
                   className="orbit-rest"
                   d={markPath(brand.mark)}
                   transform="scale(0.14368)"
-                  fill={`color-mix(in oklab, ${o.color} 58%, var(--eco-desat))`}
+                  style={{ fill: `color-mix(in oklab, ${o.color} var(--eco-pigment, 50%), var(--eco-desat))` }}
                   fillRule="evenodd"
                 />
-                <path className="orbit-full" d={markPath(brand.mark)} transform="scale(0.14368)" fill={o.color} fillRule="evenodd" />
+                <path
+                  className="orbit-full"
+                  d={markPath(brand.mark)}
+                  transform="scale(0.14368)"
+                  style={{ fill: `color-mix(in oklab, ${o.color} var(--eco-pigment-on, 80%), var(--eco-desat))` }}
+                  fillRule="evenodd"
+                />
               </g>
-              <text className="orbit-label" textAnchor="middle" y={52} fontSize={12} fontWeight={600} fill="var(--eco-label)" style={{ pointerEvents: "none" }}>
+              <text
+                className="orbit-label eco-t-orbit"
+                textAnchor="middle"
+                y={54}
+                fontSize={12}
+                fontWeight={500}
+                letterSpacing="0.005em"
+                fill="var(--eco-label)"
+                style={{ pointerEvents: "none" }}
+              >
                 {o.name}
               </text>
               {o.badge > 0 && (
-                <g transform="translate(22 -24)">
-                  <circle r={8.5} fill="var(--eco-cell)" stroke={o.color} strokeWidth={1.2} />
-                  <text textAnchor="middle" y={3.3} fontSize={9.5} fontWeight={600} fill="var(--eco-label)" className="tabular-nums">
+                <g transform="translate(23 -21)" className="orbit-badge">
+                  <rect
+                    x={o.badge > 9 ? -9 : -6.5}
+                    y={-6.5}
+                    width={o.badge > 9 ? 18 : 13}
+                    height={13}
+                    rx={6.5}
+                    fill="var(--eco-badge)"
+                    stroke="var(--eco-cell-line)"
+                    strokeWidth={1}
+                    vectorEffect="non-scaling-stroke"
+                  />
+                  <text textAnchor="middle" y={3.1} fontSize={8.5} fontWeight={600} fill="var(--eco-sub)" className="tabular-nums">
                     {o.badge}
                   </text>
                 </g>

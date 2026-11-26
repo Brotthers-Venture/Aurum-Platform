@@ -182,14 +182,22 @@ export function HexNav({
 export function DarkCenter({ lines, expanded = true }: { lines: [string, string]; expanded?: boolean }) {
   return (
     <g className="hex-cell" style={{ transform: `scale(${expanded ? 1 : 1.16})` }}>
+      {/* the open solution: the mark's two lines, drawn as hairlines in the accent */}
       <polygon points={hexPoints(R)} fill="var(--eco-center, #FBF3DC)" />
-      <Band w={FRAME.outer} color="var(--eco-mark, var(--tenant-accent))" />
-      <Band r={R - FRAME.outer - FRAME.gap} w={FRAME.inner} color="var(--eco-mark, var(--tenant-accent))" />
+      <polygon points={hexPoints(R - 0.75)} fill="none" stroke="var(--eco-mark, var(--tenant-accent))" strokeWidth={1.75} vectorEffect="non-scaling-stroke" />
+      <polygon
+        points={hexPoints(R - FRAME.outer - FRAME.gap)}
+        fill="none"
+        stroke="var(--eco-mark, var(--tenant-accent))"
+        strokeOpacity={0.55}
+        strokeWidth={1}
+        vectorEffect="non-scaling-stroke"
+      />
       <text textAnchor="middle" fill="var(--eco-label, var(--tenant-ink))">
-        <tspan x={0} y={-6} fontSize={22} className="font-serif">
+        <tspan x={0} y={-5} fontSize={21} className="font-serif">
           {lines[0]}
         </tspan>
-        <tspan x={0} y={20} fontSize={22} className="font-serif">
+        <tspan x={0} y={20} fontSize={21} className="font-serif">
           {lines[1]}
         </tspan>
       </text>

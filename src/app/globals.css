@@ -1068,3 +1068,132 @@ html[data-theme="light"] .eco-stage[data-hub] {
 .ws:not(.ws-light) .logo-on-dark { display: contents; }
 html[data-theme="light"] .ws .logo-on-light { display: contents; }
 html[data-theme="light"] .ws .logo-on-dark { display: none; }
+
+/* ───────── Hexa Room landing — Architectural Matte refinement ─────────
+   Graphite matte with one broad platinum light from above; the mark is the only saturated element, with a faint
+   accent light behind it that breathes. Cells are matte surfaces with hairline frames; workspaces are muted pigments
+   derived from their own colours (so a tenant's colours mute the same way). */
+.eco-stage[data-hub] {
+  --eco-bg: #12161b;
+  --eco-bg-2: #171b20;
+  --eco-bg-3: #1c2127;
+  --eco-platinum: #a7b2bf;
+  --eco-cell: #20262c;
+  --eco-cell-hover: #252c33;
+  --eco-cell-hover-top: #2c343c;
+  --eco-cell-line: #3b444d;
+  --eco-cell-live: color-mix(in oklab, var(--eco-mark) 48%, #6e747a);
+  --eco-center: #1d2228;
+  --eco-label: #e8eaed;
+  --eco-sub: #929ba6;
+  --eco-badge: #1a1f25;
+  --eco-desat: #9c9ca2;
+  --eco-pigment: 50%;
+  --eco-pigment-on: 80%;
+  --eco-glow: color-mix(in oklab, var(--eco-platinum) 7%, transparent);
+  --eco-halo-tone: color-mix(in oklab, var(--eco-mark) 6.5%, transparent);
+  --eco-lattice: rgba(167, 178, 191, 0.03);
+  --eco-glow-strength: 1;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -6%, color-mix(in oklab, var(--eco-platinum) 10%, transparent) 0%, transparent 72%),
+    radial-gradient(ellipse 135% 105% at 50% 42%, var(--eco-bg-2) 0%, var(--eco-bg-2) 40%, var(--eco-bg) 100%);
+  --d-bg: #171b20;
+  --d-chrome: #161a1f;
+  --d-surface: #1e2329;
+  --d-raise: #262c33;
+  --d-line: #2c333a;
+  --d-line-soft: #232930;
+  --d-line-strong: #3b444d;
+  --d-text: #e8eaed;
+  --d-text-2: #aeb5be;
+  --d-text-3: #8f98a3;
+}
+html[data-theme="light"] .eco-stage[data-hub] {
+  --eco-bg: #e1dcd3;
+  --eco-bg-2: #ebe7e0;
+  --eco-bg-3: #f2efe9;
+  --eco-cell: #f6f3ee;
+  --eco-cell-hover: #faf8f4;
+  --eco-cell-hover-top: #ffffff;
+  --eco-cell-line: #d3cdc2;
+  --eco-cell-live: color-mix(in oklab, var(--eco-mark) 58%, #8f8676);
+  --eco-center: #f6f1e4;
+  --eco-label: #1c2025;
+  --eco-sub: #61666e;
+  --eco-badge: #f6f3ee;
+  --eco-desat: #96969c;
+  --eco-pigment: 52%;
+  --eco-pigment-on: 84%;
+  --eco-glow: color-mix(in oklab, #fffdf8 42%, transparent);
+  --eco-halo-tone: color-mix(in oklab, var(--eco-mark) 5.5%, transparent);
+  --eco-lattice: rgba(28, 32, 37, 0.035);
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -6%, rgba(255, 253, 248, 0.7) 0%, transparent 72%),
+    radial-gradient(ellipse 135% 105% at 50% 42%, var(--eco-bg-2) 0%, var(--eco-bg-2) 40%, var(--eco-bg) 100%);
+  --d-bg: #ebe7e0;
+  --d-chrome: #eeebe5;
+  --d-surface: #f6f3ee;
+  --d-raise: #e5e0d8;
+  --d-line: #d9d3ca;
+  --d-line-soft: #e3ded6;
+  --d-line-strong: #c9c2b7;
+  --d-text: #1c2025;
+  --d-text-2: #4b5159;
+  --d-text-3: #5c6168;
+}
+/* The room light: broad, from above, still. The accent light: behind the mark, breathing. */
+.eco-stage[data-hub] .eco-light { top: 34%; width: min(2000px, 190vmax); aspect-ratio: 1.6; }
+.eco-stage[data-hub] .eco-halo { display: block; top: 50%; width: min(980px, 110vmin); aspect-ratio: 1; --eco-tone: var(--eco-halo-tone); }
+.eco-stage[data-hub] .eco-anim .eco-light.breathe { animation: none; }
+.eco-stage[data-hub] .eco-anim .eco-halo.breathe { animation: eco-halo-breathe 14s ease-in-out infinite; }
+@keyframes eco-halo-breathe {
+  0%, 100% { opacity: calc(0.74 * var(--eco-glow-strength)); transform: scale(0.99); }
+  50% { opacity: calc(1 * var(--eco-glow-strength)); transform: scale(1.01); }
+}
+/* Cells: opacity-only hover, 200 ms. Platinum cells sit on a restrained neutral shadow (static). */
+.eco-fade { transition: opacity 200ms var(--eco-ease); }
+html[data-theme="light"] .eco-stage[data-hub] .eco-cell {
+  filter: drop-shadow(0 1px 1px rgba(40, 34, 24, 0.05)) drop-shadow(0 10px 22px rgba(40, 34, 24, 0.06));
+}
+/* Workspaces: muted pigment at rest; hover raises saturation, a hairline frame and a faint own-colour light. */
+.eco-stage[data-hub] .orbit-mark:hover .orbit-inner,
+.eco-stage[data-hub] .orbit-mark:focus-visible .orbit-inner { transform: scale(1.06); }
+.eco-stage[data-hub] .orbit-mark .orbit-ring { transition: opacity 200ms var(--eco-ease); }
+.eco-stage[data-hub] .orbit-mark:hover .orbit-ring { opacity: 0.5; }
+.eco-stage[data-hub] .orbit-mark:focus-visible .orbit-ring,
+.eco-stage[data-hub] .orbit-mark:active .orbit-ring { opacity: 1; }
+.eco-stage[data-hub] .orbit-mark:hover .orbit-glow,
+.eco-stage[data-hub] .orbit-mark:focus-visible .orbit-glow { opacity: 1; }
+.eco-stage[data-hub] .orbit-mark:active .orbit-full { opacity: 1; }
+@media (max-width: 639px) {
+  .eco-stage[data-hub] { --eco-glow-strength: 0.55; }
+}
+/* Platinum: a touch more grain so the ivory light never bands. */
+html[data-theme="light"] .eco-stage[data-hub]::before { opacity: 0.32; }
+
+/* Cosine-eased falloff: no linear kinks, so no rings on the ivory theme. */
+.eco-stage[data-hub] .eco-light {
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 100.0%, transparent) 0.0%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 98.3%, transparent) 8.3%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 93.3%, transparent) 16.7%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 85.4%, transparent) 25.0%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 75.0%, transparent) 33.3%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 62.9%, transparent) 41.7%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 50.0%, transparent) 50.0%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 37.1%, transparent) 58.3%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 25.0%, transparent) 66.7%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 14.6%, transparent) 75.0%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 6.7%, transparent) 83.3%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 1.7%, transparent) 91.7%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 0.0%, transparent) 100.0%
+  );
+}
+/* Phones: the hub drawing scales to ~56 %, so its type is set larger in drawing units to stay legible (≥ 11 px). */
+@media (max-width: 639px) {
+  .eco-stage[data-hub] .eco-t-label { font-size: 22px; }
+  .eco-stage[data-hub] .eco-t-sub { font-size: 17px; }
+  .eco-stage[data-hub] .eco-t-orbit { font-size: 19px; }
+  html[data-theme="light"] .eco-stage[data-hub] .eco-halo { display: none; }
+}
