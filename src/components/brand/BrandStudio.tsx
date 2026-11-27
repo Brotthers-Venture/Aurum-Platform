@@ -5,8 +5,12 @@ import { Check, ImageUp, RotateCcw, Search, X } from "lucide-react";
 import { cx } from "@/components/ui";
 import { AurumLogo, AurumMark } from "./Logo";
 import { useBrand } from "./BrandProvider";
-import { Backdrop } from "@/components/auth/AuthShell";
-import { AMBIENT_MOTIONS, AURUM, MODULE_DEFAULTS, PRESETS, SANS, SERIF, contrast, hexOk, moduleName, type Brand, type MarkShape } from "@/lib/brand";
+import { EntranceBackdrop } from "@/components/auth/AuthShell";
+import { EntrancesEditor } from "./EntrancesEditor";
+import { entranceById, resolveLook } from "@/lib/entrances";
+import { gpById } from "@/lib/gps";
+import { GpLogo } from "./GpLogo";
+import { AMBIENT_MOTIONS, AURUM, MODULE_DEFAULTS, PRESETS, SANS, SERIF, contrast, hexOk, moduleName, type Brand } from "@/lib/brand";
 import type { FirmId } from "@/lib/firm-colors";
 
 /* Brand & white label: one place where a B2B client makes the platform theirs. Every change previews live
@@ -14,7 +18,6 @@ import type { FirmId } from "@/lib/firm-colors";
 
 const field = "h-10 w-full rounded-[8px] border border-stone-300 bg-white px-3 text-[13px] text-ink-900 focus:border-ink-900 focus:outline-none";
 const lab = "mb-1.5 block text-[11.5px] font-semibold text-stone-600";
-const SHAPES: MarkShape[] = ["hexagon", "circle", "square", "diamond", "arch"];
 
 function Section({ title, sub, children }: { title: string; sub?: string; children: ReactNode }) {
   return (
@@ -116,6 +119,7 @@ export function BrandStudio() {
   const { published: saved, preview, save, reset } = useBrand();
   const [d, setD] = useState<Brand>(saved);
   const [flash, setFlash] = useState<string | null>(null);
+  const [door, setDoor] = useState("firm");
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setD(saved);
@@ -203,28 +207,10 @@ export function BrandStudio() {
             </div>
           </Section>
 
-          <Section title="Logo and mark" sub="Upload both versions of the logo. The mark is the small emblem used for the app icon, the hub centre and every workspace badge.">
+          <Section title="Logo" sub="Upload both versions of the logo: one for light backgrounds, one for dark.">
             <div className="grid gap-4 sm:grid-cols-2">
               <Upload label="Logo for light backgrounds" value={d.logo} onChange={(v) => up("logo", v)} />
               <Upload label="Logo for dark backgrounds" value={d.logoLight} onChange={(v) => up("logoLight", v)} dark />
-            </div>
-            <div className="mt-5">
-              <span className={lab}>Mark shape</span>
-              <div className="flex flex-wrap gap-2">
-                {SHAPES.map((sh) => (
-                  <button
-                    key={sh}
-                    onClick={() => up("mark", sh)}
-                    className={cx(
-                      "flex h-20 w-20 flex-col items-center justify-center gap-1.5 rounded-[10px] border text-[11px] capitalize",
-                      d.mark === sh ? "border-ink-900 bg-stone-25 font-semibold text-ink-900" : "border-stone-200 text-stone-500 hover:border-stone-400",
-                    )}
-                  >
-                    <AurumMark size={26} shape={sh} color={d.colors.accent} />
-                    {sh}
-                  </button>
-                ))}
-              </div>
             </div>
           </Section>
 
@@ -270,11 +256,26 @@ export function BrandStudio() {
             </div>
           </Section>
 
-          <Section title="Ambient motion" sub="The default atmosphere of the ecosystem hub for everyone in your firm. Each user can still switch motion off for themselves, and the device's reduced-motion setting always wins.">
+          <Section
+            title="Ambient motion"
+            sub="The default atmosphere of the ecosystem hub for everyone in your firm. Each user can still switch motion off for themselves, and the device's reduced-motion setting always wins."
+          >
             <div className="grid gap-2 sm:grid-cols-2">
               {AMBIENT_MOTIONS.map((m) => (
-                <label key={m.id} className={cx("flex cursor-pointer gap-3 rounded-[10px] border p-3", (d.ambientMotion ?? "ambient") === m.id ? "border-ink-900 bg-stone-25" : "border-stone-200 hover:border-stone-300")}>
-                  <input type="radio" name="ambient-motion" checked={(d.ambientMotion ?? "ambient") === m.id} onChange={() => set({ ...d, ambientMotion: m.id })} className="mt-0.5 accent-[var(--tenant-ink)]" />
+                <label
+                  key={m.id}
+                  className={cx(
+                    "flex cursor-pointer gap-3 rounded-[10px] border p-3",
+                    (d.ambientMotion ?? "ambient") === m.id ? "border-ink-900 bg-stone-25" : "border-stone-200 hover:border-stone-300",
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="ambient-motion"
+                    checked={(d.ambientMotion ?? "ambient") === m.id}
+                    onChange={() => set({ ...d, ambientMotion: m.id })}
+                    className="mt-0.5 accent-[var(--tenant-ink)]"
+                  />
                   <span>
                     <span className="block text-[13px] font-semibold text-ink-900">{m.label}</span>
                     <span className="block text-[12px] text-stone-600">{m.about}</span>
@@ -315,55 +316,11 @@ export function BrandStudio() {
             </div>
           </Section>
 
-          <Section title="Sign-in page" sub="Shown at sign-in and on public entrances such as the formation form.">
-            <div className="grid gap-4">
-              <label className="block">
-                <span className={lab}>Eyebrow</span>
-                <input value={d.login.eyebrow} onChange={(e) => set({ ...d, login: { ...d.login, eyebrow: e.target.value } })} className={field} />
-              </label>
-              <label className="block">
-                <span className={lab}>Headline</span>
-                <input value={d.login.headline} onChange={(e) => set({ ...d, login: { ...d.login, headline: e.target.value } })} className={field} />
-              </label>
-              <label className="block">
-                <span className={lab}>Statement</span>
-                <textarea
-                  value={d.login.text}
-                  onChange={(e) => set({ ...d, login: { ...d.login, text: e.target.value } })}
-                  rows={2}
-                  className="w-full resize-none rounded-[8px] border border-stone-300 px-3 py-2 text-[13px] focus:border-ink-900 focus:outline-none"
-                />
-              </label>
-              <div>
-                <span className={lab}>Backdrop</span>
-                <div className="flex flex-wrap gap-2">
-                  {(
-                    [
-                      ["gold", "Gold photograph"],
-                      ["ink", "Ink"],
-                      ["stone", "Accent glow"],
-                      ["image", "Your image"],
-                    ] as const
-                  ).map(([v, l]) => (
-                    <button
-                      key={v}
-                      onClick={() => set({ ...d, login: { ...d.login, backdrop: v } })}
-                      className={cx(
-                        "h-9 rounded-[8px] border px-3 text-[12.5px] font-semibold",
-                        d.login.backdrop === v ? "border-ink-900 bg-ink-900 text-white" : "border-stone-300 text-stone-600",
-                      )}
-                    >
-                      {l}
-                    </button>
-                  ))}
-                </div>
-                {d.login.backdrop === "image" && (
-                  <div className="mt-3 max-w-[360px]">
-                    <Upload label="Backdrop image" value={d.login.image} onChange={(v) => set({ ...d, login: { ...d.login, image: v } })} />
-                  </div>
-                )}
-              </div>
-            </div>
+          <Section
+            title="Entrances"
+            sub="Every door into the platform has its own look: a picture or background, and its own words. Doors you leave alone inherit their group’s default, and the defaults inherit the console sign-in."
+          >
+            <EntrancesEditor d={d} set={set} selected={door} onSelect={setDoor} />
           </Section>
 
           <Section title="Legal" sub="Footer line and the documents linked from every public page.">
@@ -427,26 +384,8 @@ export function BrandStudio() {
               </div>
             </div>
           </div>
-          <div className="relative isolate h-[220px] overflow-hidden rounded-[14px] border border-stone-200 text-white shadow-card">
-            <div className="absolute inset-0 -z-10 scale-110 blur-[6px]">
-              <Backdrop brand={d} />
-            </div>
-            <div className="absolute inset-0 -z-10 bg-black/25" />
-            <div className="p-4">
-              <AurumLogo variant={d.login.backdrop === "gold" ? "dark" : "white"} height={22} />
-            </div>
-            <div className="absolute bottom-4 left-4 max-w-[190px]">
-              <div className="text-[8px] font-semibold uppercase tracking-[0.2em] text-white/80">{d.login.eyebrow}</div>
-              <div className="mt-1 font-serif text-[22px] leading-tight">{d.login.headline}</div>
-            </div>
-            <div className="absolute bottom-4 right-4 w-[150px] rounded-[8px] bg-white/95 p-3 text-ink-900">
-              <div className="font-serif text-[12px]">Welcome to {d.legalName}</div>
-              <div className="mt-2 h-5 rounded-[3px] border border-stone-300" />
-              <div className="mt-2 h-6 rounded-[3px] text-center text-[9.5px] font-semibold leading-6" style={{ background: d.colors.accent, color: d.colors.accentInk }}>
-                Continue
-              </div>
-            </div>
-          </div>
+          <div className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-stone-500">Entrance · {entranceById(d, door)?.name}</div>
+          <EntrancePreview d={d} door={door} />
           <p className="text-[11.5px] leading-relaxed text-stone-500">
             In production each client’s brand is tied to their own domain, so <span className="num">portal.{d.domain}</span> opens with it automatically. GP portals and data rooms
             keep their own sponsor branding on top.
@@ -479,8 +418,11 @@ export function BrandStudio() {
             <button
               disabled={!dirty || !d.name.trim()}
               onClick={() => {
-                save(d);
-                toast(`${d.name} is now live across the platform`);
+                toast(
+                  save(d)
+                    ? `${d.name} is now live across the platform`
+                    : "Not published: the pictures are too large for this browser’s storage. Remove one or use smaller pictures.",
+                );
               }}
               className="flex h-9 items-center gap-1.5 rounded-[9px] px-4 text-[12.5px] font-semibold disabled:opacity-40"
               style={{ background: d.colors.accent, color: d.colors.accentInk }}
@@ -491,6 +433,39 @@ export function BrandStudio() {
         </div>
       </div>
       {flash && <div className="fixed bottom-20 left-1/2 z-40 -translate-x-1/2 rounded-[12px] bg-ink-900 px-4 py-2.5 text-[13px] font-medium text-white shadow-lift">{flash}</div>}
+    </div>
+  );
+}
+
+/** A small version of the selected entrance, in its resolved look. */
+function EntrancePreview({ d, door }: { d: Brand; door: string }) {
+  const look = resolveLook(d, door);
+  const e = entranceById(d, door);
+  const gp = e?.gpId ? gpById(e.gpId) : undefined;
+  const dark = look.backdrop !== "field";
+  return (
+    <div className="relative isolate h-[240px] overflow-hidden rounded-[14px] border border-stone-200 text-white shadow-card">
+      <div className="absolute inset-0 -z-10">
+        <EntranceBackdrop brand={d} look={look} tone="dark" still field={gp ? { ink: gp.brand.primary, accent: gp.brand.secondary } : undefined} />
+      </div>
+      <div className="absolute inset-0 -z-10 bg-black/25" />
+      <div className="p-4">{gp ? <GpLogo gp={gp} height={20} tone="dark" /> : <AurumLogo variant="white" height={22} />}</div>
+      <div className="absolute bottom-4 left-4 max-w-[190px]">
+        <div className="text-[9.5px] font-medium text-white/80">{look.eyebrow}</div>
+        <div className="mt-1 font-serif text-[21px] leading-tight">{look.headline}</div>
+        <div className="mt-1 line-clamp-2 text-[9.5px] leading-snug text-white/75">{look.text}</div>
+      </div>
+      <div className="absolute bottom-4 right-4 w-[140px] rounded-[8px] bg-white/95 p-3 text-ink-900">
+        <div className="font-serif text-[11.5px] leading-snug">{e?.org ? e.name : gp ? gp.shortName : d.legalName}</div>
+        <div className="mt-2 h-5 rounded-[3px] border border-stone-300" />
+        <div
+          className="mt-2 h-6 rounded-[3px] text-center text-[9.5px] font-semibold leading-6"
+          style={gp ? { background: gp.brand.primary, color: gp.brand.primaryInk } : { background: d.colors.accent, color: d.colors.accentInk }}
+        >
+          Continue
+        </div>
+      </div>
+      {!dark && <span className="sr-only">Brand field</span>}
     </div>
   );
 }

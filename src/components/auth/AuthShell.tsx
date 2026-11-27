@@ -10,48 +10,69 @@ import { useMotionAllowed } from "./useMotionAllowed";
 import { useTheme } from "@/components/shell/ThemeProvider";
 import { useBrand } from "@/components/brand/BrandProvider";
 import type { Brand } from "@/lib/brand";
+import { resolveLook, type ResolvedLook } from "@/lib/entrances";
 
-/** The full-screen backdrop for a tenant’s sign-in: the gold photograph, a plain field in their ink or canvas colour, or their own image. */
-export function Backdrop({ brand }: { brand: Brand }) {
-  if (brand.login.backdrop === "image" && brand.login.image) {
+/** A door's backdrop: the brand field, the gold photograph, a plain field in the brand's ink, an accent glow, or a picture. */
+export function EntranceBackdrop({
+  brand,
+  look,
+  tone,
+  still,
+  field,
+}: {
+  brand: Brand;
+  look: Pick<ResolvedLook, "backdrop" | "image">;
+  tone: "dark" | "light";
+  still?: boolean;
+  /** colours for the brand field (a manager's portal uses its own) */
+  field?: { ink: string; accent: string };
+}) {
+  if (look.backdrop === "image" && look.image) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={brand.login.image} alt="" className="absolute inset-0 h-full w-full object-cover" />;
+    return <img src={look.image} alt="" className="absolute inset-0 h-full w-full object-cover" />;
   }
-  if (brand.login.backdrop === "ink")
+  if (look.backdrop === "ink")
     return (
       <div
         className="absolute inset-0"
         style={{ background: `radial-gradient(120% 90% at 30% 20%, color-mix(in oklab, ${brand.colors.metal} 45%, ${brand.colors.ink}) 0%, ${brand.colors.ink} 60%)` }}
       />
     );
-  if (brand.login.backdrop === "stone")
+  if (look.backdrop === "stone")
     return (
       <div
         className="absolute inset-0"
         style={{ background: `radial-gradient(120% 90% at 70% 30%, ${brand.colors.accent} 0%, color-mix(in oklab, ${brand.colors.ink} 70%, ${brand.colors.canvas}) 70%)` }}
       />
     );
-  return <Image src="/brand/login-bg.jpg" alt="" fill priority sizes="100vw" className="object-cover" />;
+  if (look.backdrop === "gold") return <Image src="/brand/login-bg.jpg" alt="" fill priority sizes="100vw" className="object-cover" />;
+  return <BrandField ink={field?.ink ?? brand.colors.ink} accent={field?.accent ?? brand.colors.accent} tone={tone} still={still} />;
 }
 
-export function AuthShell({ children }: { children: ReactNode }) {
+/** Kept for older callers: the firm entrance's backdrop. */
+export function Backdrop({ brand }: { brand: Brand }) {
+  return <EntranceBackdrop brand={brand} look={resolveLook(brand, "firm")} tone="dark" still />;
+}
+
+/** The sign-in stage for any door into the platform, in that door's look (see lib/entrances). */
+export function AuthShell({ children, entrance = "firm" }: { children: ReactNode; entrance?: string }) {
   const { brand } = useBrand();
   const { theme } = useTheme();
   const motion = useMotionAllowed(brand.ambientMotion);
-  // A tenant's own photograph is kept; otherwise every entrance uses the brand field.
-  const own = brand.login.backdrop === "image" && !!brand.login.image;
-  const tone = own ? "dark" : theme === "light" ? "light" : "dark";
+  const look = resolveLook(brand, entrance);
+  // pictures and the deep backdrops always carry white type; the brand field follows the theme
+  const tone = look.backdrop === "field" ? (theme === "light" ? "light" : "dark") : "dark";
   return (
     <LoginStage
-      sharp={!own}
+      sharp={look.backdrop !== "gold"}
       tone={tone}
-      background={own ? <Backdrop brand={brand} /> : <BrandField ink={brand.colors.ink} accent={brand.colors.accent} shape={brand.mark} tone={tone} still={!motion} />}
+      background={<EntranceBackdrop brand={brand} look={look} tone={tone} still={!motion} />}
       logo={<AurumLogo variant={tone === "light" ? "dark" : "white"} height={44} priority />}
       statement={
         <>
-          <div className="text-[13px] font-medium text-white/80">{brand.login.eyebrow}</div>
-          <h1 className="mt-4 font-serif text-[68px] font-normal leading-[1.02] tracking-[-0.015em] drop-shadow-[0_2px_20px_rgba(0,0,0,0.25)]">{brand.login.headline}</h1>
-          <p className="mt-5 max-w-[440px] text-[15px] leading-relaxed text-white/80">{brand.login.text}</p>
+          <div className="text-[13px] font-medium text-white/80">{look.eyebrow}</div>
+          <h1 className="mt-4 font-serif text-[68px] font-normal leading-[1.02] tracking-[-0.015em] drop-shadow-[0_2px_20px_rgba(0,0,0,0.25)]">{look.headline}</h1>
+          <p className="mt-5 max-w-[440px] text-[15px] leading-relaxed text-white/80">{look.text}</p>
         </>
       }
       footer={

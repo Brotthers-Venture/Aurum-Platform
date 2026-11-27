@@ -18,7 +18,7 @@ export const AMBIENT_MOTIONS: { id: AmbientMotion; label: string; about: string 
   { id: "architectural", label: "Architectural", about: "A fine hexagonal lattice with restrained light at its centre." },
   { id: "pulse", label: "Pulse", about: "Ambient light with an occasional, quiet transmission to one application." },
 ];
-export type LoginBackdrop = "gold" | "ink" | "stone" | "image";
+export type LoginBackdrop = "field" | "gold" | "ink" | "stone" | "image";
 
 export type Brand = {
   id: string;
@@ -49,6 +49,8 @@ export type Brand = {
   ambientMotion?: AmbientMotion;
   fonts: { serif: SerifFont; sans: SansFont };
   login: { eyebrow: string; headline: string; text: string; backdrop: LoginBackdrop; image?: string };
+  /** each entrance's own look, by entrance id (see lib/entrances); unset doors inherit */
+  entrances?: Record<string, { backdrop?: LoginBackdrop; image?: string; eyebrow?: string; headline?: string; text?: string }>;
   legal: { footer: string; privacyUrl: string; termsUrl: string };
 };
 
@@ -83,7 +85,7 @@ export const AURUM: Brand = {
     eyebrow: "Aurum Asset Management",
     headline: "Built to endure.",
     text: "Fiduciary administration for funds, offerings, companies and families across the United States, Brazil and offshore jurisdictions.",
-    backdrop: "gold",
+    backdrop: "field",
   },
   legal: { footer: "Aurum Asset Management · Orlando, Florida", privacyUrl: "#", termsUrl: "#" },
 };
@@ -102,7 +104,7 @@ export const PRESETS: Brand[] = [
     city: "Boston, Massachusetts",
     logo: undefined,
     logoLight: undefined,
-    mark: "arch",
+    mark: "hexagon",
     colors: { ink: "#173A2E", accent: "#C9A45C", accentInk: "#173A2E", metal: "#9C7B3C", canvas: "#EEF0EA", surface: "#FFFFFF" },
     modules: { sales: "#B0652A", pmo: "#6E4C8C", communication: "#2E7D74", dataroom: "#2F5D8C", billing: "#5E7F2F", compliance: "#8E2F3A" },
     fonts: { serif: "georgia", sans: "helvetica" },
@@ -125,7 +127,7 @@ export const PRESETS: Brand[] = [
     city: "Miami, Florida",
     logo: undefined,
     logoLight: undefined,
-    mark: "circle",
+    mark: "hexagon",
     colors: { ink: "#1E2228", accent: "#2FA3A0", accentInk: "#FFFFFF", metal: "#2FA3A0", canvas: "#F2F3F4", surface: "#FFFFFF" },
     modules: { sales: "#C4682B", pmo: "#7B55A6", communication: "#1F8A84", dataroom: "#3B63C4", billing: "#4C8A33", compliance: "#A1384A" },
     fonts: { serif: "palatino", sans: "system" },
@@ -263,6 +265,7 @@ export function loadBrand(): Brand {
       moduleNames: { ...b.moduleNames },
       fonts: { ...AURUM.fonts, ...b.fonts },
       login: { ...AURUM.login, ...b.login },
+      entrances: { ...b.entrances },
       legal: { ...AURUM.legal, ...b.legal },
     };
   } catch {

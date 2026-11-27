@@ -6,7 +6,9 @@ import { ArrowLeft, Lock } from "lucide-react";
 import { GpLogo, AdministeredByAurum } from "@/components/brand/GpLogo";
 import { Button } from "@/components/ui";
 import { LoginStage } from "@/components/auth/LoginStage";
-import { BrandField } from "@/components/auth/BrandField";
+import { EntranceBackdrop } from "@/components/auth/AuthShell";
+import { useBrand } from "@/components/brand/BrandProvider";
+import { resolveLook } from "@/lib/entrances";
 import { useMotionAllowed } from "@/components/auth/useMotionAllowed";
 import { useTheme } from "@/components/shell/ThemeProvider";
 import { brandStyle, type GpClient } from "@/lib/gps";
@@ -24,25 +26,28 @@ export function BrandedLogin({ gp }: { gp: GpClient }) {
   const tall = gp.logo && gp.logo.width / gp.logo.height < 3;
   const { theme } = useTheme();
   const motion = useMotionAllowed();
+  const { brand } = useBrand();
+  const look = resolveLook(brand, `investor:${gp.id}`);
+  const tone = look.backdrop === "field" && theme === "light" ? "light" : "dark";
 
   return (
     <LoginStage
       style={brandStyle(gp.brand)}
-      sharp
-      tone={theme === "light" ? "light" : "dark"}
-      background={<BrandField ink={gp.brand.primary} accent={gp.brand.secondary} tone={theme === "light" ? "light" : "dark"} still={!motion} />}
-      logo={<GpLogo gp={gp} height={tall ? 64 : 30} tone={theme === "light" ? "light" : "dark"} />}
+      sharp={look.backdrop !== "gold"}
+      tone={tone}
+      background={<EntranceBackdrop brand={brand} look={look} tone={tone} still={!motion} field={{ ink: gp.brand.primary, accent: gp.brand.secondary }} />}
+      logo={<GpLogo gp={gp} height={tall ? 64 : 30} tone={tone} />}
       statement={
         <>
-          <div className="text-[13px] font-medium text-white/80">Investor portal</div>
-          <h1 className="mt-4 font-serif text-[52px] font-normal leading-[1.05] tracking-[-0.015em] drop-shadow-[0_2px_20px_rgba(0,0,0,0.25)]">{gp.shortName}</h1>
-          <p className="mt-4 max-w-[420px] text-[15px] leading-relaxed text-white/80">Statements, notices, reports and tax documents for your investments.</p>
+          <div className="text-[13px] font-medium text-white/80">{look.eyebrow}</div>
+          <h1 className="mt-4 font-serif text-[52px] font-normal leading-[1.05] tracking-[-0.015em] drop-shadow-[0_2px_20px_rgba(0,0,0,0.25)]">{look.headline}</h1>
+          <p className="mt-4 max-w-[420px] text-[15px] leading-relaxed text-white/80">{look.text}</p>
         </>
       }
       footer={
         <>
           <span>© 2026 {gp.name}</span>
-          <AdministeredByAurum tone={theme === "light" ? "light" : "dark"} />
+          <AdministeredByAurum tone={tone} />
         </>
       }
     >

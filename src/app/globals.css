@@ -72,9 +72,10 @@
   --tenant-metal: #b8975a;
   --tenant-canvas: #f1ede4;
   --tenant-surface: #ffffff;
-  --brand: #b8975a;
+  /* primary buttons: the brand accent with its own ink (gold with navy for Aurum); GP portals set their own */
+  --brand: var(--tenant-accent);
   --brand-2: #d8c296;
-  --brand-ink: #0f2340;
+  --brand-ink: var(--tenant-accent-ink);
   --brand-soft: #faf6ec;
 }
 
@@ -610,10 +611,14 @@ html[data-eco-enter] .eco-enter-item {
     opacity: 0.7;
   }
 }
-/* Applications: name and own-colour light on hover or keyboard focus; always named on touch screens. */
-.orbit-glow,
-.orbit-label {
+/* Workspaces: always named (people should not have to remember a colour); the name brightens and the own-colour
+   light appears on hover or keyboard focus. */
+.orbit-glow {
   opacity: 0;
+  transition: opacity 220ms var(--eco-ease);
+}
+.orbit-label {
+  opacity: 0.78;
   transition: opacity 220ms var(--eco-ease);
 }
 .orbit-mark:hover .orbit-glow,
@@ -658,11 +663,6 @@ html[data-eco-enter] .eco-enter-item {
 /* Pause decorative motion while the tab is hidden. */
 .eco-paused * {
   animation-play-state: paused !important;
-}
-@media (hover: none) {
-  .eco-expanded .orbit-label {
-    opacity: 0;
-  }
 }
 
 /* ───────────────────────── Direction D bridge ─────────────────────────

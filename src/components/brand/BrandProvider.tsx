@@ -4,8 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { AURUM, BRAND_KEY, brandVars, loadBrand, serialiseBrand, type Brand } from "@/lib/brand";
 
 /** `brand` is what the page shows (may be a live preview); `published` is what is saved. */
-type Ctx = { brand: Brand; published: Brand; preview: (b: Brand) => void; save: (b: Brand) => void; reset: () => void };
-const BrandCtx = createContext<Ctx>({ brand: AURUM, published: AURUM, preview: () => {}, save: () => {}, reset: () => {} });
+type Ctx = { brand: Brand; published: Brand; preview: (b: Brand) => void; save: (b: Brand) => boolean; reset: () => void };
+const BrandCtx = createContext<Ctx>({ brand: AURUM, published: AURUM, preview: () => {}, save: () => true, reset: () => {} });
 
 function apply(b: Brand) {
   const s = document.documentElement.style;
@@ -38,14 +38,16 @@ export function BrandProvider({ children }: { children: ReactNode }) {
     apply(b);
   }, []);
   const save = useCallback((b: Brand) => {
-    setBrand(b);
-    setPublished(b);
-    apply(b);
     try {
       window.localStorage.setItem(BRAND_KEY, serialiseBrand(b));
     } catch {
-      /* storage full (large logo) or unavailable */
+      // storage full (large pictures) or unavailable: keep the published brand as it was
+      return false;
     }
+    setBrand(b);
+    setPublished(b);
+    apply(b);
+    return true;
   }, []);
   const reset = useCallback(() => {
     try {

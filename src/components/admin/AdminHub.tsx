@@ -258,6 +258,10 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
         badge: here || member.party !== "employee" ? 0 : m.badge,
         x: Math.round(orbitR * Math.cos(a) * 100) / 100,
         y: Math.round(orbitR * Math.sin(a) * 100) / 100,
+        // the name sits on the outer side of the mark, so it never runs into the solution cells
+        lx: Math.abs(Math.cos(a)) < 0.3 ? 0 : Math.sign(Math.cos(a)) * 44,
+        ly: Math.abs(Math.cos(a)) < 0.3 ? (Math.sin(a) < 0 ? -46 : 56) : Math.round(Math.sin(a) * 30 + 4),
+        anchor: (Math.abs(Math.cos(a)) < 0.3 ? "middle" : Math.cos(a) > 0 ? "start" : "end") as "middle" | "start" | "end",
       },
     ];
   });
@@ -311,7 +315,9 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
 
       <svg
         viewBox={`${-size / 2} ${-h / 2} ${size} ${h}`}
-        className={cx("h-auto w-full max-w-[640px] select-none overflow-visible", (revealed || level.kind !== "root") && "eco-expanded")}
+        className={cx("h-auto w-full select-none overflow-visible", (revealed || level.kind !== "root") && "eco-expanded")}
+        // fits the screen's height too: the open ring and the workspace names (≈ 660 units tall) always stay in view
+        style={{ maxWidth: "min(640px, calc((100dvh - 150px) * 0.97))" }}
         role="group"
         aria-label={`${brand.name} navigation`}
         ref={svgRef}
@@ -524,8 +530,9 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
               </g>
               <text
                 className="orbit-label eco-t-orbit"
-                textAnchor="middle"
-                y={54}
+                textAnchor={o.anchor}
+                x={o.lx}
+                y={o.ly}
                 fontSize={12}
                 fontWeight={500}
                 letterSpacing="0.005em"
