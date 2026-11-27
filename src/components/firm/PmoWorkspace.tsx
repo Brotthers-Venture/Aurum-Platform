@@ -4,6 +4,7 @@ import { TenantName } from "@/components/brand/TenantName";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { CalendarRange, ChevronDown, ChevronRight, Columns3, Filter, KanbanSquare, LayoutList, Maximize2, Plus, Search, SendHorizontal, Users, X } from "lucide-react";
 import { cx } from "@/components/ui";
+import { inkFor } from "@/lib/gps";
 import { FIRM } from "@/lib/firm-colors";
 import { solutions } from "@/lib/solutions";
 import { PMO_TODAY, WEEKS, capacity, projects, risks, tasks, type Project } from "@/lib/pmo";
@@ -259,7 +260,9 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
           </span>
           <div>
             <div className="text-[13px] font-semibold text-ink-900">PMO workspace</div>
-            <div className="text-[11px] text-stone-500"><TenantName /></div>
+            <div className="text-[11px] text-stone-500">
+              <TenantName />
+            </div>
           </div>
         </div>
         {external ? (
@@ -269,7 +272,10 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
               <button
                 key={p.id}
                 onClick={() => setPlanId(p.id)}
-                className={cx("flex w-full items-center gap-2 rounded-[8px] px-2 py-2 text-left text-[13px]", plan?.id === p.id ? "bg-champagne font-semibold text-ink-900" : "text-stone-600 hover:bg-white")}
+                className={cx(
+                  "flex w-full items-center gap-2 rounded-[8px] px-2 py-2 text-left text-[13px]",
+                  plan?.id === p.id ? "bg-champagne font-semibold text-ink-900" : "text-stone-600 hover:bg-white",
+                )}
               >
                 <LayoutList size={14} className="shrink-0" style={{ color: plan?.id === p.id ? C : undefined }} />
                 <span className="flex-1 truncate">{p.name}</span>
@@ -279,41 +285,41 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
           </>
         ) : (
           <>
-        <div className="mb-1 mt-6 px-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">Boards</div>
-        {boards.map((b) => (
-          <button
-            key={b.id}
-            onClick={() => {
-              setPlanId(null);
-              setBoardId(b.id);
-              setGroupBy("group");
-              setTab(b.id === "portfolio" ? "portfolio" : (b.id as PmoTab));
-              if (view === "timeline" && !b.cols.some((c) => c.kind === "timeline")) setView("table");
-            }}
-            className={cx(
-              "flex w-full items-center gap-2 rounded-[8px] px-2 py-2 text-left text-[13px]",
-              b.id === boardId && !plan ? "bg-champagne font-semibold text-ink-900" : "text-stone-600 hover:bg-white",
-            )}
-          >
-            <LayoutList size={14} className="shrink-0" style={{ color: b.id === boardId && !plan ? C : undefined }} />
-            <span className="flex-1 truncate">{b.name}</span>
-            <span className="text-[11px] text-stone-400">{b.items.length}</span>
-          </button>
-        ))}
-        <div className="mb-1 mt-6 px-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">Project plans</div>
-        <PlanTree
-          data={planData}
-          selected={planId}
-          color={C}
-          onChange={(d) => {
-            setPlanData(d);
-            if (planId && !d.plans.some((p) => p.id === planId)) setPlanId(null);
-          }}
-          onSelect={(id) => {
-            setPlanId(id);
-            setTab("plan");
-          }}
-        />
+            <div className="mb-1 mt-6 px-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">Boards</div>
+            {boards.map((b) => (
+              <button
+                key={b.id}
+                onClick={() => {
+                  setPlanId(null);
+                  setBoardId(b.id);
+                  setGroupBy("group");
+                  setTab(b.id === "portfolio" ? "portfolio" : (b.id as PmoTab));
+                  if (view === "timeline" && !b.cols.some((c) => c.kind === "timeline")) setView("table");
+                }}
+                className={cx(
+                  "flex w-full items-center gap-2 rounded-[8px] px-2 py-2 text-left text-[13px]",
+                  b.id === boardId && !plan ? "bg-champagne font-semibold text-ink-900" : "text-stone-600 hover:bg-white",
+                )}
+              >
+                <LayoutList size={14} className="shrink-0" style={{ color: b.id === boardId && !plan ? C : undefined }} />
+                <span className="flex-1 truncate">{b.name}</span>
+                <span className="text-[11px] text-stone-400">{b.items.length}</span>
+              </button>
+            ))}
+            <div className="mb-1 mt-6 px-2 text-[10.5px] font-bold uppercase tracking-[0.14em] text-stone-500">Project plans</div>
+            <PlanTree
+              data={planData}
+              selected={planId}
+              color={C}
+              onChange={(d) => {
+                setPlanData(d);
+                if (planId && !d.plans.some((p) => p.id === planId)) setPlanId(null);
+              }}
+              onSelect={(id) => {
+                setPlanId(id);
+                setTab("plan");
+              }}
+            />
           </>
         )}
       </aside>
@@ -508,7 +514,7 @@ function StatusCell({ col, value, onPick }: { col: Col; value: unknown; onPick: 
       <button
         onClick={() => setOpen((x) => !x)}
         className="flex h-full w-full items-center justify-center px-1 text-[12px] font-semibold transition-[filter] hover:brightness-95"
-        style={{ background: o?.color ?? "#E3DCCD", color: o ? (o.ink ?? "#FFFFFF") : "#6F6A61" }}
+        style={{ background: o?.color ?? "#E3DCCD", color: o ? (o.ink ?? inkFor(o.color)) : "#6F6A61" }}
       >
         {o?.label ?? ""}
       </button>
@@ -525,7 +531,7 @@ function StatusCell({ col, value, onPick }: { col: Col; value: unknown; onPick: 
                 setOpen(false);
               }}
               className="flex h-8 w-full items-center justify-center rounded-[6px] text-[12px] font-semibold hover:brightness-95"
-              style={{ background: x.color, color: x.ink ?? "#FFFFFF" }}
+              style={{ background: x.color, color: x.ink ?? inkFor(x.color) }}
             >
               {x.label}
             </button>
@@ -785,7 +791,7 @@ function Kanban({
             onDrop={() => drag && onMove(drag, o.label)}
             className="flex min-h-[400px] flex-col overflow-hidden rounded-[12px] bg-white shadow-card"
           >
-            <div className="flex h-10 items-center justify-between px-3 text-[13px] font-semibold" style={{ background: o.color, color: o.ink ?? "#FFFFFF" }}>
+            <div className="flex h-10 items-center justify-between px-3 text-[13px] font-semibold" style={{ background: o.color, color: o.ink ?? inkFor(o.color) }}>
               {o.label}
               <span className="text-[12px] opacity-80">{list.length}</span>
             </div>

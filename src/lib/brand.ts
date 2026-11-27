@@ -175,7 +175,17 @@ export function textOn(bg: string, ink: string) {
 function mixHex(a: string, b: string, t: number) {
   const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
   const [x, y] = [p(a), p(b)];
-  return "#" + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, "0")).join("").toUpperCase();
+  return (
+    "#" +
+    x
+      .map((v, i) =>
+        Math.round(v + (y[i] - v) * t)
+          .toString(16)
+          .padStart(2, "0"),
+      )
+      .join("")
+      .toUpperCase()
+  );
 }
 /** The brand colour itself if it reads on this background, else the nearest shade (towards black or white) that meets the ratio. */
 export function readableOn(color: string, bg: string, min = 4.5) {
@@ -186,6 +196,20 @@ export function readableOn(color: string, bg: string, min = 4.5) {
     if (contrast(c, bg) >= min) return c;
   }
   return toward;
+}
+
+/**
+ * The brand's accent as text on light surfaces. Light accents (gold, yellow) only reach AA by darkening so far that they
+ * turn brown; past a third of the way to black the brand's own ink is used instead (navy for Aurum).
+ */
+export function accentTextOnLight(accent: string, ink: string) {
+  if (!hexOk(accent) || !hexOk(ink)) return readableOn(accent, "#FFFFFF");
+  if (contrast(accent, "#FFFFFF") >= 4.5) return accent;
+  for (let t = 0.04; t <= 0.3401; t += 0.04) {
+    const c = mixHex(accent, "#000000", t);
+    if (contrast(c, "#FFFFFF") >= 4.5) return c;
+  }
+  return contrast(ink, "#FFFFFF") >= 4.5 ? ink : readableOn(accent, "#FFFFFF");
 }
 
 /** The CSS variables a brand sets on the page. Tailwind's ink, gold and stone scales are rebuilt from them. */
@@ -202,7 +226,7 @@ export function brandVars(b: Brand): Record<string, string> {
     // Direction D: brand text and lines on the Obsidian and Platinum surfaces, AA-checked
     "--tenant-accent-dark": c.accentDark ?? c.accent,
     "--tenant-accent-on-dark": readableOn(c.accentDark ?? c.accent, "#10161D"),
-    "--tenant-accent-on-light": readableOn(c.accent, "#FFFFFF"),
+    "--tenant-accent-on-light": accentTextOnLight(c.accent, c.ink),
     "--color-ink-950": mix(c.ink, 82, "black"),
     "--color-ink-900": c.ink,
     "--color-ink-800": mix(c.ink, 88, "white"),

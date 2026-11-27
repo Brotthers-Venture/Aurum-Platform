@@ -126,7 +126,7 @@ function ClientItem({ c, i, actor, accent, open, onOpen }: { c: Checklist; i: It
       <button onClick={onOpen} className="flex w-full items-center gap-3 px-4 py-3 text-left">
         <span
           className={cx("flex h-8 w-8 shrink-0 items-center justify-center rounded-full border", i.status === "accepted" ? "border-transparent" : "border-d-line")}
-          style={i.status === "accepted" ? { background: "var(--d-pos)", color: "#fff" } : undefined}
+          style={i.status === "accepted" ? { background: "var(--d-pos)", color: "var(--d-bg)" } : undefined}
         >
           {i.status === "accepted" ? <Check size={14} strokeWidth={3} /> : <Icon size={15} className="text-d-text-2" />}
         </span>
@@ -426,8 +426,8 @@ function ReviewPanel({ c, actor }: { c: Checklist; actor: string }) {
                       <div className="flex gap-2">
                         <button
                           onClick={() => accept(c.id, i.key, actor)}
-                          className="inline-flex h-8 items-center gap-1.5 rounded-[7px] px-3 text-[12.5px] font-semibold text-white"
-                          style={{ background: "var(--d-pos)" }}
+                          className="inline-flex h-8 items-center gap-1.5 rounded-[7px] px-3 text-[12.5px] font-semibold"
+                          style={{ background: "var(--d-pos)", color: "var(--d-bg)" }}
                         >
                           <Check size={14} strokeWidth={2.5} /> Accept
                         </button>

@@ -281,7 +281,7 @@ export function CloseWorkspace({ fundId }: { fundId: string }) {
             {t === "letter" && d.openComments.length > 0 && (
               <span className="tnum ml-1.5 rounded-full bg-stone-100 px-1.5 text-[11px] text-stone-600">{d.openComments.length}</span>
             )}
-            {tab === t && <span className="absolute inset-x-2 -bottom-px h-[2px] rounded-full bg-[var(--d-accent)]" />}
+            {tab === t && <span className="absolute inset-x-2 -bottom-px h-[2px] rounded-full bg-[var(--d-accent-fill)]" />}
           </button>
         ))}
       </div>
@@ -502,7 +502,7 @@ function NextAction({ d, who, onTab }: { d: D; who: string; onTab: (t: Tab) => v
         aria-hidden
         className={cx(
           "absolute inset-y-0 left-0 w-[3px]",
-          tone === "warn" ? "bg-gold-500" : tone === "done" ? "bg-[var(--color-up)]" : tone === "wait" ? "bg-stone-300" : "bg-[var(--d-accent)]",
+          tone === "warn" ? "bg-gold-500" : tone === "done" ? "bg-[var(--color-up)]" : tone === "wait" ? "bg-stone-300" : "bg-[var(--d-accent-fill)]",
         )}
       />
       {c.changesRequested && c.status === "preparing" && (

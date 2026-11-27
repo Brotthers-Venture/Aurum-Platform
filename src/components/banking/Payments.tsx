@@ -442,7 +442,7 @@ function Stepline({ done, label, at }: { done: boolean; label: string; at?: stri
       <span
         className={cx(
           "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full",
-          done ? "bg-[var(--color-up)] text-white" : "border border-d-line-strong text-transparent",
+          done ? "bg-[var(--color-up)] text-[var(--d-bg)]" : "border border-d-line-strong text-transparent",
         )}
       >
         {done ? <Check size={11} strokeWidth={3} /> : <Circle size={6} />}

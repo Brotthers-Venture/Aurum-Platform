@@ -437,7 +437,7 @@ export function SubscriptionsView({ v, entity }: { v: InvestorView; entity: stri
               <div className="num mt-0.5 text-[12.5px] text-stone-500">{money(o.commitment)} commitment</div>
               <div className="mt-5 flex items-center gap-4">
                 <span className="block h-1 flex-1 overflow-hidden rounded-full bg-stone-100">
-                  <span className="block h-full rounded-full bg-[var(--d-accent)]" style={{ width: `${o.progress * 100}%` }} />
+                  <span className="block h-full rounded-full bg-[var(--d-accent-fill)]" style={{ width: `${o.progress * 100}%` }} />
                 </span>
                 <span className="num text-[12px] text-stone-500">{Math.round(o.progress * 100)}% complete</span>
                 <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink-900">

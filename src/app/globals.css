@@ -364,7 +364,7 @@ html[data-theme="light"] .ws,
   --d-text: #14181d;
   --d-text-2: #5a6069;
   --d-text-3: #8a8f96;
-  --d-accent: var(--tenant-accent-on-light, #7d5f00);
+  --d-accent: var(--tenant-accent-on-light, #0f2340);
   --d-accent-fill: var(--tenant-accent);
   --d-accent-soft: color-mix(in srgb, var(--tenant-accent) 18%, transparent);
   --d-pos: #15803d;
@@ -708,9 +708,11 @@ html[data-eco-enter] .eco-enter-item {
   --color-down: var(--d-neg);
   --color-attn-line: color-mix(in srgb, var(--d-accent-fill) 45%, transparent);
   --color-neg-line: color-mix(in srgb, var(--d-neg) 40%, transparent);
-  --brand: var(--d-accent);
+  /* buttons fill with the brand colour itself and carry the brand's own ink (navy on Aurum gold), in both themes;
+     --d-accent stays the darker, text-readable shade and is never used as a fill */
+  --brand: var(--d-accent-fill);
   --brand-2: color-mix(in srgb, var(--d-accent-fill) 55%, var(--d-surface));
-  --brand-ink: var(--d-text);
+  --brand-ink: var(--d-on-accent);
   --brand-soft: var(--d-accent-soft);
   --tenant-ink: var(--d-text);
   --tenant-canvas: var(--d-bg);
@@ -720,6 +722,16 @@ html[data-eco-enter] .eco-enter-item {
   --font-sans: "Inter Variable", system-ui, sans-serif;
   --font-serif: "Manrope Variable", "Inter Variable", sans-serif;
   font-family: var(--font-sans);
+}
+/* White text stays white on coloured fills (white backgrounds map to the surface, text does not).
+   Dark-ink fills (bg-ink-900/800/700 + text-white) invert with the theme: ink maps to the page text colour, so the
+   label takes the page background — white on near-black in light, near-black on white in dark. */
+.ws-bridge .text-white {
+  color: #ffffff;
+}
+.ws-bridge :is(.bg-ink-900, .bg-ink-800, .bg-ink-700).text-white,
+.ws-bridge :is(.bg-ink-900, .bg-ink-800, .bg-ink-700) > .text-white {
+  color: var(--d-bg);
 }
 .ws-bridge ::selection {
   background: var(--d-accent-soft);
@@ -759,12 +771,24 @@ html[data-eco-enter] .eco-enter-item {
   }
 }
 @keyframes ws-rise {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 @keyframes ws-drawer {
-  from { transform: translateX(24px); opacity: 0; }
-  to { transform: none; opacity: 1; }
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
 .ws .data-table thead th {
   text-transform: none;
@@ -815,10 +839,21 @@ html[data-theme="light"] .ws[data-finish],
   --d-sheen-top: color-mix(in oklab, #ffffff 55%, var(--d-surface));
   --d-grain: 0.03;
 }
-.ws[data-finish="pure"] { --d-light: 0; }
-.ws[data-finish="atmos"] { --d-light: 0.32; --d-sheen-top: color-mix(in oklab, var(--d-ambient) 9%, var(--d-surface)); }
-html[data-theme="light"] .ws[data-finish="atmos"], .ws.ws-light[data-finish="atmos"] { --d-light: 1; }
-html[data-theme="light"] .ws[data-finish="pure"], .ws.ws-light[data-finish="pure"] { --d-light: 0; }
+.ws[data-finish="pure"] {
+  --d-light: 0;
+}
+.ws[data-finish="atmos"] {
+  --d-light: 0.32;
+  --d-sheen-top: color-mix(in oklab, var(--d-ambient) 9%, var(--d-surface));
+}
+html[data-theme="light"] .ws[data-finish="atmos"],
+.ws.ws-light[data-finish="atmos"] {
+  --d-light: 1;
+}
+html[data-theme="light"] .ws[data-finish="pure"],
+.ws.ws-light[data-finish="pure"] {
+  --d-light: 0;
+}
 
 /* The light: broad, edgeless, behind the upper centre. Stacked stops avoid visible rings; grain dithers the gradient. */
 .ws-light-layer {
@@ -856,8 +891,13 @@ html[data-theme="light"] .ws[data-finish="pure"], .ws.ws-light[data-finish="pure
   mix-blend-mode: overlay;
 }
 @media (max-width: 767px) {
-  .ws[data-finish] { --d-light-k: 0.45; }
-  .ws-light-layer::before { width: 320vw; top: -30vh; }
+  .ws[data-finish] {
+    --d-light-k: 0.45;
+  }
+  .ws-light-layer::before {
+    width: 320vw;
+    top: -30vh;
+  }
 }
 @media (prefers-reduced-motion: no-preference) {
   .ws[data-finish="atmos"][data-ambient="on"] .ws-light-layer::before {
@@ -865,22 +905,39 @@ html[data-theme="light"] .ws[data-finish="pure"], .ws.ws-light[data-finish="pure
   }
 }
 @keyframes ws-drift {
-  0% { transform: translateX(-52%) scale(1); }
-  50% { transform: translateX(-49%) scale(1.04); }
-  100% { transform: translateX(-51%) scale(0.98); }
+  0% {
+    transform: translateX(-52%) scale(1);
+  }
+  50% {
+    transform: translateX(-49%) scale(1.04);
+  }
+  100% {
+    transform: translateX(-51%) scale(0.98);
+  }
 }
 
 /* Surface integration: the header and the search sit on the canvas; the Hexa Room is a tone, not a box. */
-.ws[data-finish] [data-shell="header"] { background: transparent; border-color: transparent; }
+.ws[data-finish] [data-shell="header"] {
+  background: transparent;
+  border-color: transparent;
+}
 .ws[data-finish] [data-shell="search"] {
   border-color: transparent;
   background: color-mix(in oklab, var(--d-surface) 72%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--d-line) 60%, transparent);
 }
 .ws[data-finish] [data-shell="search"]:hover,
-.ws[data-finish] [data-shell="search"]:focus-within { box-shadow: inset 0 0 0 1px var(--d-line-strong); }
-.ws[data-finish] [data-shell="room"] { background: color-mix(in oklab, var(--d-chrome) 62%, transparent); border-color: color-mix(in oklab, var(--d-line) 45%, transparent); }
-.ws[data-finish] .ws-stage { position: relative; z-index: 1; }
+.ws[data-finish] [data-shell="search"]:focus-within {
+  box-shadow: inset 0 0 0 1px var(--d-line-strong);
+}
+.ws[data-finish] [data-shell="room"] {
+  background: color-mix(in oklab, var(--d-chrome) 62%, transparent);
+  border-color: color-mix(in oklab, var(--d-line) 45%, transparent);
+}
+.ws[data-finish] .ws-stage {
+  position: relative;
+  z-index: 1;
+}
 
 /* The register: one continuous matte surface, tonal rows, hairline separators, 6px corners. */
 .ws[data-finish] .matte {
@@ -888,59 +945,139 @@ html[data-theme="light"] .ws[data-finish="pure"], .ws.ws-light[data-finish="pure
   background: linear-gradient(to bottom, var(--d-sheen-top), var(--d-surface) 140px);
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--d-line) 70%, transparent);
 }
-.ws[data-finish="pure"] .matte { background: var(--d-surface); }
+.ws[data-finish="pure"] .matte {
+  background: var(--d-surface);
+}
 /* Register rows inside the matte surface: no row fills, hairlines only, tonal hover. */
-.ws[data-finish] .data-table.register thead th { background: transparent; border-color: var(--d-line-soft); color: var(--d-text-3); }
-.ws[data-finish] .data-table.register td { border-color: var(--d-line-soft); }
-.ws[data-finish] .data-table.register tbody tr:hover td { background: color-mix(in oklab, var(--d-raise) 45%, transparent); }
-.ws[data-finish] .data-table thead th { background: transparent; }
+.ws[data-finish] .data-table.register thead th {
+  background: transparent;
+  border-color: var(--d-line-soft);
+  color: var(--d-text-3);
+}
+.ws[data-finish] .data-table.register td {
+  border-color: var(--d-line-soft);
+}
+.ws[data-finish] .data-table.register tbody tr:hover td {
+  background: color-mix(in oklab, var(--d-raise) 45%, transparent);
+}
+.ws[data-finish] .data-table thead th {
+  background: transparent;
+}
 .ws[data-finish] [data-panel] {
   border-color: transparent;
   border-radius: var(--d-radius);
   background: linear-gradient(to bottom, var(--d-sheen-top), var(--d-surface) 140px);
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--d-line) 70%, transparent);
 }
-.ws[data-finish="pure"] [data-panel] { background: var(--d-surface); }
-.ws[data-finish] [data-panel] > header { border-color: var(--d-line-soft); }
-.ws[data-finish] [data-page-header] { border-color: transparent; padding-bottom: 8px; }
-.ws[data-finish] [data-page-header] h1 { font-size: 30px; font-weight: 560; letter-spacing: -0.022em; }
-.ws[data-finish] .num { font-variant-numeric: tabular-nums lining-nums; }
-.ws[data-finish] .data-table.register th, .ws[data-finish] .data-table.register td { padding-left: 10px; padding-right: 10px; white-space: nowrap; font-size: 12.5px; }
+.ws[data-finish="pure"] [data-panel] {
+  background: var(--d-surface);
+}
+.ws[data-finish] [data-panel] > header {
+  border-color: var(--d-line-soft);
+}
+.ws[data-finish] [data-page-header] {
+  border-color: transparent;
+  padding-bottom: 8px;
+}
+.ws[data-finish] [data-page-header] h1 {
+  font-size: 30px;
+  font-weight: 560;
+  letter-spacing: -0.022em;
+}
+.ws[data-finish] .num {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+.ws[data-finish] .data-table.register th,
+.ws[data-finish] .data-table.register td {
+  padding-left: 10px;
+  padding-right: 10px;
+  white-space: nowrap;
+  font-size: 12.5px;
+}
 /* Hexa Room opened from the rail: slides over the page; no layout shift. */
 @media (prefers-reduced-motion: no-preference) {
-  .hexa-peek { animation: hexa-peek 160ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .hexa-peek {
+    animation: hexa-peek 160ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
 }
 @keyframes hexa-peek {
-  from { opacity: 0; transform: translateX(-10px); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
-.ws[data-finish] [data-shell="room"][data-overlay] { background: var(--d-chrome); border-color: var(--d-line); }
+.ws[data-finish] [data-shell="room"][data-overlay] {
+  background: var(--d-chrome);
+  border-color: var(--d-line);
+}
 /* Header logo: the mark at rest; the full logo replaces it on hover or keyboard focus. */
-.logo-full { opacity: 0; transform: translateY(-50%) translateX(-4px); }
-.group\/logo:hover .logo-full, .group\/logo:focus-visible .logo-full { opacity: 1; transform: translateY(-50%); }
-.group\/logo:hover .logo-mark, .group\/logo:focus-visible .logo-mark { opacity: 0; }
-@media (prefers-reduced-motion: no-preference) {
-  .logo-full, .logo-mark { transition: opacity 180ms ease, transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+.logo-full {
+  opacity: 0;
+  transform: translateY(-50%) translateX(-4px);
 }
-.logo-full img { max-width: none; }
+.group\/logo:hover .logo-full,
+.group\/logo:focus-visible .logo-full {
+  opacity: 1;
+  transform: translateY(-50%);
+}
+.group\/logo:hover .logo-mark,
+.group\/logo:focus-visible .logo-mark {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .logo-full,
+  .logo-mark {
+    transition:
+      opacity 180ms ease,
+      transform 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+}
+.logo-full img {
+  max-width: none;
+}
 
 /* Corporate Chat in the matte finish: navigation a quiet tone, the list a lighter inbox surface,
    the conversation on the canvas so the light reaches it. */
-.ws[data-finish] .chat-nav { background: color-mix(in oklab, var(--d-chrome) 72%, transparent); border-color: var(--d-line-soft); }
-.ws[data-finish] .chat-list { background: color-mix(in oklab, var(--d-surface) 88%, transparent); }
-.ws[data-finish] .chat-list-head { background: color-mix(in oklab, var(--d-surface) 96%, transparent); }
-.ws[data-finish] .chat-composer { background: transparent; }
+.ws[data-finish] .chat-nav {
+  background: color-mix(in oklab, var(--d-chrome) 72%, transparent);
+  border-color: var(--d-line-soft);
+}
+.ws[data-finish] .chat-list {
+  background: color-mix(in oklab, var(--d-surface) 88%, transparent);
+}
+.ws[data-finish] .chat-list-head {
+  background: color-mix(in oklab, var(--d-surface) 96%, transparent);
+}
+.ws[data-finish] .chat-composer {
+  background: transparent;
+}
 
 /* ═════════ Hexa Room landing — Architectural Matte atmosphere (A pure · B atmosphere · C depth) ═════════
    Matte graphite instead of near-black; a broad, desaturated champagne light derived from the tenant accent;
    no sparkle field; the lattice almost imperceptible. Breathing (B): 18 s, opacity + scale only. */
-.ws { --eco-desat: #8b9097; }
-html[data-theme="light"] .ws { --eco-desat: #8f8a80; }
-.orbit-full { transition: opacity 200ms var(--eco-ease); }
-.eco-stage[data-hub] .orbit-full { opacity: 0; }
+.ws {
+  --eco-desat: #8b9097;
+}
+html[data-theme="light"] .ws {
+  --eco-desat: #8f8a80;
+}
+.orbit-full {
+  transition: opacity 200ms var(--eco-ease);
+}
+.eco-stage[data-hub] .orbit-full {
+  opacity: 0;
+}
 .eco-stage[data-hub] .orbit-mark:hover .orbit-full,
-.eco-stage[data-hub] .orbit-mark:focus-visible .orbit-full { opacity: 1; }
-.eco-stage:not([data-hub]) .orbit-rest { display: none; }
+.eco-stage[data-hub] .orbit-mark:focus-visible .orbit-full {
+  opacity: 1;
+}
+.eco-stage:not([data-hub]) .orbit-rest {
+  display: none;
+}
 
 .eco-stage[data-hub] {
   --eco-bg: #15191d;
@@ -992,10 +1129,19 @@ html[data-theme="light"] .eco-stage[data-hub] {
   --d-text-3: #5c6168;
 }
 /* No sparkle field; no concentrated halo behind the mark — one broad light instead. */
-.eco-stage[data-hub] .eco-dots { display: none; }
-.eco-stage[data-hub] .eco-halo { display: none; }
-.eco-stage[data-hub] .eco-light { width: min(2200px, 210vmax); aspect-ratio: 1.5; }
-.eco-stage[data-hub="pure"] { --eco-glow-strength: 0.35; }
+.eco-stage[data-hub] .eco-dots {
+  display: none;
+}
+.eco-stage[data-hub] .eco-halo {
+  display: none;
+}
+.eco-stage[data-hub] .eco-light {
+  width: min(2200px, 210vmax);
+  aspect-ratio: 1.5;
+}
+.eco-stage[data-hub="pure"] {
+  --eco-glow-strength: 0.35;
+}
 .eco-stage[data-hub="depth"] {
   --eco-glow-strength: 0.42;
   background:
@@ -1004,12 +1150,23 @@ html[data-theme="light"] .eco-stage[data-hub] {
     linear-gradient(to bottom, color-mix(in oklab, var(--eco-bg-2) 60%, var(--eco-bg)) 0%, var(--eco-bg) 100%);
 }
 /* Breathing only in B; A and C stay still. 18 s, slight scale. */
-.eco-stage[data-hub="atmos"] .eco-anim .eco-light.breathe { animation: eco-breathe-slow 18s ease-in-out infinite; }
+.eco-stage[data-hub="atmos"] .eco-anim .eco-light.breathe {
+  animation: eco-breathe-slow 18s ease-in-out infinite;
+}
 .eco-stage[data-hub="pure"] .eco-anim .eco-light.breathe,
-.eco-stage[data-hub="depth"] .eco-anim .eco-light.breathe { animation: none; }
+.eco-stage[data-hub="depth"] .eco-anim .eco-light.breathe {
+  animation: none;
+}
 @keyframes eco-breathe-slow {
-  0%, 100% { opacity: calc(0.72 * var(--eco-glow-strength)); transform: scale(0.97); }
-  50% { opacity: calc(1 * var(--eco-glow-strength)); transform: scale(1.03); }
+  0%,
+  100% {
+    opacity: calc(0.72 * var(--eco-glow-strength));
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: calc(1 * var(--eco-glow-strength));
+    transform: scale(1.03);
+  }
 }
 /* A matte grain dithers the gradients so no bands show. */
 .eco-stage[data-hub]::before {
@@ -1028,26 +1185,72 @@ html[data-theme="light"] .eco-stage[data-hub] {
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--d-line) 70%, transparent);
 }
 @media (prefers-reduced-motion: no-preference) {
-  .picker-in { animation: picker-in 160ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-  .drawer-left { animation: drawer-left 200ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .picker-in {
+    animation: picker-in 160ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .drawer-left {
+    animation: drawer-left 200ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
 }
-@keyframes picker-in { from { opacity: 0; transform: translateX(-6px) scale(0.98); } to { opacity: 1; transform: none; } }
-@keyframes drawer-left { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes picker-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes drawer-left {
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
 /* Row hover inside the workstation: a tonal lift, never a light wash that hides the text. */
-.ws .data-table tbody tr.row-link:hover td { background: color-mix(in oklab, var(--d-raise) 75%, transparent); }
+.ws .data-table tbody tr.row-link:hover td {
+  background: color-mix(in oklab, var(--d-raise) 75%, transparent);
+}
 
 /* ───────── Sign-in background (every entrance) ───────── */
-.brand-field-band { transform: translateX(-120%); opacity: 0; }
-@media (prefers-reduced-motion: no-preference) {
-  .brand-field:not(.is-still) .brand-field-band { animation: brand-band 30s cubic-bezier(0.45, 0, 0.55, 1) infinite; }
+.brand-field-band {
+  transform: translateX(-120%);
+  opacity: 0;
 }
-.brand-field.is-still .brand-field-band { animation: none; transform: translateX(40%); opacity: 0.6; }
+@media (prefers-reduced-motion: no-preference) {
+  .brand-field:not(.is-still) .brand-field-band {
+    animation: brand-band 30s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  }
+}
+.brand-field.is-still .brand-field-band {
+  animation: none;
+  transform: translateX(40%);
+  opacity: 0.6;
+}
 @keyframes brand-band {
-  0% { transform: translateX(-120%); opacity: 0; }
-  12% { opacity: 1; }
-  55% { opacity: 1; }
-  70% { transform: translateX(260%); opacity: 0; }
-  100% { transform: translateX(260%); opacity: 0; }
+  0% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  55% {
+    opacity: 1;
+  }
+  70% {
+    transform: translateX(260%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(260%);
+    opacity: 0;
+  }
 }
 .brand-field-grain {
   opacity: 0.08;
@@ -1055,19 +1258,42 @@ html[data-theme="light"] .eco-stage[data-hub] {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='1' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 /* Platinum entrance: ink text on porcelain instead of white on graphite. */
-.login-light { color: var(--color-ink-900, #191d22); }
-.login-light .text-white { color: #191d22; }
-.login-light .text-white\/80 { color: rgba(25, 29, 34, 0.72); }
-.login-light .text-white\/60, .login-light footer { color: rgba(25, 29, 34, 0.6); }
-.login-light .hover\:text-white:hover { color: #191d22; }
+.login-light {
+  color: var(--color-ink-900, #191d22);
+}
+.login-light .text-white {
+  color: #191d22;
+}
+.login-light .text-white\/80 {
+  color: rgba(25, 29, 34, 0.72);
+}
+.login-light .text-white\/60,
+.login-light footer {
+  color: rgba(25, 29, 34, 0.6);
+}
+.login-light .hover\:text-white:hover {
+  color: #191d22;
+}
 
 /* GP logos with tone="auto": the light-surface art by default and on Platinum, the dark-surface art in the Obsidian workstation. */
-.logo-on-light { display: contents; }
-.logo-on-dark { display: none; }
-.ws:not(.ws-light) .logo-on-light { display: none; }
-.ws:not(.ws-light) .logo-on-dark { display: contents; }
-html[data-theme="light"] .ws .logo-on-light { display: contents; }
-html[data-theme="light"] .ws .logo-on-dark { display: none; }
+.logo-on-light {
+  display: contents;
+}
+.logo-on-dark {
+  display: none;
+}
+.ws:not(.ws-light) .logo-on-light {
+  display: none;
+}
+.ws:not(.ws-light) .logo-on-dark {
+  display: contents;
+}
+html[data-theme="light"] .ws .logo-on-light {
+  display: contents;
+}
+html[data-theme="light"] .ws .logo-on-dark {
+  display: none;
+}
 
 /* ───────── Hexa Room landing — Architectural Matte refinement ─────────
    Graphite matte with one broad platinum light from above; the mark is the only saturated element, with a faint
@@ -1142,70 +1368,142 @@ html[data-theme="light"] .eco-stage[data-hub] {
   --d-text-3: #5c6168;
 }
 /* The room light: broad, from above, still. The accent light: behind the mark, breathing. */
-.eco-stage[data-hub] .eco-light { top: 34%; width: min(2000px, 190vmax); aspect-ratio: 1.6; }
-.eco-stage[data-hub] .eco-halo { display: block; top: 50%; width: min(980px, 110vmin); aspect-ratio: 1; --eco-tone: var(--eco-halo-tone); }
-.eco-stage[data-hub] .eco-anim .eco-light.breathe { animation: none; }
-.eco-stage[data-hub] .eco-anim .eco-halo.breathe { animation: eco-halo-breathe 14s ease-in-out infinite; }
+.eco-stage[data-hub] .eco-light {
+  top: 34%;
+  width: min(2000px, 190vmax);
+  aspect-ratio: 1.6;
+}
+.eco-stage[data-hub] .eco-halo {
+  display: block;
+  top: 50%;
+  width: min(980px, 110vmin);
+  aspect-ratio: 1;
+  --eco-tone: var(--eco-halo-tone);
+}
+.eco-stage[data-hub] .eco-anim .eco-light.breathe {
+  animation: none;
+}
+.eco-stage[data-hub] .eco-anim .eco-halo.breathe {
+  animation: eco-halo-breathe 14s ease-in-out infinite;
+}
 @keyframes eco-halo-breathe {
-  0%, 100% { opacity: calc(0.74 * var(--eco-glow-strength)); transform: scale(0.99); }
-  50% { opacity: calc(1 * var(--eco-glow-strength)); transform: scale(1.01); }
+  0%,
+  100% {
+    opacity: calc(0.74 * var(--eco-glow-strength));
+    transform: scale(0.99);
+  }
+  50% {
+    opacity: calc(1 * var(--eco-glow-strength));
+    transform: scale(1.01);
+  }
 }
 /* Cells: opacity-only hover, 200 ms. Platinum cells sit on a restrained neutral shadow (static). */
-.eco-fade { transition: opacity 200ms var(--eco-ease); }
+.eco-fade {
+  transition: opacity 200ms var(--eco-ease);
+}
 html[data-theme="light"] .eco-stage[data-hub] .eco-cell {
   filter: drop-shadow(0 1px 1px rgba(40, 34, 24, 0.05)) drop-shadow(0 10px 22px rgba(40, 34, 24, 0.06));
 }
 /* Workspaces: muted pigment at rest; hover raises saturation, a hairline frame and a faint own-colour light. */
 .eco-stage[data-hub] .orbit-mark:hover .orbit-inner,
-.eco-stage[data-hub] .orbit-mark:focus-visible .orbit-inner { transform: scale(1.06); }
-.eco-stage[data-hub] .orbit-mark .orbit-ring { transition: opacity 200ms var(--eco-ease); }
-.eco-stage[data-hub] .orbit-mark:hover .orbit-ring { opacity: 0.5; }
+.eco-stage[data-hub] .orbit-mark:focus-visible .orbit-inner {
+  transform: scale(1.06);
+}
+.eco-stage[data-hub] .orbit-mark .orbit-ring {
+  transition: opacity 200ms var(--eco-ease);
+}
+.eco-stage[data-hub] .orbit-mark:hover .orbit-ring {
+  opacity: 0.5;
+}
 .eco-stage[data-hub] .orbit-mark:focus-visible .orbit-ring,
-.eco-stage[data-hub] .orbit-mark:active .orbit-ring { opacity: 1; }
+.eco-stage[data-hub] .orbit-mark:active .orbit-ring {
+  opacity: 1;
+}
 .eco-stage[data-hub] .orbit-mark:hover .orbit-glow,
-.eco-stage[data-hub] .orbit-mark:focus-visible .orbit-glow { opacity: 1; }
-.eco-stage[data-hub] .orbit-mark:active .orbit-full { opacity: 1; }
+.eco-stage[data-hub] .orbit-mark:focus-visible .orbit-glow {
+  opacity: 1;
+}
+.eco-stage[data-hub] .orbit-mark:active .orbit-full {
+  opacity: 1;
+}
 @media (max-width: 639px) {
-  .eco-stage[data-hub] { --eco-glow-strength: 0.55; }
+  .eco-stage[data-hub] {
+    --eco-glow-strength: 0.55;
+  }
 }
 /* Platinum: a touch more grain so the ivory light never bands. */
-html[data-theme="light"] .eco-stage[data-hub]::before { opacity: 0.32; }
+html[data-theme="light"] .eco-stage[data-hub]::before {
+  opacity: 0.32;
+}
 
 /* Cosine-eased falloff: no linear kinks, so no rings on the ivory theme. */
 .eco-stage[data-hub] .eco-light {
   background: radial-gradient(
     closest-side,
-    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 100.0%, transparent) 0.0%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 100%, transparent) 0%,
     color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 98.3%, transparent) 8.3%,
     color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 93.3%, transparent) 16.7%,
-    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 85.4%, transparent) 25.0%,
-    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 75.0%, transparent) 33.3%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 85.4%, transparent) 25%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 75%, transparent) 33.3%,
     color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 62.9%, transparent) 41.7%,
-    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 50.0%, transparent) 50.0%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 50%, transparent) 50%,
     color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 37.1%, transparent) 58.3%,
-    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 25.0%, transparent) 66.7%,
-    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 14.6%, transparent) 75.0%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 25%, transparent) 66.7%,
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 14.6%, transparent) 75%,
     color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 6.7%, transparent) 83.3%,
     color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 1.7%, transparent) 91.7%,
-    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 0.0%, transparent) 100.0%
+    color-mix(in oklab, var(--eco-tone, var(--eco-glow)) 0%, transparent) 100%
   );
 }
 /* Phones: the hub drawing scales to ~56 %, so its type is set larger in drawing units to stay legible (≥ 11 px). */
 @media (max-width: 639px) {
-  .eco-stage[data-hub] .eco-t-label { font-size: 22px; }
-  .eco-stage[data-hub] .eco-t-sub { font-size: 17px; }
-  .eco-stage[data-hub] .eco-t-orbit { font-size: 19px; }
-  html[data-theme="light"] .eco-stage[data-hub] .eco-halo { display: none; }
+  .eco-stage[data-hub] .eco-t-label {
+    font-size: 22px;
+  }
+  .eco-stage[data-hub] .eco-t-sub {
+    font-size: 17px;
+  }
+  .eco-stage[data-hub] .eco-t-orbit {
+    font-size: 19px;
+  }
+  html[data-theme="light"] .eco-stage[data-hub] .eco-halo {
+    display: none;
+  }
 }
 
 /* ───────── Report Studio: print-ready output (A4, no margins: the page itself carries them) ───────── */
 @media print {
-  @page { size: A4; margin: 0; }
-  html, body { background: #fff !important; }
-  .print-chrome { display: none !important; }
-  .print-root { background: #fff !important; min-height: 0 !important; }
-  .print-pages { display: block !important; padding: 0 !important; gap: 0 !important; }
-  .print-page { box-shadow: none !important; break-after: page; page-break-after: always; }
-  .print-page:last-child { break-after: auto; page-break-after: auto; }
-  .report-sheet { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  .print-chrome {
+    display: none !important;
+  }
+  .print-root {
+    background: #fff !important;
+    min-height: 0 !important;
+  }
+  .print-pages {
+    display: block !important;
+    padding: 0 !important;
+    gap: 0 !important;
+  }
+  .print-page {
+    box-shadow: none !important;
+    break-after: page;
+    page-break-after: always;
+  }
+  .print-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+  .report-sheet {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }

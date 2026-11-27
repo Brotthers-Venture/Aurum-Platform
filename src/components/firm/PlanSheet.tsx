@@ -7,6 +7,7 @@ import { postPlanRequest } from "@/lib/chat-store";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, CalendarRange, ChevronDown, ChevronRight, Copy, Download, FileText, MessageSquare, Paperclip, Plus, Printer, Send, Table2, X } from "lucide-react";
 import { cx } from "@/components/ui";
+import { inkFor } from "@/lib/gps";
 import { FIRM } from "@/lib/firm-colors";
 import { PLAN_TODAY, PRIORITIES, STATUSES, daysLeft, holdsUp, isOverdue, isTopic, summary, topicOf, waitingOn, type Plan, type PlanRow, type PlanStatus } from "@/lib/plans";
 import { fmtShort } from "./kit";
@@ -470,7 +471,7 @@ function Grid({
                             <EditCell value={t.status ?? "Not started"} kind="select" options={STATUSES} onSave={(v) => onUpdate(t.id, { status: v as PlanStatus })}>
                               <span
                                 className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11.5px] font-semibold text-white"
-                                style={{ background: STATUS_COLOR[t.status ?? "Not started"] }}
+                                style={{ background: STATUS_COLOR[t.status ?? "Not started"], color: inkFor(STATUS_COLOR[t.status ?? "Not started"]) }}
                               >
                                 {t.status}
                               </span>
@@ -629,7 +630,10 @@ function Gantt({
             )}
             <span className="w-[96px]">
               {r.status && (
-                <span className="rounded-full px-2 py-0.5 text-[10.5px] font-semibold text-white" style={{ background: STATUS_COLOR[r.status] }}>
+                <span
+                  className="rounded-full px-2 py-0.5 text-[10.5px] font-semibold text-white"
+                  style={{ background: STATUS_COLOR[r.status], color: inkFor(STATUS_COLOR[r.status]) }}
+                >
                   {r.status}
                 </span>
               )}

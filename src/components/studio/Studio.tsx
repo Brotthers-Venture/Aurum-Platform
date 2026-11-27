@@ -77,7 +77,7 @@ export function StudioHome() {
             className={cx("relative h-10 px-3 text-[13px] font-semibold", tab === t ? "text-ink-900" : "text-stone-500 hover:text-ink-900")}
           >
             {l}
-            {tab === t && <span className="absolute inset-x-2 -bottom-px h-[2px] rounded-full bg-[var(--d-accent)]" />}
+            {tab === t && <span className="absolute inset-x-2 -bottom-px h-[2px] rounded-full bg-[var(--d-accent-fill)]" />}
           </button>
         ))}
         <Link href="/admin/fund/quarter-close" className="mb-2.5 ml-auto inline-flex items-center gap-1 text-[12.5px] text-stone-500 hover:text-ink-900">

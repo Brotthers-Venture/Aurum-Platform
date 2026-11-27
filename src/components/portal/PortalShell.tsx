@@ -169,7 +169,7 @@ export function PortalShell({
                   on ? "bg-d-raise" : "hover:bg-[color-mix(in_oklab,var(--d-raise)_70%,transparent)]",
                 )}
               >
-                {on && <span aria-hidden className="absolute -left-2 bottom-2 top-2 w-[2px] rounded-full bg-[var(--d-accent)]" />}
+                {on && <span aria-hidden className="absolute -left-2 bottom-2 top-2 w-[2px] rounded-full bg-[var(--d-accent-fill)]" />}
                 <n.Icon size={16} strokeWidth={1.7} className={on ? "text-d-text" : "text-d-text-3 group-hover:text-d-text-2"} />
                 <span className={cx("flex-1 truncate", on ? "font-semibold text-d-text" : "font-medium text-d-text-2 group-hover:text-d-text")}>{n.label}</span>
                 {!!n.badge && <span className="tnum rounded-full bg-d-accent-soft px-1.5 text-[11px] font-semibold text-[var(--d-accent)]">{n.badge}</span>}
@@ -188,7 +188,7 @@ export function PortalShell({
                             here ? "bg-d-raise font-medium text-d-text" : "text-d-text-2 hover:bg-d-raise hover:text-d-text",
                           )}
                         >
-                          {here && <span aria-hidden className="absolute -left-[7px] bottom-1.5 top-1.5 w-[2px] rounded-full bg-[var(--d-accent)]" />}
+                          {here && <span aria-hidden className="absolute -left-[7px] bottom-1.5 top-1.5 w-[2px] rounded-full bg-[var(--d-accent-fill)]" />}
                           <span className="truncate">{c.label}</span>
                         </Link>
                       </li>
@@ -382,9 +382,9 @@ export function PortalShell({
                         on ? "bg-d-raise text-d-text" : "text-d-text-3 hover:bg-d-raise hover:text-d-text",
                       )}
                     >
-                      {on && <span aria-hidden className="absolute -left-2 bottom-2.5 top-2.5 w-[2px] rounded-full bg-[var(--d-accent)]" />}
+                      {on && <span aria-hidden className="absolute -left-2 bottom-2.5 top-2.5 w-[2px] rounded-full bg-[var(--d-accent-fill)]" />}
                       <n.Icon size={18} strokeWidth={1.7} />
-                      {!!n.badge && !on && <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[var(--d-accent)]" />}
+                      {!!n.badge && !on && <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[var(--d-accent-fill)]" />}
                     </Link>
                   );
                 })}

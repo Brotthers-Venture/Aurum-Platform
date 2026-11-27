@@ -54,7 +54,7 @@ export function ConnPill({ c }: { c: Connection }) {
   const label = { Platform: "Platform", Connected: "Connected · read-only", Statements: "Statements" }[c];
   return (
     <span className={cx("inline-flex items-center gap-1.5 whitespace-nowrap text-[12px]", c === "Platform" ? "text-d-text" : "text-d-text-3")}>
-      <span aria-hidden className={cx("h-1.5 w-1.5 rounded-full", c === "Platform" ? "bg-[var(--color-up)]" : c === "Connected" ? "bg-[var(--d-accent)]" : "bg-d-line-strong")} />
+      <span aria-hidden className={cx("h-1.5 w-1.5 rounded-full", c === "Platform" ? "bg-[var(--color-up)]" : c === "Connected" ? "bg-[var(--d-accent-fill)]" : "bg-d-line-strong")} />
       {label}
     </span>
   );

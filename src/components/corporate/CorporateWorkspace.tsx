@@ -52,8 +52,7 @@ export function CorporateWorkspace() {
               href="/incorporate"
               target="_blank"
               rel="noreferrer"
-              className="flex h-9 items-center gap-1.5 rounded-[10px] px-3.5 text-[12.5px] font-semibold text-ink-900"
-              style={{ background: "var(--tenant-accent)" }}
+              className="flex h-9 items-center gap-1.5 rounded-[10px] bg-brand px-3.5 text-[12.5px] font-semibold text-brand-ink hover:opacity-90"
             >
               <ExternalLink size={13} /> Open client form
             </a>

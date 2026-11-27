@@ -227,7 +227,7 @@ export function GpCloseReview({ gpId, fundId }: { gpId: string; fundId: string }
 
         {close.status === "with_gp" && (
           <section className="relative overflow-hidden rounded-[12px] border border-stone-200 bg-white px-5 py-4" aria-label="Your approval">
-            <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-[var(--d-accent)]" />
+            <span aria-hidden className="absolute inset-y-0 left-0 w-[3px] bg-[var(--d-accent-fill)]" />
             <div className="flex items-start gap-3">
               <ShieldCheck size={17} className="mt-0.5 shrink-0 text-[var(--d-accent)]" />
               <div className="min-w-0 flex-1">

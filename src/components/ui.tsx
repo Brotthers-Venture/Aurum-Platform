@@ -13,28 +13,18 @@ const buttonVariants: Record<ButtonVariant, string> = {
   primary: "bg-ink-900 text-white hover:bg-ink-700",
   secondary: "border border-stone-300 bg-white text-ink-900 hover:border-ink-900",
   ghost: "text-ink-900 hover:bg-stone-100",
-  gold: "bg-gold-400 text-ink-900 hover:bg-gold-500",
+  gold: "bg-brand text-brand-ink hover:opacity-90",
   brand: "bg-brand text-brand-ink hover:opacity-90",
   /** Aurum logo gold, navy text — reserved for Aurum's own sign-in */
   aurum: "bg-[var(--tenant-accent)] text-[var(--tenant-accent-ink)] shadow-[0_6px_16px_-8px_rgba(0,0,0,0.35)] hover:brightness-[0.95]",
 };
 const buttonSizes = { sm: "h-8 px-3", md: "h-9 px-4", lg: "h-11 px-5 text-[14px]" };
 
-export function Button({
-  variant = "primary",
-  size = "md",
-  className,
-  ...props
-}: ComponentProps<"button"> & { variant?: ButtonVariant; size?: keyof typeof buttonSizes }) {
+export function Button({ variant = "primary", size = "md", className, ...props }: ComponentProps<"button"> & { variant?: ButtonVariant; size?: keyof typeof buttonSizes }) {
   return <button className={cx(buttonBase, buttonVariants[variant], buttonSizes[size], className)} {...props} />;
 }
 
-export function ButtonLink({
-  variant = "primary",
-  size = "md",
-  className,
-  ...props
-}: ComponentProps<typeof Link> & { variant?: ButtonVariant; size?: keyof typeof buttonSizes }) {
+export function ButtonLink({ variant = "primary", size = "md", className, ...props }: ComponentProps<typeof Link> & { variant?: ButtonVariant; size?: keyof typeof buttonSizes }) {
   return <Link className={cx(buttonBase, buttonVariants[variant], buttonSizes[size], className)} {...props} />;
 }
 
@@ -60,19 +50,7 @@ export function PageHeader({
   );
 }
 
-export function Panel({
-  title,
-  actions,
-  children,
-  className,
-  flush,
-}: {
-  title?: ReactNode;
-  actions?: ReactNode;
-  children: ReactNode;
-  className?: string;
-  flush?: boolean;
-}) {
+export function Panel({ title, actions, children, className, flush }: { title?: ReactNode; actions?: ReactNode; children: ReactNode; className?: string; flush?: boolean }) {
   return (
     <section data-panel className={cx("rounded-[8px] border border-stone-200/70 bg-white shadow-card", className)}>
       {(title || actions) && (
@@ -86,17 +64,7 @@ export function Panel({
   );
 }
 
-export function Stat({
-  label,
-  value,
-  sub,
-  className,
-}: {
-  label: string;
-  value: ReactNode;
-  sub?: ReactNode;
-  className?: string;
-}) {
+export function Stat({ label, value, sub, className }: { label: string; value: ReactNode; sub?: ReactNode; className?: string }) {
   return (
     <div className={cx("px-5 py-4", className)}>
       <div className="eyebrow">{label}</div>
@@ -181,7 +149,13 @@ const statusDot: Record<string, string> = {
 export function Status({ value, className }: { value: string; className?: string }) {
   const k = statusTone[value] ?? "neutral";
   return (
-    <span className={cx("inline-flex items-center gap-1.5 whitespace-nowrap text-[12px] font-medium leading-none", k === "negative" ? "text-negative" : k === "neutral" ? "text-stone-500" : "text-ink-800", className)}>
+    <span
+      className={cx(
+        "inline-flex items-center gap-1.5 whitespace-nowrap text-[12px] font-medium leading-none",
+        k === "negative" ? "text-negative" : k === "neutral" ? "text-stone-500" : "text-ink-800",
+        className,
+      )}
+    >
       <span className={cx("h-[7px] w-[7px] shrink-0 rounded-full", statusDot[k])} />
       {value}
     </span>
