@@ -148,7 +148,7 @@ export const PRESETS: Brand[] = [
 export const MODULE_DEFAULTS: Record<FirmId, string> = {
   sales: "Sales",
   pmo: "PMO",
-  communication: "Corporate Chat",
+  communication: "Concourse",
   dataroom: "Data rooms",
   billing: "Treasury",
   compliance: "Compliance",

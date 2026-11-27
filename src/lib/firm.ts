@@ -3,13 +3,13 @@
  * chosen so neighbouring colours stay distinguishable. Each ring is six modules with a live count (no amounts).
  */
 import { FIRM, type FirmId } from "./firm-colors";
-import { solutions } from "./solutions";
-import { spaceUnreadCount, totalUnread } from "./comms";
+import { totalUnread } from "./comms";
 import { billingCounts } from "./billing";
 import { salesCounts } from "./sales";
 import { pmoCounts } from "./plans";
 import { dataroomCounts } from "./dataroom";
 import { complianceCounts } from "./compliance";
+import { concourseCounts } from "./concourse";
 
 export type RingItem = { id: string; label: [string, string?]; sub: string; alert?: boolean; href: string };
 export type FirmModule = { id: FirmId; name: string; color: string; href: string; badge: number; badgeLabel: string; ring: RingItem[] };
@@ -20,6 +20,7 @@ const d = dataroomCounts();
 const b = billingCounts();
 const c = complianceCounts();
 const unread = totalUnread();
+const cc = concourseCounts();
 
 const plural = (n: number, one: string, many = `${one}S`) => `${n} ${n === 1 ? one : many}`;
 
@@ -58,15 +59,25 @@ export const firmModules: FirmModule[] = [
   },
   {
     id: "communication",
-    name: "Corporate Chat",
+    name: "Concourse",
     color: FIRM.communication,
     href: "/admin/communication",
     badge: unread,
     badgeLabel: "unread",
-    ring: solutions.map((sol) => {
-      const u = spaceUnreadCount(sol.id);
-      return { id: sol.id, label: sol.lines, sub: u ? `${u} unread` : "All read", alert: u > 0, href: `/admin/communication?space=${sol.id}` };
-    }),
+    ring: [
+      { id: "messages", label: ["Messages"], sub: unread ? `${unread} unread` : "All read", alert: unread > 0, href: "/admin/communication" },
+      { id: "calendar", label: ["Calendar"], sub: plural(cc.week, "date", "dates") + " this week", href: "/admin/communication/calendar" },
+      { id: "agenda", label: ["Agenda"], sub: "Day by day", href: "/admin/communication/calendar?view=agenda" },
+      {
+        id: "overdue",
+        label: ["Overdue"],
+        sub: cc.overdue ? `${cc.overdue} past due` : "None",
+        alert: cc.overdue > 0,
+        href: "/admin/communication/calendar?view=agenda&show=overdue",
+      },
+      { id: "meetings", label: ["Meetings"], sub: "Scheduled here", href: "/admin/communication/calendar?view=agenda&filter=meeting" },
+      { id: "new", label: ["New", "meeting"], sub: "Schedule", href: "/admin/communication/calendar?new=1" },
+    ],
   },
   {
     id: "dataroom",

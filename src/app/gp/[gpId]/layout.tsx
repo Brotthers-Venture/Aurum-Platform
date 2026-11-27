@@ -49,7 +49,7 @@ async function BrandedShell({ children, params }: { children: ReactNode; params:
     ["Investors", `${base}/investors`],
     ["Capital activity", `${base}/activity`],
     ["Reports", `${base}/reports`],
-    ["Corporate Chat", `${base}/messages`],
+    ["Concourse", `${base}/messages`],
   ];
   const search: GpSearchItem[] = [
     ...pages.map(([label, href]) => ({ id: `pg-${href}`, group: "Go to", label, href, keys: label, kind: "page" as const })),

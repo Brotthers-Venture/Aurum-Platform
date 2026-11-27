@@ -45,7 +45,7 @@ const iso = () => new Date().toISOString();
 
 function Skeleton() {
   return (
-    <div className="flex min-h-0 flex-1" aria-busy="true" aria-label="Loading Corporate Chat">
+    <div className="flex min-h-0 flex-1" aria-busy="true" aria-label="Loading Concourse">
       <div className="hidden w-[232px] shrink-0 space-y-2 border-r border-d-line bg-d-chrome p-4 lg:block">
         {Array.from({ length: 9 }).map((_, i) => (
           <div key={i} className="h-5 animate-pulse rounded-[3px] bg-d-raise" style={{ width: `${55 + ((i * 13) % 35)}%` }} />
@@ -189,7 +189,7 @@ export function CorporateChat() {
   const matterById = (id: string) => s?.matters.find((m) => m.id === id);
 
   const audit = (action: string, m: Matter | undefined, detail: string) =>
-    recordAudit({ user: personName(VIEWER), action, object: `Corporate Chat · ${m?.ref ?? ""} ${m?.title ?? ""} · ${detail}` });
+    recordAudit({ user: personName(VIEWER), action, object: `Concourse · ${m?.ref ?? ""} ${m?.title ?? ""} · ${detail}` });
 
   const setStatus = (id: string, st: MatterStatus) => {
     const m = matterById(id);

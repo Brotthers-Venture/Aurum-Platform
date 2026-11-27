@@ -40,7 +40,7 @@ export function GpShell({
     { href: `${base}/investors`, label: "Investors", Icon: Users },
     { href: `${base}/activity`, label: "Capital activity", Icon: ArrowLeftRight, badge: serverApprovals.length },
     { href: `${base}/reports`, label: "Reports", Icon: FileText, badge: closeTasks.length },
-    { href: `${base}/messages`, label: "Corporate Chat", Icon: MessagesSquare },
+    { href: `${base}/messages`, label: "Concourse", Icon: MessagesSquare },
   ];
   const index: Hit[] = useMemo(() => search.map((s) => ({ ...s, Icon: ICON[s.kind] })), [search]);
   return (

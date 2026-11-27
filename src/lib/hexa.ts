@@ -121,12 +121,15 @@ export const HEXAS: Hexa[] = [
   {
     id: "communication",
     firm: "communication",
-    name: "Corporate Chat",
+    name: "Concourse",
     color: FIRM.communication,
     href: "/admin/communication",
     base: "/admin/communication",
     badge: badgeOf("communication"),
-    pages: [],
+    pages: [
+      { label: "Messages", href: "/admin/communication" },
+      { label: "Calendar", href: "/admin/communication/calendar" },
+    ],
   },
   {
     id: "dataroom",

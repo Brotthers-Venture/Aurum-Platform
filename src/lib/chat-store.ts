@@ -148,10 +148,10 @@ export function addPlanRow(planId: string, title: string, opts: { party?: string
   if (!plan) return null;
   const topics = plan.rows.filter((r) => !r.id.includes("."));
   // Requests and chat tasks collect under one topic per plan.
-  let topic = topics.find((t) => t.title === "From Corporate Chat");
+  let topic = topics.find((t) => t.title === "From Concourse");
   const rows = [...plan.rows];
   if (!topic) {
-    topic = { id: String(Math.max(...topics.map((t) => Number(t.id))) + 1), title: "From Corporate Chat", party: "aurum", dependsOn: [] };
+    topic = { id: String(Math.max(...topics.map((t) => Number(t.id))) + 1), title: "From Concourse", party: "aurum", dependsOn: [] };
     rows.push(topic);
   }
   const n = rows.filter((r) => r.id.startsWith(topic!.id + ".") && r.id.split(".").length === 2).length + 1;

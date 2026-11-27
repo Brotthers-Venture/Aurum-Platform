@@ -1,6 +1,7 @@
 "use client";
 
-import { AtSign, ChevronDown, FilePen, Hash, Inbox, Layers, PenSquare, UserRoundCheck, X } from "lucide-react";
+import { AtSign, CalendarDays, ChevronDown, FilePen, Hash, Inbox, Layers, PenSquare, UserRoundCheck, X } from "lucide-react";
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { cx } from "@/components/ui";
 import { useBrand } from "@/components/brand/BrandProvider";
@@ -100,6 +101,16 @@ export function Sidebar({ brandName, onClose }: { brandName: string; onClose: ()
           <Row active={is({ kind: "assigned" })} onClick={() => setNav({ kind: "assigned" })} icon={<UserRoundCheck size={15} />} label="Assigned to me" count={c.assigned} />
           <Row active={is({ kind: "mentions" })} onClick={() => setNav({ kind: "mentions" })} icon={<AtSign size={15} />} label="Mentions" count={c.mentions} />
           <Row active={is({ kind: "drafts" })} onClick={() => setNav({ kind: "drafts" })} icon={<FilePen size={15} />} label="Drafts" count={c.drafts} />
+          {/* The room's calendar: every date from across the platform, and meetings scheduled here */}
+          <Link
+            href="/admin/communication/calendar"
+            className="flex h-[29px] w-full items-center gap-2.5 rounded-[4px] pl-2.5 pr-2 text-[13px] text-d-text-2 hover:bg-d-raise hover:text-d-text"
+          >
+            <span className="flex w-4 justify-center">
+              <CalendarDays size={15} />
+            </span>
+            Calendar
+          </Link>
         </div>
 
         <Group title="Matters">

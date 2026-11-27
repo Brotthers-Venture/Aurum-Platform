@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { CorporateChat } from "@/components/chat/CorporateChat";
 
-export const metadata: Metadata = { title: "Corporate Chat" };
+export const metadata: Metadata = { title: "Concourse" };
 
 /** Corporate Chat (the module key stays "communication" so saved data and links keep working). */
 export default function CommunicationPage() {

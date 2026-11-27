@@ -42,7 +42,7 @@ export function MatterExport({ id }: { id: string }) {
       <div className="print-chrome sticky top-0 z-20 border-b border-black/10 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-[900px] flex-wrap items-center gap-4 px-6 py-3 text-[13px] text-[#0F2340]">
           <Link href={`/admin/communication?m=${m.id}`} className="flex items-center gap-1.5 font-semibold hover:underline">
-            <ArrowLeft size={14} /> Corporate Chat
+            <ArrowLeft size={14} /> Concourse
           </Link>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={notes} onChange={(e) => setNotes(e.target.checked)} />
