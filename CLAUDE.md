@@ -20,6 +20,7 @@ Live: https://aurum-platform-6sal.vercel.app
 - `tools/stitch` — Google Stitch CLI + design brief. `.mcp.json` — Stitch and 21st.dev MCP servers.
 
 ## Design rules (follow strictly — the owner rejects anything that looks AI-made)
+- **Start with `.claude/skills/aurum-design/SKILL.md`** for any interface work: the owner-approved decisions (the published dark matte look, gold hexagon, module colours, hub and sidebar), the order of precedence over the third-party design skills in `.claude/skills/`, and the visual check required before presenting. Where a line below differs from what is published, the published, approved look wins.
 - Read `tools/stitch/design.md`. Private-bank tone: warm cream canvas, navy ink, serif headlines
   (Source Serif 4), Hanken Grotesk interface, gold used sparingly, hairline borders, dense data layouts,
   tabular numbers, few colours. No gradient blobs, glassmorphism, emoji, icon-in-circle feature grids.
