@@ -16,6 +16,7 @@ import {
   loadPlans,
   nextDeadline,
   openTasks,
+  isWaiting,
   planFolders,
   plans as seedPlans,
   savePlans,
@@ -31,11 +32,12 @@ import { usePreviewRole } from "@/components/admin/PreviewRole";
 
 const C = FIRM.pmo;
 export type PmoTab = "overview" | "tasks" | "reports" | "plan";
+export type TaskView = "all" | "week" | "waiting";
 
 const STATUS_TEXT: Record<PlanStatus, string> = { Completed: "#1F7A45", "In progress": "#2A64A0", "Not started": "#5B7592", Blocked: "#B3261E", "On hold": "#A86A0B" };
 const report = (q: string) => `/pmo-report?${q}`;
 
-export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
+export function PmoWorkspace({ tab: initial, show = "all", startNew = false }: { tab: PmoTab; show?: TaskView; startNew?: boolean }) {
   const [tab, setTab] = useTab<PmoTab>(initial);
   const [planData, setPlanData] = useState<{ plans: Plan[]; folders: PlanFolder[] }>({ plans: seedPlans, folders: planFolders });
   const [planId, setPlanId] = useState<string | null>(initial === "plan" ? seedPlans[0].id : null);
@@ -66,6 +68,17 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
     setRowId(row);
     setTab("plan");
   };
+  const newPlan = () => {
+    const p = blankPlan("fund", null);
+    setPlanData((d) => ({ ...d, plans: [...d.plans, p] }));
+    openPlan(p.id);
+  };
+  // "New plan" from the hub lands here; opening the plan rewrites the address, so a reload does not add another.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- runs once, after the saved plans have loaded
+    if (startNew && loaded) newPlan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- newPlan is recreated every render; only the load matters
+  }, [startNew, loaded]);
   const go = (t: PmoTab) => {
     setPlanId(null);
     setTab(t);
@@ -127,20 +140,11 @@ export function PmoWorkspace({ tab: initial }: { tab: PmoTab }) {
         ) : external ? (
           <div className="py-16 text-center text-[13px] text-stone-500">Plans you are part of will appear here.</div>
         ) : tab === "tasks" ? (
-          <OpenTasks plans={planData.plans} onOpen={openPlan} />
+          <OpenTasks plans={planData.plans} onOpen={openPlan} initialView={show} />
         ) : tab === "reports" ? (
           <Reports plans={planData.plans} folders={planData.folders} />
         ) : (
-          <Overview
-            plans={planData.plans}
-            folders={planData.folders}
-            onOpen={openPlan}
-            onNew={() => {
-              const p = blankPlan("fund", null);
-              setPlanData((d) => ({ ...d, plans: [...d.plans, p] }));
-              openPlan(p.id);
-            }}
-          />
+          <Overview plans={planData.plans} folders={planData.folders} onOpen={openPlan} onNew={newPlan} />
         )}
       </div>
     </div>
@@ -322,10 +326,17 @@ function Overview({ plans, folders, onOpen, onNew }: { plans: Plan[]; folders: P
 
 /* ───────────────────────── open tasks ───────────────────────── */
 
-function OpenTasks({ plans, onOpen }: { plans: Plan[]; onOpen: (plan: string, row?: string) => void }) {
+const VIEWS: [TaskView, string][] = [
+  ["all", "All open"],
+  ["week", "Due this week"],
+  ["waiting", "Waiting on others"],
+];
+
+function OpenTasks({ plans, onOpen, initialView }: { plans: Plan[]; onOpen: (plan: string, row?: string) => void; initialView: TaskView }) {
   const [q, setQ] = useState("");
   const [who, setWho] = useState("all");
-  const all = openTasks(plans);
+  const [view, setView] = useState<TaskView>(initialView);
+  const all = openTasks(plans).filter((t) => (view === "week" ? t.days !== null && t.days >= 0 && t.days <= 7 : view === "waiting" ? isWaiting(t) : true));
   const owners = [...new Set(all.map((t) => t.row.owner).filter(Boolean) as string[])].sort();
   const list = all.filter((t) => (who === "all" || t.row.owner === who) && (!q || `${t.row.title} ${t.plan.name}`.toLowerCase().includes(q.toLowerCase())));
   const buckets: [string, typeof list][] = [
@@ -338,6 +349,21 @@ function OpenTasks({ plans, onOpen }: { plans: Plan[]; onOpen: (plan: string, ro
     <div>
       <PageTitle title="Open tasks" about="Every task not yet completed, across all plans, soonest deadline first. Click a task to open it in its plan." />
       <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div role="group" aria-label="Show" className="flex rounded-[8px] border border-stone-200 p-0.5">
+          {VIEWS.map(([v, label]) => (
+            <button
+              key={v}
+              aria-pressed={view === v}
+              onClick={() => {
+                setView(v);
+                window.history.replaceState(null, "", `/admin/pmo?tab=tasks${v === "all" ? "" : `&show=${v}`}`);
+              }}
+              className={cx("h-8 rounded-[6px] px-3 text-[12.5px]", view === v ? "bg-stone-100 font-semibold text-ink-900" : "text-stone-500 hover:text-ink-900")}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <div className="relative">
           <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" />
           <input

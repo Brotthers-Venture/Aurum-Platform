@@ -266,9 +266,16 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
       },
     ];
   });
-  // Resting on a workspace opens nothing. A click opens its ring of sections in the hub, the way the centre opens the
-  // solutions; a section then goes to its page. The firm's mark, in the workspace's old place, leads back to the solutions.
-  const orbitNode = (o: (typeof orbit)[number]): Node => ({ id: `orbit-${o.id}`, slot: "ne", label: [""], sub: "" });
+  // Resting on a workspace, or clicking it, opens its ring of sections in the hub, the way the centre opens the
+  // solutions; a section then goes to its page. The firm's mark, in the workspace's old place, leads back to the
+  // solutions on a click only, so passing over it never folds the ring you are reading.
+  const orbitNode = (o: (typeof orbit)[number]): Node => ({
+    id: `orbit-${o.id}`,
+    slot: "ne",
+    label: [""],
+    sub: "",
+    open: o.id === "aurum" || (o.id === "communication" && member.party !== "employee") ? undefined : () => orbitGo(o),
+  });
   const orbitGo = (o: (typeof orbit)[number]) =>
     o.id === "aurum"
       ? toRoot()

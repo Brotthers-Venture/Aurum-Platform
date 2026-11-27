@@ -312,10 +312,15 @@ export function openTasks(all: Plan[]) {
     .sort((a, b) => (a.row.deadline ?? "9999").localeCompare(b.row.deadline ?? "9999"));
 }
 
+/** Tasks that cannot move until someone else does: marked blocked, or waiting on a task not yet completed. */
+export const isWaiting = (t: ReturnType<typeof openTasks>[number]) =>
+  t.row.status === "Blocked" || t.row.dependsOn.some((d) => t.plan.rows.find((x) => x.id === d)?.status !== "Completed");
+
 /** Counts for the hub and the sidebar, from the seed plans (the browser copy may differ). */
 export function pmoCounts() {
   const open = openTasks(plans);
   return {
+    waiting: open.filter(isWaiting).length,
     plans: plans.length,
     attention: plans.filter((p) => summary(p.rows).overdue > 0 || summary(p.rows).blocked > 0).length,
     overdue: open.filter((t) => t.days !== null && t.days < 0).length,
