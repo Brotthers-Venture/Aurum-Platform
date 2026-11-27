@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, ChevronsUpDown, EyeOff, LayoutGrid, MoreVertical, Plus, SlidersHorizontal } from "lucide-react";
 import { cx } from "@/components/ui";
 import { Columns, Lines, MEANING } from "@/components/analytics/charts";
@@ -121,6 +122,7 @@ export function LegendWorkspace({
   attention: WorkspaceAttention[];
   options?: WorkspaceOptions;
 }) {
+  const router = useRouter();
   const [tab, setTab] = useState("Overview");
   const [scope, setScope] = useState("all");
   const [range, setRange] = useState<"1Y" | "3Y" | "ITD">("3Y");
@@ -159,35 +161,38 @@ export function LegendWorkspace({
     <div className="-mx-2 space-y-2">
       {/* workspace bar */}
       <div className="flex flex-wrap items-center gap-2 rounded-[12px] border border-stone-200 bg-white px-2 py-1.5">
-        {(options.tabs ?? ["Overview", "Capital activity", "Investor relations"]).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={cx(
-              "inline-flex h-8 items-center gap-2 rounded-[8px] px-3 text-[13px]",
-              tab === t ? "bg-champagne font-semibold text-ink-900" : "text-stone-500 hover:bg-stone-100 hover:text-ink-900",
-            )}
-          >
-            {t === "Overview" && <LayoutGrid size={14} />}
-            {t}
-          </button>
-        ))}
-        {customise && (
-          <button
-            type="button"
-            aria-label="New layout"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] text-stone-400 hover:bg-stone-100 hover:text-ink-900"
-          >
-            <Plus size={15} />
-          </button>
-        )}
+        {/* On a phone the tabs stay on one line and scroll sideways instead of wrapping. */}
+        <div className="scroll-quiet flex min-w-0 max-w-full items-center gap-2 overflow-x-auto max-md:flex-1">
+          {(options.tabs ?? ["Overview", "Capital activity", "Investor relations"]).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className={cx(
+                "inline-flex h-8 shrink-0 items-center gap-2 whitespace-nowrap rounded-[8px] px-3 text-[13px]",
+                tab === t ? "bg-champagne font-semibold text-ink-900" : "text-stone-500 hover:bg-stone-100 hover:text-ink-900",
+              )}
+            >
+              {t === "Overview" && <LayoutGrid size={14} />}
+              {t}
+            </button>
+          ))}
+          {customise && (
+            <button
+              type="button"
+              aria-label="New layout"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] text-stone-400 hover:bg-stone-100 hover:text-ink-900 max-md:hidden"
+            >
+              <Plus size={15} />
+            </button>
+          )}
+        </div>
         <span className="mx-auto inline-flex items-center gap-2 rounded-full border border-stone-200 bg-white px-3 py-1 text-[12px] text-ink-900">
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: UP }} />
           Q4 2026 · period open
         </span>
         {customise && (
-          <button type="button" className="inline-flex h-8 items-center gap-2 rounded-[8px] px-3 text-[13px] font-semibold text-ink-900 hover:bg-stone-100">
+          <button type="button" className="inline-flex h-8 items-center gap-2 rounded-[8px] px-3 text-[13px] font-semibold text-ink-900 hover:bg-stone-100 max-md:hidden">
             Add widget <LayoutGrid size={14} />
           </button>
         )}
@@ -378,8 +383,12 @@ export function LegendWorkspace({
                         .join(" ")}
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[12.5px] font-semibold text-ink-900">{a.title}</span>
-                      <span className="block truncate text-[11.5px] text-stone-500">{a.detail}</span>
+                      <span className="block truncate text-[12.5px] font-semibold text-ink-900" title={a.title}>
+                        {a.title}
+                      </span>
+                      <span className="block truncate text-[11.5px] text-stone-500" title={a.detail}>
+                        {a.detail}
+                      </span>
                     </span>
                     <ArrowRight size={13} className="text-stone-300 group-hover:text-ink-900" />
                   </Link>
@@ -398,7 +407,7 @@ export function LegendWorkspace({
               <tbody>
                 {events.map((e) => (
                   <tr key={e.id} className="hover:bg-stone-100/60">
-                    <td className="max-w-[150px] truncate py-[8px] font-semibold text-ink-900">
+                    <td className="max-w-[150px] truncate py-[8px] font-semibold text-ink-900" title={e.title}>
                       <Link href={e.href}>{e.title}</Link>
                     </td>
                     <td className="py-[8px]">
@@ -460,50 +469,60 @@ export function LegendWorkspace({
           tag={MEANING.capitalIn}
           actions={<SlidersHorizontal size={15} className="mx-1" />}
         >
-          <table className="w-full text-[12.5px]">
-            <thead className="sticky top-0 bg-white">
-              <tr className="border-b border-stone-100 text-[11.5px] font-semibold text-stone-500">
-                <th className="px-4 py-2.5 text-left font-semibold">Vehicle</th>
-                <th className="px-2 py-2.5 text-left font-semibold">Call</th>
-                <th className="px-2 py-2.5 text-left font-semibold">Due</th>
-                <th className="px-2 py-2.5 text-right font-semibold">Amount</th>
-                <th className="px-2 py-2.5 text-right font-semibold">Received</th>
-                <th className="w-[72px] px-2 py-2.5 text-left font-semibold 2xl:w-[120px]">Funded</th>
-                <th className="px-4 py-2.5 text-left font-semibold">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {calls.map((c) => {
-                const pctFunded = c.amount ? c.received / c.amount : 0;
-                return (
-                  <tr key={c.id} className="border-b border-stone-100 hover:bg-stone-100/60">
-                    <td className="max-w-[150px] truncate px-4 py-[9px] font-semibold text-ink-900 2xl:max-w-[200px]">{c.fund}</td>
-                    <td className="num whitespace-nowrap px-2 py-[9px] text-stone-600">No. {c.number}</td>
-                    <td className="num whitespace-nowrap px-2 py-[9px] text-stone-600">{c.due}</td>
-                    <td className="num whitespace-nowrap px-2 py-[9px] text-right text-ink-900">{mask(money(c.amount, c.currency))}</td>
-                    <td className="num whitespace-nowrap px-2 py-[9px] text-right">
-                      <span
-                        className="rounded-[6px] px-1.5 py-0.5 font-semibold"
-                        style={{ background: pctFunded >= 1 ? "var(--color-up-bg)" : "var(--color-stone-100)", color: pctFunded >= 1 ? UP : "var(--color-stone-700)" }}
-                      >
-                        {mask(money(c.received, c.currency))}
-                      </span>
-                    </td>
-                    <td className="px-2 py-[9px]">
-                      <span className="block h-1 w-full overflow-hidden rounded-full bg-stone-100">
-                        <span className="block h-full rounded-full" style={{ width: `${Math.min(100, pctFunded * 100)}%`, background: pctFunded >= 1 ? UP : MEANING.capitalIn }} />
-                      </span>
-                    </td>
-                    <td className="px-4 py-[9px]">
-                      <span className={cx("inline-flex whitespace-nowrap rounded-[6px] border px-2 py-0.5 text-[11.5px]", pill[c.status] ?? "border-stone-200 text-stone-500")}>
-                        {c.status}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <div className="scroll-quiet overflow-x-auto">
+            <table className="w-full text-[12.5px]">
+              <thead className="sticky top-0 bg-white">
+                <tr className="border-b border-stone-100 text-[11.5px] font-semibold text-stone-500">
+                  <th className="px-4 py-2.5 text-left font-semibold">Vehicle</th>
+                  <th className="px-2 py-2.5 text-left font-semibold max-2xl:hidden">Call</th>
+                  <th className="px-2 py-2.5 text-left font-semibold">Due</th>
+                  <th className="px-2 py-2.5 text-right font-semibold">Amount</th>
+                  <th className="px-2 py-2.5 text-right font-semibold">Received</th>
+                  <th className="w-[120px] px-2 py-2.5 text-left font-semibold max-2xl:hidden">Funded</th>
+                  <th className="py-2.5 pl-2 pr-4 text-left font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {calls.map((c) => {
+                  const pctFunded = c.amount ? c.received / c.amount : 0;
+                  return (
+                    <tr
+                      key={c.id}
+                      // The whole row opens the call; the name stays a real link for keyboard and screen-reader users.
+                      onClick={(e) => !(e.target as HTMLElement).closest("a") && router.push(`/admin/fund/capital-calls/${c.id}`)}
+                      className="cursor-pointer border-b border-stone-100 hover:bg-stone-100/60"
+                    >
+                      <td className="px-4 py-[9px] font-semibold text-ink-900" title={`${c.fund}, call No. ${c.number}`}>
+                        {/* Table cells grow to fit their content, so the width cap sits on the link itself. */}
+                        <Link href={`/admin/fund/capital-calls/${c.id}`} className="block max-w-[200px] truncate hover:underline 2xl:max-w-[320px]">
+                          {c.fund}
+                        </Link>
+                      </td>
+                      <td className="num whitespace-nowrap px-2 py-[9px] text-stone-600 max-2xl:hidden">No. {c.number}</td>
+                      <td className="num whitespace-nowrap px-2 py-[9px] text-stone-600">{c.due}</td>
+                      <td className="num whitespace-nowrap px-2 py-[9px] text-right text-ink-900">{mask(money(c.amount, c.currency))}</td>
+                      {/* The bar and the status already say how funded a call is; the amount stays plain. */}
+                      <td className="num whitespace-nowrap px-2 py-[9px] text-right text-ink-900">{mask(money(c.received, c.currency))}</td>
+                      {/* Narrower cards drop the bar: the status and the received amount already carry it. */}
+                      <td className="px-2 py-[9px] max-2xl:hidden">
+                        <span className="block h-1 w-full overflow-hidden rounded-full bg-stone-100">
+                          <span
+                            className="block h-full rounded-full"
+                            style={{ width: `${Math.min(100, pctFunded * 100)}%`, background: pctFunded >= 1 ? UP : MEANING.capitalIn }}
+                          />
+                        </span>
+                      </td>
+                      <td className="py-[9px] pl-2 pr-4">
+                        <span className={cx("inline-flex whitespace-nowrap rounded-[6px] border px-2 py-0.5 text-[11.5px]", pill[c.status] ?? "border-stone-200 text-stone-500")}>
+                          {c.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </Panel>
       </div>
       <p className="px-2 text-right text-[11px] text-stone-400">As of {periodLabel(data.periods[last]) === "Today" ? "today" : data.periods[last]} · USD</p>

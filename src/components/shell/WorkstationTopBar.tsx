@@ -187,12 +187,13 @@ export function WorkstationTopBar({
       <button
         onClick={() => (onSearch ? onSearch() : (setSearchOpen(true), onActivity?.(true)))}
         data-shell="search"
-        className="flex h-10 w-full min-w-0 max-w-[600px] items-center gap-2.5 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-4 text-left text-d-text-3 hover:border-d-line-strong"
+        className="flex h-10 w-full min-w-0 max-w-[600px] items-center gap-2.5 rounded-full border border-d-line bg-[color-mix(in_oklab,var(--d-surface)_70%,transparent)] px-4 text-left text-d-text-2 hover:border-d-line-strong"
         aria-label="Search funds, investors, documents"
       >
         <Search size={16} className="shrink-0" />
-        <span className="truncate text-[14px]">Search funds, investors, documents</span>
-        <kbd className="ml-auto hidden shrink-0 whitespace-nowrap rounded-[4px] border border-d-line px-1.5 font-sans text-[11px] text-d-text-3 sm:inline">Ctrl K</kbd>
+        <span className="truncate text-[14px] max-sm:hidden">Search funds, investors, documents</span>
+        <span className="text-[14px] sm:hidden">Search</span>
+        <kbd className="ml-auto hidden shrink-0 whitespace-nowrap rounded-[4px] border border-d-line px-1.5 font-sans text-[11px] text-d-text-2 sm:inline">Ctrl K</kbd>
       </button>
       {!onSearch && (
         <GlobalSearch

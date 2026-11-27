@@ -368,7 +368,7 @@ html[data-theme="light"] .ws,
   --d-accent: var(--tenant-accent-on-light, #0f2340);
   --d-accent-fill: var(--tenant-accent);
   --d-accent-soft: color-mix(in srgb, var(--tenant-accent) 18%, transparent);
-  --d-pos: #15803d;
+  --d-pos: #126e35; /* 4.7:1 or better on every light surface, tinted pills included */
   --d-warn: #a6570b;
   --d-info: #1d4ed8;
   --d-neg: #b42318;
