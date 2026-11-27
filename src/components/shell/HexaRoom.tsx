@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Building2, ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Banknote, Blocks, Landmark, Layers, Users, X } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, X } from "lucide-react";
+import { BankingMark, ChainMark, CorporateMark, FamilyMark, FundMark, OfferingMark } from "./SolutionIcons";
 import { cx } from "@/components/ui";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { AurumLogo, markPath } from "@/components/brand/Logo";
@@ -23,13 +24,13 @@ export const HEXA_DRAWER_EVENT = "aurum-hexa-drawer";
  * Navigation only — each keeps its own routes, records and permissions. Later solutions (Offering, Blockchain,
  * Banking) are added here when they exist; nothing unfinished is listed.
  */
-const SOLUTIONS: { id: HexaId; about: string; Icon: typeof Landmark }[] = [
-  { id: "fund", about: "Fund administration and investment vehicles.", Icon: Landmark },
-  { id: "corporate", about: "Corporate entities and administration.", Icon: Building2 },
-  { id: "multi-family", about: "Private wealth and family office services.", Icon: Users },
-  { id: "offering", about: "Capital formation, investor pipeline and agreements.", Icon: Layers },
-  { id: "blockchain", about: "Tokenized share registers and owner wallets.", Icon: Blocks },
-  { id: "banking", about: "Accounts, cash and payments for administered entities.", Icon: Banknote },
+const SOLUTIONS: { id: HexaId; about: string; Icon: typeof FundMark }[] = [
+  { id: "fund", about: "Fund administration and investment vehicles.", Icon: FundMark },
+  { id: "corporate", about: "Corporate entities and administration.", Icon: CorporateMark },
+  { id: "multi-family", about: "Private wealth and family office services.", Icon: FamilyMark },
+  { id: "offering", about: "Capital formation, investor pipeline and agreements.", Icon: OfferingMark },
+  { id: "blockchain", about: "Tokenized share registers and owner wallets.", Icon: ChainMark },
+  { id: "banking", about: "Accounts, cash and payments for administered entities.", Icon: BankingMark },
 ];
 const isSolution = (id?: string) => SOLUTIONS.some((s) => s.id === id);
 
@@ -307,7 +308,7 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
                       active={active}
                       accent="var(--tenant-accent)"
                       href={hrefOf(h)}
-                      icon={<Icon size={15} strokeWidth={1.7} className={active ? "text-d-text" : "text-d-text-3"} />}
+                      icon={<Icon size={20} className={active ? "text-d-text" : "text-d-text-2"} />}
                       label={name(h)}
                       badge={badgeOf(h)}
                       toggle={pagesOf(h).length ? () => setOpenPages((o) => (o === h.id ? null : h.id)) : undefined}
