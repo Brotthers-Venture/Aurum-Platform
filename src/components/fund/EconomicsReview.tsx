@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check, CircleAlert, FileText, FileUp, Lock, RotateCcw, ShieldCheck, Sparkles, X } from "lucide-react";
-import { Button, Panel, Progress, Status, cx } from "@/components/ui";
+import { Button, ButtonLink, Panel, Progress, Status, cx } from "@/components/ui";
 import { usePreviewRole } from "@/components/admin/PreviewRole";
 import type { ExtractedTerm, LpaReview } from "@/lib/lpa/review";
 import { date, dateTime } from "@/lib/format";
@@ -20,7 +20,7 @@ type Stage = "aurum_review" | "gp_confirmation" | "applied";
 const groups: ExtractedTerm["group"][] = ["Fund & term", "Share classes", "Management fee", "Distribution waterfall", "Closings & equalization", "Expenses"];
 
 export function EconomicsReview({ review, fundName }: { review: LpaReview; fundName: string }) {
-  const { user, can } = usePreviewRole();
+  const { user, can, role } = usePreviewRole();
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
   const [stage, setStage] = useState<Stage>("aurum_review");
   const [aurumApprover, setAurumApprover] = useState<string | null>(null);
@@ -28,7 +28,7 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
   const [draft, setDraft] = useState({ value: "", source: "", note: "", reading: 0 });
 
   const isPreparer = user.name === review.preparedBy;
-  const isGp = user.title === "GP principal";
+  const isGp = role === "gp_principal";
   const canDecide = stage === "aurum_review" && can("economics.approve") && !isPreparer && !isGp;
   const canConfirm = stage === "gp_confirmation" && isGp && can("economics.approve") && user.name !== aurumApprover;
 
@@ -81,6 +81,9 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
           </p>
         </div>
         <div className="flex gap-2">
+          <ButtonLink href={`/admin/fund/funds/${review.fundId}/economics/edit`} variant="secondary">
+            Economics in force
+          </ButtonLink>
           <Button variant="secondary" disabled={!can("economics.prepare")}>
             <FileUp size={14} strokeWidth={1.8} /> Upload document
           </Button>

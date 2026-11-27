@@ -1,6 +1,5 @@
 "use client";
 
-import { TenantName } from "@/components/brand/TenantName";
 import { useEffect, useState, type ReactNode } from "react";
 import { AlertCircle, CheckCircle2, Clock3, FileText, LayoutList, ListChecks, Plus, Search } from "lucide-react";
 import { cx } from "@/components/ui";
@@ -87,17 +86,7 @@ export function PmoWorkspace({ tab: initial, show = "all", startNew = false }: {
   return (
     <div className="-mx-8 -mt-4 flex min-h-[calc(100vh-64px)]">
       <aside className="w-[260px] shrink-0 border-r border-stone-200 px-3 py-5">
-        <div className="flex items-center gap-2 px-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-[8px] text-[12px] font-bold text-white" style={{ background: C }}>
-            P
-          </span>
-          <div>
-            <div className="text-[13px] font-semibold text-ink-900">PMO workspace</div>
-            <div className="text-[11px] text-stone-500">
-              <TenantName />
-            </div>
-          </div>
-        </div>
+        <div className="px-2 text-[13px] font-semibold text-ink-900">Project management</div>
         {external ? (
           <>
             <Heading>Your plans</Heading>

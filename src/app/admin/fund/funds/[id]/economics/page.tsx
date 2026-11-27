@@ -42,7 +42,10 @@ export default async function EconomicsPage({ params }: { params: Promise<{ id: 
       </div>
       <div className="flex items-start gap-2 text-[12px] text-stone-500">
         <ShieldCheck size={14} strokeWidth={1.8} className="mt-px shrink-0" />
-        Current economics for this fund were entered manually and remain in force until a review is approved by Aurum and the GP.
+        Current economics for this fund were entered manually and remain in force until a change is approved by the firm and the GP.{" "}
+        <Link href={`/admin/fund/funds/${f.id}/economics/edit`} className="font-semibold text-ink-900 underline-offset-2 hover:underline">
+          View or change the economics in force
+        </Link>
       </div>
     </div>
   );

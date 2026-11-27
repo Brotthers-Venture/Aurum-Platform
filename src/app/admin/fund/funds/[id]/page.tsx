@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CurrentTerm } from "@/components/fund/EconomicsEditor";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Download, FileText, Plus, Scale } from "lucide-react";
 import { Button, ButtonLink, KeyValue, PageHeader, Panel, Stat, StatRow, Status } from "@/components/ui";
@@ -31,7 +32,14 @@ export default async function FundDetail({ params }: { params: Promise<{ id: str
 
   const overview = (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-      <Panel title="Terms">
+      <Panel
+        title="Terms"
+        actions={
+          <Link href={`/admin/fund/funds/${f.id}/economics/edit`} className="text-[12px] font-medium text-stone-500 hover:text-ink-900 hover:underline">
+            Edit economics
+          </Link>
+        }
+      >
         <KeyValue
           items={[
             ["Legal form", f.legalForm],
@@ -40,10 +48,10 @@ export default async function FundDetail({ params }: { params: Promise<{ id: str
             ["Investment manager", f.manager],
             ["Strategy", f.strategy],
             ["Base currency", f.currency],
-            ["Management fee", f.managementFee],
-            ["Carried interest", f.carry],
-            ["Hurdle", f.hurdle],
-            ["Term", f.term],
+            ["Management fee", <CurrentTerm key="fee" fundId={f.id} term="managementFee" />],
+            ["Carried interest", <CurrentTerm key="carry" fundId={f.id} term="carry" />],
+            ["Hurdle", <CurrentTerm key="hurdle" fundId={f.id} term="hurdle" />],
+            ["Term", <CurrentTerm key="term" fundId={f.id} term="term" />],
             ["First close", date(f.firstClose)],
             ["Final close", f.finalClose ? date(f.finalClose) : "Open"],
             ["Auditor", f.auditor],

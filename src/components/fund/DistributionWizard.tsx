@@ -1,5 +1,6 @@
 "use client";
 
+import { useEconomics } from "@/lib/economics";
 import { useState } from "react";
 import { CircleCheck } from "lucide-react";
 import { ButtonLink, KeyValue, Panel, cx } from "@/components/ui";
@@ -17,8 +18,12 @@ export function DistributionWizard() {
   const [roc, setRoc] = useState("37,600,000");
   const [gain, setGain] = useState("14,400,000");
   const [income, setIncome] = useState("0");
-  const [hurdle, setHurdle] = useState(String(+(fundById("serra-re-spv")!.hurdleRate * 100).toFixed(2)));
-  const [carry, setCarry] = useState(String(+(fundById("serra-re-spv")!.carryRate * 100).toFixed(2)));
+  // Hurdle and carry start from the economics in force for the vehicle; typing over them overrides this distribution only.
+  const [hurdleEdit, setHurdle] = useState<string | null>(null);
+  const [carryEdit, setCarry] = useState<string | null>(null);
+  const { current: inForce } = useEconomics(fundId);
+  const hurdle = hurdleEdit ?? String(+(inForce.terms.hurdleRate * 100).toFixed(2));
+  const carry = carryEdit ?? String(+(inForce.terms.carryRate * 100).toFixed(2));
   const [catchUp, setCatchUp] = useState("100");
   const [done, setDone] = useState(false);
 
@@ -58,8 +63,8 @@ export function DistributionWizard() {
 
   const selectFund = (id: string) => {
     setFundId(id);
-    setHurdle(String(+(fundById(id)!.hurdleRate * 100).toFixed(2)));
-    setCarry(String(+(fundById(id)!.carryRate * 100).toFixed(2)));
+    setHurdle(null);
+    setCarry(null);
   };
 
   if (done) {
