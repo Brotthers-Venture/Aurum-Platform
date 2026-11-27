@@ -53,8 +53,8 @@ export function CapitalCallWizard() {
         </span>
         <h1 className="mt-6 text-[24px] font-semibold tracking-[-0.015em]">Submitted for approval</h1>
         <p className="mt-3 text-[14px] leading-relaxed text-stone-600">
-          Capital Call No. {nextNumber} for {f.name} ({m(total)}) is with Fund Accounting for review, then {f.gp} for sign-off.
-          On approval, {alloc.length} notices publish to investor portals and the entries post to the ledger.
+          Capital Call No. {nextNumber} for {f.name} ({m(total)}) is with Fund Accounting for review, then {f.gp} for sign-off. On approval, {alloc.length} notices publish to
+          investor portals and the entries post to the ledger.
         </p>
         <div className="mt-8 flex justify-center gap-2">
           <ButtonLink href="/admin/fund/capital-calls">Back to capital calls</ButtonLink>
@@ -199,7 +199,10 @@ export function CapitalCallWizard() {
               <button
                 type="button"
                 onClick={() => setNoticeFor(a.p.investorId)}
-                className={cx("w-full border-b border-stone-100 px-4 py-2.5 text-left text-[12px]", lp.p.investorId === a.p.investorId ? "bg-stone-100 font-semibold" : "hover:bg-stone-50")}
+                className={cx(
+                  "w-full border-b border-stone-100 px-4 py-2.5 text-left text-[12px]",
+                  lp.p.investorId === a.p.investorId ? "bg-stone-100 font-semibold" : "hover:bg-stone-50",
+                )}
               >
                 {investorById(a.p.investorId)?.name}
                 <span className="num block text-stone-500">{m(a.amount, 2)}</span>
@@ -216,9 +219,8 @@ export function CapitalCallWizard() {
         <h2 className="mt-8 text-[20px] font-semibold text-ink-900">Capital Call Notice No. {nextNumber}</h2>
         <p className="mt-4">To: {investorById(lp.p.investorId)?.name}</p>
         <p className="mt-3">
-          Pursuant to the Limited Partnership Agreement, {f.gp} hereby calls capital from the Limited Partners in the aggregate
-          amount of {m(total)}. Your share, based on your commitment of {m(lp.p.commitment)}, is set out below and is due on{" "}
-          <span className="font-semibold">{date(due)}</span>.
+          Pursuant to the Limited Partnership Agreement, {f.gp} hereby calls capital from the Limited Partners in the aggregate amount of {m(total)}. Your share, based on your
+          commitment of {m(lp.p.commitment)}, is set out below and is due on <span className="font-semibold">{date(due)}</span>.
         </p>
         <table className="mt-5 w-full font-sans text-[12px]">
           <tbody>

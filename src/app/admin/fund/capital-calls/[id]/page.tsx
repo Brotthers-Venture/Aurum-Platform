@@ -176,10 +176,7 @@ export default async function CapitalCallDetail({ params }: { params: Promise<{ 
             <div className="num mt-2 text-[12px] text-stone-500">{pct(call.received / call.amount, 0)} received</div>
             <div className="mt-4 flex gap-3 border-t border-stone-100 pt-4 text-[12px] text-stone-600">
               <Landmark size={15} strokeWidth={1.6} className="mt-px shrink-0" />
-              <span>
-                Receipts are matched from {bank?.institution} statements. With Plaid connected, incoming wires match automatically by
-                amount, sender and reference.
-              </span>
+              <span>Receipts are matched from {bank?.institution} statements. With Plaid connected, incoming wires match automatically by amount, sender and reference.</span>
             </div>
           </Panel>
           <Panel title="Approval trail">

@@ -53,11 +53,38 @@ export default async function FundOverview() {
     .slice(0, 12)
     .map((c) => {
       const f = fundById(c.fundId)!;
-      return { id: c.id, fund: f.shortName, fundId: f.id, number: c.number, notice: c.noticeDate, due: date(c.dueDate), amount: c.amount, received: c.received, status: c.status, currency: f.currency };
+      return {
+        id: c.id,
+        fund: f.shortName,
+        fundId: f.id,
+        number: c.number,
+        notice: c.noticeDate,
+        due: date(c.dueDate),
+        amount: c.amount,
+        received: c.received,
+        status: c.status,
+        currency: f.currency,
+      };
     });
   const events: WorkspaceEvent[] = [
-    ...capitalCalls.map((c) => ({ id: c.id, at: c.noticeDate, title: `${fundById(c.fundId)!.shortName} · Call ${c.number}`, status: c.status, side: "Call", type: "Capital call", href: "/admin/fund/capital-calls" })),
-    ...distributions.map((d) => ({ id: d.id, at: d.date, title: `${fundById(d.fundId)!.shortName} · ${d.type}`, status: d.status, side: "Distribution", type: d.type, href: "/admin/fund/distributions" })),
+    ...capitalCalls.map((c) => ({
+      id: c.id,
+      at: c.noticeDate,
+      title: `${fundById(c.fundId)!.shortName} · Call ${c.number}`,
+      status: c.status,
+      side: "Call",
+      type: "Capital call",
+      href: "/admin/fund/capital-calls",
+    })),
+    ...distributions.map((d) => ({
+      id: d.id,
+      at: d.date,
+      title: `${fundById(d.fundId)!.shortName} · ${d.type}`,
+      status: d.status,
+      side: "Distribution",
+      type: d.type,
+      href: "/admin/fund/distributions",
+    })),
   ]
     .sort((x, y) => y.at.localeCompare(x.at))
     .slice(0, 12)

@@ -3,6 +3,9 @@ import { Plus } from "lucide-react";
 import { ButtonLink, PageHeader, Panel, Status } from "@/components/ui";
 import { distributions, fundById } from "@/lib/data";
 import { date, money } from "@/lib/format";
+import { ByManager } from "@/components/fund/ByManager";
+import { GpMark } from "@/components/brand/GpLogo";
+import { gps } from "@/lib/gps";
 
 export const metadata: Metadata = { title: "Distributions" };
 
@@ -19,7 +22,31 @@ export default function DistributionsPage() {
           </ButtonLink>
         }
       />
-      <Panel flush>
+      <ByManager
+        noun={["distribution", "distributions"]}
+        groups={[...gps]
+          .sort((x, y) => x.shortName.localeCompare(y.shortName))
+          .map((g) => {
+            const list = distributions.filter((d) => fundById(d.fundId)!.gpId === g.id);
+            return {
+              id: g.id,
+              name: g.shortName,
+              mark: <GpMark gp={g} size={20} />,
+              meta: `${list.length} ${list.length === 1 ? "distribution" : "distributions"}`,
+              count: list.length,
+              href: `/admin/fund/gps/${g.id}`,
+              content: <DistTable list={list} />,
+            };
+          })}
+      />
+    </div>
+  );
+}
+
+function DistTable({ list }: { list: typeof distributions }) {
+  return (
+    <Panel flush>
+      <div className="overflow-x-auto">
         <table className="data-table">
           <thead>
             <tr>
@@ -32,7 +59,7 @@ export default function DistributionsPage() {
             </tr>
           </thead>
           <tbody>
-            {distributions.map((d) => {
+            {list.map((d) => {
               const f = fundById(d.fundId)!;
               return (
                 <tr key={d.id} className="row-link">
@@ -49,7 +76,7 @@ export default function DistributionsPage() {
             })}
           </tbody>
         </table>
-      </Panel>
-    </div>
+      </div>
+    </Panel>
   );
 }

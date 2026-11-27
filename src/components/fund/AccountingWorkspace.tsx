@@ -65,7 +65,10 @@ export function AccountingWorkspace() {
   const ties = Math.abs(partnerTotal - capital) < 0.05 && Math.abs(totalAssets - liabilities - capital) < 0.05;
 
   const sources = ["All", ...Array.from(new Set(books.journal.map((j) => j.source)))];
-  const journal = books.journal.filter((j) => source === "All" || j.source === source).slice().reverse();
+  const journal = books.journal
+    .filter((j) => source === "All" || j.source === source)
+    .slice()
+    .reverse();
 
   const tbTab = (
     <Panel flush>

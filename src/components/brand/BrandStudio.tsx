@@ -10,7 +10,7 @@ import { EntrancesEditor } from "./EntrancesEditor";
 import { entranceById, resolveLook } from "@/lib/entrances";
 import { gpById } from "@/lib/gps";
 import { GpLogo } from "./GpLogo";
-import { AMBIENT_MOTIONS, AURUM, MODULE_DEFAULTS, PRESETS, SANS, SERIF, contrast, hexOk, moduleName, type Brand } from "@/lib/brand";
+import { AMBIENT_MOTIONS, AURUM, MODULE_DEFAULTS, SANS, SERIF, contrast, hexOk, moduleName, type Brand } from "@/lib/brand";
 import type { FirmId } from "@/lib/firm-colors";
 
 /* Brand & white label: one place where a B2B client makes the platform theirs. Every change previews live
@@ -158,34 +158,6 @@ export function BrandStudio() {
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
         <div className="space-y-5">
-          <Section title="Start from" sub="Load a complete brand, then adjust. The two below Aurum are fictional examples.">
-            <div className="grid gap-3 sm:grid-cols-3">
-              {PRESETS.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => set({ ...p })}
-                  className={cx(
-                    "rounded-[12px] border p-3 text-left transition-shadow hover:shadow-card",
-                    d.id === p.id ? "border-ink-900 ring-1 ring-ink-900" : "border-stone-200",
-                  )}
-                >
-                  <div className="flex h-16 items-center gap-2 rounded-[8px] px-3" style={{ background: p.colors.canvas }}>
-                    <AurumMark size={22} shape={p.mark} color={p.colors.accent} />
-                    <span className="font-serif text-[15px] uppercase tracking-[0.06em]" style={{ color: p.colors.ink, fontFamily: SERIF[p.fonts.serif].stack }}>
-                      {p.name}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex gap-1">
-                    {[p.colors.ink, p.colors.accent, p.colors.metal, ...Object.values(p.modules)].map((c, i) => (
-                      <span key={i} className="h-2.5 flex-1 rounded-full" style={{ background: c }} />
-                    ))}
-                  </div>
-                  <div className="mt-2 text-[12px] font-semibold text-ink-900">{p.legalName}</div>
-                </button>
-              ))}
-            </div>
-          </Section>
-
           <Section title="Identity" sub="Names and contact details shown across the platform and in every email.">
             <div className="grid gap-4 sm:grid-cols-2">
               {(

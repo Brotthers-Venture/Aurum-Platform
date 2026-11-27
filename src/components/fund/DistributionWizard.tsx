@@ -43,7 +43,10 @@ export function DistributionWizard() {
     catchUp: parseAmount(catchUp) / 100,
   });
 
-  const lpCents = allocateCents(Math.round(wf.lp * 100), partners.map((p) => Math.round(p.commitment * 100)));
+  const lpCents = allocateCents(
+    Math.round(wf.lp * 100),
+    partners.map((p) => Math.round(p.commitment * 100)),
+  );
   const incomeShare = proceeds ? parseAmount(income) / proceeds : 0;
   const rows = partners.map((p, i) => {
     const gross = lpCents[i] / 100;
@@ -67,8 +70,7 @@ export function DistributionWizard() {
         </span>
         <h1 className="mt-6 text-[24px] font-semibold tracking-[-0.015em]">Distribution submitted for approval</h1>
         <p className="mt-3 text-[14px] leading-relaxed text-stone-600">
-          {m(proceeds)} from {source}: {m(wf.lp)} to limited partners and {m(wf.gp)} carried interest to {f.gp}. Payment
-          instructions are generated on approval.
+          {m(proceeds)} from {source}: {m(wf.lp)} to limited partners and {m(wf.gp)} carried interest to {f.gp}. Payment instructions are generated on approval.
         </p>
         <div className="mt-8 flex justify-center">
           <ButtonLink href="/admin/fund/distributions">Back to distributions</ButtonLink>
@@ -132,8 +134,8 @@ export function DistributionWizard() {
           </WField>
         </div>
         <p className="mt-4 text-[12px] text-stone-500">
-          European (whole-of-fund) waterfall. Contributed capital {m(wf.capital)} from {contributions.length} receipts; prior
-          distributions {m(prior)}; preferred return accrued to {date(payDate)}: {m(wf.prefAccrued)}.
+          European (whole-of-fund) waterfall. Contributed capital {m(wf.capital)} from {contributions.length} receipts; prior distributions {m(prior)}; preferred return accrued to{" "}
+          {date(payDate)}: {m(wf.prefAccrued)}.
         </p>
       </Panel>
       <Panel title="Waterfall result" flush>
@@ -222,14 +224,18 @@ export function DistributionWizard() {
           <tr>
             <td colSpan={3}>Total</td>
             <td className="num r">{m(proceeds, 2)}</td>
-            <td className="num r">{m(rows.reduce((a, r) => a + r.wht, 0), 2)}</td>
+            <td className="num r">
+              {m(
+                rows.reduce((a, r) => a + r.wht, 0),
+                2,
+              )}
+            </td>
             <td className="num r">{m(proceeds - rows.reduce((a, r) => a + r.wht, 0), 2)}</td>
           </tr>
         </tfoot>
       </table>
       <p className="border-t border-stone-100 px-5 py-3 text-[12px] text-stone-500">
-        Withholding estimated at 30% on the income portion for partners documented on W-8 forms; treaty rates are applied by tax
-        review before payment.
+        Withholding estimated at 30% on the income portion for partners documented on W-8 forms; treaty rates are applied by tax review before payment.
       </p>
     </Panel>,
 
@@ -250,9 +256,16 @@ export function DistributionWizard() {
       </Panel>
       <Panel title="Entries that will post on payment">
         <ul className="space-y-1.5 font-mono text-[12px] text-ink-800">
-          <li>Dr 1000 Cash {m(proceeds, 2)} / Cr 1100 Investments at cost {m(parseAmount(roc), 2)}</li>
-          <li className="pl-[11.5ch]">Cr 4100 Realized gain {m(parseAmount(gain), 2)}{parseAmount(income) ? ` · Cr 4000 Investment income ${m(parseAmount(income), 2)}` : ""}</li>
-          <li>Dr 3100 Partners&apos; distributions (per partner) {m(wf.lp, 2)} · Dr carried interest {m(wf.gp, 2)} / Cr 1000 Cash {m(proceeds, 2)}</li>
+          <li>
+            Dr 1000 Cash {m(proceeds, 2)} / Cr 1100 Investments at cost {m(parseAmount(roc), 2)}
+          </li>
+          <li className="pl-[11.5ch]">
+            Cr 4100 Realized gain {m(parseAmount(gain), 2)}
+            {parseAmount(income) ? ` · Cr 4000 Investment income ${m(parseAmount(income), 2)}` : ""}
+          </li>
+          <li>
+            Dr 3100 Partners&apos; distributions (per partner) {m(wf.lp, 2)} · Dr carried interest {m(wf.gp, 2)} / Cr 1000 Cash {m(proceeds, 2)}
+          </li>
         </ul>
       </Panel>
     </div>,

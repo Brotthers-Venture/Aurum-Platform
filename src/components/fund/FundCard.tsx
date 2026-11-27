@@ -88,7 +88,10 @@ export function FundCard({
   href,
   action,
   footer,
+  compact,
 }: {
+  /** inside a manager's group: a shorter cover and no repeated manager name */
+  compact?: boolean;
   fund: { id: string; name: string };
   gp: GpClient;
   offering: Offering;
@@ -100,17 +103,24 @@ export function FundCard({
   const logo = gp.logoDark ?? null;
   const body = (
     <>
-      <div className="relative h-[168px] overflow-hidden">
+      <div className={cx("relative overflow-hidden", compact ? "h-[92px]" : "h-[168px]")}>
         {offering.cover ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={offering.cover} alt="" className="absolute inset-0 h-full w-full object-cover" />
         ) : (
-          <FundCover id={fund.id} primary={gp.brand.primary} secondary={gp.brand.secondary} className="absolute inset-0 h-full w-full transition-transform duration-500 group-hover:scale-[1.04]" />
+          <FundCover
+            id={fund.id}
+            primary={gp.brand.primary}
+            secondary={gp.brand.secondary}
+            className="absolute inset-0 h-full w-full transition-transform duration-500 group-hover:scale-[1.04]"
+          />
         )}
         {offering.badge && <span className="absolute left-3 top-3 rounded-[4px] bg-white/95 px-2 py-[3px] text-[11px] font-semibold text-ink-900 shadow-sm">{offering.badge}</span>}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white">
-          <div className="text-[28px] font-semibold leading-none tracking-[0.02em] drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]">{offering.code}</div>
-          <div className="mt-2.5 flex items-center gap-1.5 text-[12px] font-medium text-white/85">
+          <div className={cx("font-semibold leading-none tracking-[0.02em] drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)]", compact ? "text-[22px]" : "text-[28px]")}>
+            {offering.code}
+          </div>
+          <div className={cx("mt-2.5 items-center gap-1.5 text-[12px] font-medium text-white/85", compact ? "hidden" : "flex")}>
             by
             {logo ? (
               <Image src={logo.src} alt={gp.shortName} width={Math.round((14 * logo.width) / logo.height)} height={14} className="h-[14px] w-auto" />
@@ -123,16 +133,18 @@ export function FundCard({
 
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-stone-200 bg-white">
-            <GpMark gp={gp} size={22} />
-          </span>
+          {!compact && (
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-stone-200 bg-white">
+              <GpMark gp={gp} size={22} />
+            </span>
+          )}
           <div className="min-w-0">
             <div className="text-[14.5px] font-semibold leading-snug text-ink-900">{fund.name}</div>
-            <div className="mt-0.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-stone-500">{gp.shortName}</div>
+            {!compact && <div className="mt-0.5 text-[11.5px] font-medium text-stone-500">{gp.shortName}</div>}
           </div>
         </div>
 
-        <p className="mt-3 line-clamp-3 text-[13px] leading-relaxed text-stone-600">{offering.tagline}</p>
+        <p className={cx("mt-2 text-[13px] leading-relaxed text-stone-600", compact ? "line-clamp-2" : "line-clamp-3")}>{offering.tagline}</p>
 
         <dl className="mt-3 divide-y divide-stone-100 border-t border-stone-100 text-[12.5px]">
           {terms.map(([k, v]) => (
@@ -150,7 +162,12 @@ export function FundCard({
             </span>
           ))}
         </div>
-        {(action || footer) && <div className="mt-4 flex items-center gap-2">{action}{footer}</div>}
+        {(action || footer) && (
+          <div className="mt-4 flex items-center gap-2">
+            {action}
+            {footer}
+          </div>
+        )}
       </div>
     </>
   );

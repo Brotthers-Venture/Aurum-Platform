@@ -93,7 +93,21 @@ function useDrop(onFiles: (f: File[]) => void) {
   };
 }
 
-function PickButton({ label, onFiles, multiple = true, icon, className, ariaLabel }: { label?: ReactNode; onFiles: (f: File[]) => void; multiple?: boolean; icon?: ReactNode; className?: string; ariaLabel: string }) {
+function PickButton({
+  label,
+  onFiles,
+  multiple = true,
+  icon,
+  className,
+  ariaLabel,
+}: {
+  label?: ReactNode;
+  onFiles: (f: File[]) => void;
+  multiple?: boolean;
+  icon?: ReactNode;
+  className?: string;
+  ariaLabel: string;
+}) {
   const ref = useRef<HTMLInputElement>(null);
   return (
     <>
@@ -119,7 +133,19 @@ function PickButton({ label, onFiles, multiple = true, icon, className, ariaLabe
   );
 }
 
-function Row({ f, history, onEdit, onReplace, onRemove }: { f: RoomFile; history: RoomFile[]; onEdit: (patch: Partial<RoomFile>) => void; onReplace: (files: File[]) => void; onRemove: () => void }) {
+function Row({
+  f,
+  history,
+  onEdit,
+  onReplace,
+  onRemove,
+}: {
+  f: RoomFile;
+  history: RoomFile[];
+  onEdit: (patch: Partial<RoomFile>) => void;
+  onReplace: (files: File[]) => void;
+  onRemove: () => void;
+}) {
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState(f.title);
   const [showVersions, setShowVersions] = useState(false);
@@ -140,7 +166,14 @@ function Row({ f, history, onEdit, onReplace, onRemove }: { f: RoomFile; history
                   setRenaming(false);
                 }}
               >
-                <input autoFocus aria-label="Document name" value={draft} onChange={(e) => setDraft(e.target.value)} onBlur={() => setRenaming(false)} className={cx(cell, "border-ink-900 bg-white")} />
+                <input
+                  autoFocus
+                  aria-label="Document name"
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onBlur={() => setRenaming(false)}
+                  className={cx(cell, "border-ink-900 bg-white")}
+                />
               </form>
             ) : (
               <>
@@ -148,12 +181,22 @@ function Row({ f, history, onEdit, onReplace, onRemove }: { f: RoomFile; history
                   {f.title}
                 </span>
                 {f.version > 1 && (
-                  <button type="button" onClick={() => setShowVersions((v) => !v)} className="shrink-0 rounded-[2px] bg-stone-100 px-1.5 text-[10.5px] font-semibold text-stone-600 hover:bg-stone-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowVersions((v) => !v)}
+                    className="shrink-0 rounded-[2px] bg-stone-100 px-1.5 text-[10.5px] font-semibold text-stone-600 hover:bg-stone-200"
+                  >
                     v{f.version}
                   </button>
                 )}
                 {readOnly && (
-                  <a href={`https://search.gleif.org/#/record/${f.title}`} target="_blank" rel="noreferrer" className="shrink-0 text-stone-400 hover:text-ink-900" aria-label="Open in GLEIF">
+                  <a
+                    href={`https://search.gleif.org/#/record/${f.title}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="shrink-0 text-stone-400 hover:text-ink-900"
+                    aria-label="Open in GLEIF"
+                  >
                     <ExternalLink size={12} />
                   </a>
                 )}
@@ -175,7 +218,13 @@ function Row({ f, history, onEdit, onReplace, onRemove }: { f: RoomFile; history
           )}
         </td>
         <td className="w-[140px] px-1 py-2">
-          <select aria-label="Access" disabled={readOnly} value={f.visibility} onChange={(e) => onEdit({ visibility: e.target.value as DocVisibility })} className={cx(cell, readOnly && "text-stone-600")}>
+          <select
+            aria-label="Access"
+            disabled={readOnly}
+            value={f.visibility}
+            onChange={(e) => onEdit({ visibility: e.target.value as DocVisibility })}
+            className={cx(cell, readOnly && "text-stone-600")}
+          >
             {(Object.keys(visibilityLabel) as DocVisibility[]).map((v) => (
               <option key={v} value={v}>
                 {visibilityLabel[v]}
@@ -187,7 +236,13 @@ function Row({ f, history, onEdit, onReplace, onRemove }: { f: RoomFile; history
           {readOnly ? (
             <span className="px-2 text-[12.5px] text-stone-400">—</span>
           ) : (
-            <input type="date" aria-label="Effective date" value={f.effectiveDate ?? ""} onChange={(e) => onEdit({ effectiveDate: e.target.value || null })} className={cx(cell, !f.effectiveDate && "text-stone-400")} />
+            <input
+              type="date"
+              aria-label="Effective date"
+              value={f.effectiveDate ?? ""}
+              onChange={(e) => onEdit({ effectiveDate: e.target.value || null })}
+              className={cx(cell, !f.effectiveDate && "text-stone-400")}
+            />
           )}
         </td>
         <td className="num w-[80px] px-3 py-2 text-right text-[12px] text-stone-500">{readOnly ? "—" : fileSize(f.bytes)}</td>
@@ -197,10 +252,22 @@ function Row({ f, history, onEdit, onReplace, onRemove }: { f: RoomFile; history
         <td className="w-[104px] py-2 pr-4">
           {!readOnly && (
             <div className="flex justify-end gap-0.5 opacity-40 transition-opacity group-hover:opacity-100">
-              <button type="button" aria-label="Rename" title="Rename" onClick={() => (setDraft(f.title), setRenaming(true))} className="rounded-[3px] p-1.5 text-stone-500 hover:bg-stone-200 hover:text-ink-900">
+              <button
+                type="button"
+                aria-label="Rename"
+                title="Rename"
+                onClick={() => (setDraft(f.title), setRenaming(true))}
+                className="rounded-[3px] p-1.5 text-stone-500 hover:bg-stone-200 hover:text-ink-900"
+              >
                 <Pencil size={13} />
               </button>
-              <PickButton ariaLabel="Replace" multiple={false} onFiles={onReplace} icon={<RefreshCw size={13} />} className="rounded-[3px] p-1.5 text-stone-500 hover:bg-stone-200 hover:text-ink-900" />
+              <PickButton
+                ariaLabel="Replace"
+                multiple={false}
+                onFiles={onReplace}
+                icon={<RefreshCw size={13} />}
+                className="rounded-[3px] p-1.5 text-stone-500 hover:bg-stone-200 hover:text-ink-900"
+              />
               <button type="button" aria-label="Remove" title="Remove" onClick={onRemove} className="rounded-[3px] p-1.5 text-stone-500 hover:bg-stone-200 hover:text-negative">
                 <Trash2 size={13} />
               </button>
@@ -227,7 +294,17 @@ function Row({ f, history, onEdit, onReplace, onRemove }: { f: RoomFile; history
  * The vehicle's corporate documents. Drop files anywhere on it; the type is guessed from the file name
  * and can be changed, as can the name, access and effective date. Replacing adds a version.
  */
-export function DataRoom({ files, onChange, gleif, uploader = "Luiza Andrade" }: { files: RoomFile[]; onChange: (f: RoomFile[]) => void; gleif?: GleifCapture | null; uploader?: string }) {
+export function DataRoom({
+  files,
+  onChange,
+  gleif,
+  uploader = "Luiza Andrade",
+}: {
+  files: RoomFile[];
+  onChange: (f: RoomFile[]) => void;
+  gleif?: GleifCapture | null;
+  uploader?: string;
+}) {
   const [group, setGroup] = useState<(typeof DOC_GROUPS)[number] | "All">("All");
   const [message, setMessage] = useState<string | null>(null);
 
@@ -239,7 +316,21 @@ export function DataRoom({ files, onChange, gleif, uploader = "Luiza Andrade" }:
   const drop = useDrop((l) => add(l));
 
   const lei: RoomFile | null = gleif
-    ? { id: "gleif", chain: "gleif", title: gleif.lei, fileName: "GLEIF record", type: "lei_record", visibility: "gp", bytes: 0, sha256: "", effectiveDate: null, version: 1, uploadedAt: gleif.capturedAt, uploadedBy: "GLEIF", source: "gleif" }
+    ? {
+        id: "gleif",
+        chain: "gleif",
+        title: gleif.lei,
+        fileName: "GLEIF record",
+        type: "lei_record",
+        visibility: "gp",
+        bytes: 0,
+        sha256: "",
+        effectiveDate: null,
+        version: 1,
+        uploadedAt: gleif.capturedAt,
+        uploadedBy: "GLEIF",
+        source: "gleif",
+      }
     : null;
   const current = [...(lei ? [lei] : []), ...currentFiles(files)];
   const count = (g: string) => current.filter((f) => docType(f.type).group === g).length;
@@ -368,7 +459,12 @@ export function LpaUpload({ files, onChange, uploader = "Luiza Andrade" }: { fil
             <option value="side_letter">Side letter</option>
           </select>
           <span className="num w-[70px] text-right text-[12px] text-stone-500">{fileSize(f.bytes)}</span>
-          <button type="button" aria-label="Remove" onClick={() => onChange(files.map((x) => (x.chain === f.chain ? { ...x, archived: true } : x)))} className="p-1 text-stone-400 hover:text-negative">
+          <button
+            type="button"
+            aria-label="Remove"
+            onClick={() => onChange(files.map((x) => (x.chain === f.chain ? { ...x, archived: true } : x)))}
+            className="p-1 text-stone-400 hover:text-negative"
+          >
             <X size={14} />
           </button>
         </div>

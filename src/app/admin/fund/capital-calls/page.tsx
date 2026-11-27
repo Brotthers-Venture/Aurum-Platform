@@ -5,18 +5,17 @@ import { Plus } from "lucide-react";
 import { ButtonLink, PageHeader, Panel, Progress, Stat, StatRow, Status } from "@/components/ui";
 import { capitalCalls, fundById, toUSD } from "@/lib/data";
 import { date, money, moneyShort } from "@/lib/format";
+import { ByManager } from "@/components/fund/ByManager";
+import { GpMark } from "@/components/brand/GpLogo";
+import { gps } from "@/lib/gps";
 
 export const metadata: Metadata = { title: "Capital calls" };
 
 export default async function CapitalCallsPage() {
   const fx = await reportingRate();
   const open = capitalCalls.filter((c) => c.status !== "Funded");
-  const outstanding = open
-    .filter((c) => c.status !== "Draft")
-    .reduce((a, c) => a + toUSD(c.amount - c.received, fundById(c.fundId)!.currency, fx.rate), 0);
-  const ytd = capitalCalls
-    .filter((c) => c.noticeDate.startsWith("2026") && c.status !== "Draft")
-    .reduce((a, c) => a + toUSD(c.amount, fundById(c.fundId)!.currency, fx.rate), 0);
+  const outstanding = open.filter((c) => c.status !== "Draft").reduce((a, c) => a + toUSD(c.amount - c.received, fundById(c.fundId)!.currency, fx.rate), 0);
+  const ytd = capitalCalls.filter((c) => c.noticeDate.startsWith("2026") && c.status !== "Draft").reduce((a, c) => a + toUSD(c.amount, fundById(c.fundId)!.currency, fx.rate), 0);
   const next = open.filter((c) => c.status !== "Draft").sort((a, b) => a.dueDate.localeCompare(b.dueDate))[0];
 
   return (
@@ -37,54 +36,77 @@ export default async function CapitalCallsPage() {
         <Stat label="Called 2026 YTD" value={moneyShort(ytd)} sub="USD equivalent" />
         <Stat label="Next due" value={next ? date(next.dueDate).replace(/, \d{4}$/, "") : "—"} sub={next ? `${fundById(next.fundId)!.shortName} · No. ${next.number}` : ""} />
       </StatRow>
-      <Panel flush>
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Vehicle</th>
-                <th>Call</th>
-                <th>Purpose</th>
-                <th>Notice date</th>
-                <th>Due date</th>
-                <th className="r">Amount</th>
-                <th className="w-[150px]">Funded</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {capitalCalls.map((c) => {
-                const f = fundById(c.fundId)!;
-                return (
-                  <tr key={c.id} className="row-link">
-                    <td className="font-semibold">
-                      <Link href={`/admin/fund/capital-calls/${c.id}`} className="block">
-                        {f.shortName}
-                      </Link>
-                    </td>
-                    <td className="num">
-                      <Link href={`/admin/fund/capital-calls/${c.id}`}>No. {c.number}</Link>
-                    </td>
-                    <td className="max-w-[300px] truncate text-stone-600">{c.purpose}</td>
-                    <td className="num text-stone-600">{date(c.noticeDate)}</td>
-                    <td className="num text-stone-600">{date(c.dueDate)}</td>
-                    <td className="num r">{money(c.amount, f.currency)}</td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <Progress value={c.received / c.amount} />
-                        <span className="num w-9 text-right text-[12px] text-stone-500">{Math.round((c.received / c.amount) * 100)}%</span>
-                      </div>
-                    </td>
-                    <td>
-                      <Status value={c.status} />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Panel>
+      <ByManager
+        noun={["capital call", "capital calls"]}
+        groups={[...gps]
+          .sort((x, y) => x.shortName.localeCompare(y.shortName))
+          .map((g) => {
+            const list = capitalCalls.filter((c) => fundById(c.fundId)!.gpId === g.id);
+            const openN = list.filter((c) => c.status !== "Funded").length;
+            return {
+              id: g.id,
+              name: g.shortName,
+              mark: <GpMark gp={g} size={20} />,
+              meta: `${list.length} ${list.length === 1 ? "call" : "calls"}${openN ? ` · ${openN} open` : ""}`,
+              count: list.length,
+              href: `/admin/fund/gps/${g.id}`,
+              content: <CallsTable list={list} />,
+            };
+          })}
+      />
     </div>
+  );
+}
+
+function CallsTable({ list }: { list: typeof capitalCalls }) {
+  return (
+    <Panel flush>
+      <div className="overflow-x-auto">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Vehicle</th>
+              <th>Call</th>
+              <th>Purpose</th>
+              <th>Notice date</th>
+              <th>Due date</th>
+              <th className="r">Amount</th>
+              <th className="w-[150px]">Funded</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((c) => {
+              const f = fundById(c.fundId)!;
+              return (
+                <tr key={c.id} className="row-link">
+                  <td className="font-semibold">
+                    <Link href={`/admin/fund/capital-calls/${c.id}`} className="block">
+                      {f.shortName}
+                    </Link>
+                  </td>
+                  <td className="num">
+                    <Link href={`/admin/fund/capital-calls/${c.id}`}>No. {c.number}</Link>
+                  </td>
+                  <td className="max-w-[300px] truncate text-stone-600">{c.purpose}</td>
+                  <td className="num text-stone-600">{date(c.noticeDate)}</td>
+                  <td className="num text-stone-600">{date(c.dueDate)}</td>
+                  <td className="num r">{money(c.amount, f.currency)}</td>
+                  <td>
+                    <div className="flex items-center gap-2">
+                      <Progress value={c.received / c.amount} />
+                      <span className="num w-9 text-right text-[12px] text-stone-500">{Math.round((c.received / c.amount) * 100)}%</span>
+                    </div>
+                  </td>
+                  <td>
+                    <Status value={c.status} />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Panel>
   );
 }

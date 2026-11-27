@@ -34,12 +34,10 @@ export default async function EconomicsPage({ params }: { params: Promise<{ id: 
         <FileUp size={26} strokeWidth={1.4} className="mx-auto text-stone-400" />
         <h2 className="mt-4 text-[17px] font-semibold">Upload the LPA to set this fund’s economics</h2>
         <p className="mx-auto mt-2 max-w-[520px] text-[13px] leading-relaxed text-stone-600">
-          Add the LPA, its amendments and any side letters as PDFs. The review reads share classes, fees, hurdle, catch-up, carry,
-          waterfall, closings and expense terms, quotes the clause behind each, and leaves anything the documents do not state blank.
+          Add the LPA, its amendments and any side letters as PDFs. The review reads share classes, fees, hurdle, catch-up, carry, waterfall, closings and expense terms, quotes the
+          clause behind each, and leaves anything the documents do not state blank.
         </p>
-        <div className="mt-6 inline-flex h-10 cursor-not-allowed items-center rounded-[3px] bg-stone-200 px-5 text-[13px] font-semibold text-stone-500">
-          Choose PDF files
-        </div>
+        <div className="mt-6 inline-flex h-10 cursor-not-allowed items-center rounded-[3px] bg-stone-200 px-5 text-[13px] font-semibold text-stone-500">Choose PDF files</div>
         <p className="mt-3 text-[12px] text-stone-500">Available once document storage and the review service are connected.</p>
       </div>
       <div className="flex items-start gap-2 text-[12px] text-stone-500">

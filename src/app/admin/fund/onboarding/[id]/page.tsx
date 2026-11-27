@@ -191,13 +191,23 @@ export default async function SubmissionReview({ params }: { params: Promise<{ i
               key={s.title}
               title={
                 <span className="flex items-center gap-3">
-                  {s.title === KYC ? <KycSectionMark id={o.id} server={s.state} /> : <span className={`flex h-5 w-5 items-center justify-center rounded-full ${iconBg[s.state]}`}>{icon[s.state]}</span>}
+                  {s.title === KYC ? (
+                    <KycSectionMark id={o.id} server={s.state} />
+                  ) : (
+                    <span className={`flex h-5 w-5 items-center justify-center rounded-full ${iconBg[s.state]}`}>{icon[s.state]}</span>
+                  )}
                   <span className="num text-stone-400">{String(i + 1).padStart(2, "0")}</span>
                   {s.title}
                 </span>
               }
               flush={s.flush}
-              actions={s.title === KYC ? <KycSectionLabel id={o.id} server={s.state} /> : <span className="text-stone-500">{s.state === "complete" ? "Complete" : s.state === "attention" ? "Needs attention" : "Awaiting investor"}</span>}
+              actions={
+                s.title === KYC ? (
+                  <KycSectionLabel id={o.id} server={s.state} />
+                ) : (
+                  <span className="text-stone-500">{s.state === "complete" ? "Complete" : s.state === "attention" ? "Needs attention" : "Awaiting investor"}</span>
+                )
+              }
             >
               {s.body}
             </Panel>
@@ -209,7 +219,9 @@ export default async function SubmissionReview({ params }: { params: Promise<{ i
           <Panel title="Progress">
             <div className="flex items-baseline justify-between">
               <span className="num text-[24px] font-medium">{Math.round(o.progress * 100)}%</span>
-              <span className="text-[12px] text-stone-500">{sections.filter((s) => s.state === "complete").length} of {sections.length} sections</span>
+              <span className="text-[12px] text-stone-500">
+                {sections.filter((s) => s.state === "complete").length} of {sections.length} sections
+              </span>
             </div>
             <Progress value={o.progress} className="mt-3" />
           </Panel>

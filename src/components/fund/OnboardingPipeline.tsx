@@ -25,7 +25,21 @@ export function OnboardingPipeline() {
     return () => window.removeEventListener("aurum-screening", read);
   }, []);
   const fundRows = useMemo(
-    () => onboarding.filter((o) => o.fundId === fundId).map((o) => (live.tick ? { ...o, status: statusOf(o), kyc: kycOf(o, live.cases.find((c) => c.subscriptionId === o.id)) as typeof o.kyc } : o)),
+    () =>
+      onboarding
+        .filter((o) => o.fundId === fundId)
+        .map((o) =>
+          live.tick
+            ? {
+                ...o,
+                status: statusOf(o),
+                kyc: kycOf(
+                  o,
+                  live.cases.find((c) => c.subscriptionId === o.id),
+                ) as typeof o.kyc,
+              }
+            : o,
+        ),
     [fundId, live],
   );
   const rows = stage === "All" ? fundRows : fundRows.filter((r) => r.status === stage);
@@ -65,9 +79,7 @@ export function OnboardingPipeline() {
             </option>
           ))}
         </select>
-        <span className="text-[12px] text-stone-500">
-          {fundId === "atlantico-vp-ii" ? "Second close · target Dec 18, 2026" : "Final close · open"}
-        </span>
+        <span className="text-[12px] text-stone-500">{fundId === "atlantico-vp-ii" ? "Second close · target Dec 18, 2026" : "Final close · open"}</span>
         <div className="ml-auto flex items-center gap-2 rounded-[3px] border border-stone-200 bg-white px-3 py-1.5 text-[12px] text-stone-600">
           <Link2 size={13} strokeWidth={1.8} />
           <span className="font-mono text-[11px]">portal.aurumasset.us/subscribe/{fund.id}</span>
@@ -91,9 +103,7 @@ export function OnboardingPipeline() {
               <div className={cx("text-[11px] font-semibold uppercase tracking-[0.1em]", on ? "text-gold-400" : "text-stone-500")}>{s}</div>
               <div className="mt-1.5 flex items-baseline justify-between">
                 <span className="num text-[20px] font-medium">{r.length}</span>
-                <span className={cx("num text-[12px]", on ? "text-white/70" : "text-stone-500")}>
-                  {moneyShort(r.reduce((a, x) => a + x.commitment, 0))}
-                </span>
+                <span className={cx("num text-[12px]", on ? "text-white/70" : "text-stone-500")}>{moneyShort(r.reduce((a, x) => a + x.commitment, 0))}</span>
               </div>
             </button>
           );
@@ -160,8 +170,7 @@ export function OnboardingPipeline() {
 }
 
 function InviteDrawer({ fundName, onClose }: { fundName: string; onClose: () => void }) {
-  const input =
-    "h-10 w-full rounded-[3px] border border-stone-300 px-3 text-[13px] focus:border-ink-900 focus:outline-none focus:ring-1 focus:ring-ink-900";
+  const input = "h-10 w-full rounded-[3px] border border-stone-300 px-3 text-[13px] focus:border-ink-900 focus:outline-none focus:ring-1 focus:ring-ink-900";
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-ink-900/30" onClick={onClose}>
       <aside className="flex h-full w-full max-w-[460px] flex-col bg-white" onClick={(e) => e.stopPropagation()}>

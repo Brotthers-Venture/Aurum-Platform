@@ -76,8 +76,8 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
             <Status value={stage === "applied" ? "Completed" : stage === "gp_confirmation" ? "GP consent" : "Pending review"} />
           </h1>
           <p className="mt-1.5 max-w-[720px] text-[14px] text-stone-600">
-            Economic terms read from the fund documents. Every value quotes its source clause; anything the documents do not state
-            is left blank. Nothing applies until Aurum and the GP have both approved.
+            Economic terms read from the fund documents. Every value quotes its source clause; anything the documents do not state is left blank. Nothing applies until Aurum and
+            the GP have both approved.
           </p>
         </div>
         <div className="flex gap-2">
@@ -117,9 +117,7 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
 
           {canDecide && (
             <div className="flex items-center justify-between rounded-[8px] border border-stone-200/70 bg-white shadow-card px-4 py-3 text-[13px]">
-              <span className="text-stone-600">
-                Each verified term still needs your approval. Not-found and conflicting terms must be decided one by one.
-              </span>
+              <span className="text-stone-600">Each verified term still needs your approval. Not-found and conflicting terms must be decided one by one.</span>
               <Button size="sm" variant="secondary" onClick={approveAllVerified}>
                 Approve all verified terms
               </Button>
@@ -159,9 +157,7 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
                                     t.value
                                   )}
                                 </div>
-                                <blockquote className="mt-1.5 border-l-2 border-gold-400 pl-3 font-serif text-[13px] leading-relaxed text-stone-600">
-                                  {t.quote}
-                                </blockquote>
+                                <blockquote className="mt-1.5 border-l-2 border-gold-400 pl-3 font-serif text-[13px] leading-relaxed text-stone-600">{t.quote}</blockquote>
                                 <div className="mt-1.5 flex items-center gap-3 text-[11px] text-stone-500">
                                   <span className="font-mono">
                                     {t.clause} · p. {t.page}
@@ -187,10 +183,7 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
                                 {t.readings!.map((r, i) => (
                                   <div
                                     key={i}
-                                    className={cx(
-                                      "rounded-[3px] border p-3",
-                                      d?.kind === "reading" && d.index === i ? "border-ink-900 ring-1 ring-ink-900" : "border-stone-200",
-                                    )}
+                                    className={cx("rounded-[3px] border p-3", d?.kind === "reading" && d.index === i ? "border-ink-900 ring-1 ring-ink-900" : "border-stone-200")}
                                   >
                                     <div className="text-[13px] font-semibold">
                                       Reading {i + 1}: {r.value}
@@ -219,7 +212,10 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
                                         <button
                                           key={i}
                                           onClick={() => setDraft({ ...draft, reading: i })}
-                                          className={cx("h-8 rounded-[3px] border px-3 text-[12px] font-semibold", draft.reading === i ? "border-gold-500 bg-champagne text-ink-900" : "border-stone-300 bg-white")}
+                                          className={cx(
+                                            "h-8 rounded-[3px] border px-3 text-[12px] font-semibold",
+                                            draft.reading === i ? "border-gold-500 bg-champagne text-ink-900" : "border-stone-300 bg-white",
+                                          )}
                                         >
                                           Apply reading {i + 1}
                                         </button>
@@ -235,7 +231,11 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
                                       <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
                                         Cancel
                                       </Button>
-                                      <Button size="sm" disabled={!draft.note.trim()} onClick={() => decide(t.key, { kind: "reading", by: user.name, index: draft.reading, note: draft.note })}>
+                                      <Button
+                                        size="sm"
+                                        disabled={!draft.note.trim()}
+                                        onClick={() => decide(t.key, { kind: "reading", by: user.name, index: draft.reading, note: draft.note })}
+                                      >
                                         Record decision
                                       </Button>
                                     </div>
@@ -275,12 +275,7 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
                           <div className="w-[190px] shrink-0 text-right">
                             {d ? (
                               <div className="text-[12px]">
-                                <div
-                                  className={cx(
-                                    "inline-flex items-center gap-1 font-semibold",
-                                    d.kind === "rejected" ? "text-negative" : "text-positive",
-                                  )}
-                                >
+                                <div className={cx("inline-flex items-center gap-1 font-semibold", d.kind === "rejected" ? "text-negative" : "text-positive")}>
                                   {d.kind === "rejected" ? <X size={13} strokeWidth={2.4} /> : <Check size={13} strokeWidth={2.4} />}
                                   {d.kind === "approved" && "Approved"}
                                   {d.kind === "edited" && "Corrected"}
@@ -468,17 +463,7 @@ export function EconomicsReview({ review, fundName }: { review: LpaReview; fundN
                     <span className="font-semibold">
                       v{h.version} · {h.label}
                     </span>
-                    <Status
-                      value={
-                        h.version === review.version
-                          ? stage === "applied"
-                            ? "Completed"
-                            : "Pending review"
-                          : stage === "applied"
-                            ? "Superseded"
-                            : "Completed"
-                      }
-                    />
+                    <Status value={h.version === review.version ? (stage === "applied" ? "Completed" : "Pending review") : stage === "applied" ? "Superseded" : "Completed"} />
                   </div>
                   <div className="text-[12px] text-stone-500">
                     Effective {date(h.effective)} · {h.version === review.version && stage === "applied" ? `${aurumApprover} · Marcus Hale (GP)` : h.approvedBy}

@@ -53,7 +53,11 @@ export function SubmissionActions({ id }: { id: string }) {
           {block && <Lock size={13} />} Countersign & accept
         </Button>
       ) : (
-        <Button disabled={!canApprove} title={block ?? (status !== "Submitted" ? `The subscription is ${status.toLowerCase()}.` : undefined)} onClick={() => setSubscriptionStatus(o, "Approved", user.name)}>
+        <Button
+          disabled={!canApprove}
+          title={block ?? (status !== "Submitted" ? `The subscription is ${status.toLowerCase()}.` : undefined)}
+          onClick={() => setSubscriptionStatus(o, "Approved", user.name)}
+        >
           {block && <Lock size={13} />} Approve subscription
         </Button>
       )}
@@ -71,7 +75,10 @@ export function ScreeningBanner({ id }: { id: string }) {
       <div className="flex-1">
         <span className="font-semibold">Approval and countersignature are locked.</span> {block}
       </div>
-      <Link href={`/admin/compliance?tab=screening#${c.id}`} className="inline-flex shrink-0 items-center gap-1 self-start font-semibold text-ink-900 underline-offset-2 hover:underline">
+      <Link
+        href={`/admin/compliance?tab=screening#${c.id}`}
+        className="inline-flex shrink-0 items-center gap-1 self-start font-semibold text-ink-900 underline-offset-2 hover:underline"
+      >
         Open the case <ArrowUpRight size={13} />
       </Link>
     </div>
@@ -80,8 +87,16 @@ export function ScreeningBanner({ id }: { id: string }) {
 
 const STEPS = (c: ScreeningCase) => [
   { label: "Screened", who: `${c.screened.length} people · ${c.result}`, done: true },
-  { label: "First review · Compliance", who: c.result === "No match" ? "Not needed — no match" : c.first ? `${c.first.by} · ${c.first.decision}` : "Waiting", done: c.result === "No match" || !!c.first },
-  { label: "Second approval · Head of Fund Services", who: c.result === "No match" ? "Not needed — no match" : c.second?.confirmed ? c.second.by : "Waiting", done: c.result === "No match" || !!c.second?.confirmed },
+  {
+    label: "First review · Compliance",
+    who: c.result === "No match" ? "Not needed — no match" : c.first ? `${c.first.by} · ${c.first.decision}` : "Waiting",
+    done: c.result === "No match" || !!c.first,
+  },
+  {
+    label: "Second approval · Head of Fund Services",
+    who: c.result === "No match" ? "Not needed — no match" : c.second?.confirmed ? c.second.by : "Waiting",
+    done: c.result === "No match" || !!c.second?.confirmed,
+  },
 ];
 
 export function ScreeningAside({ id }: { id: string }) {
@@ -103,7 +118,9 @@ export function ScreeningAside({ id }: { id: string }) {
             <ol className="space-y-2.5">
               {STEPS(c).map((s) => (
                 <li key={s.label} className="flex gap-2.5">
-                  <span className={cx("mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full", s.done ? "bg-ink-900 text-white" : "border border-stone-300")}>{s.done && <Check size={10} strokeWidth={3} />}</span>
+                  <span className={cx("mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full", s.done ? "bg-ink-900 text-white" : "border border-stone-300")}>
+                    {s.done && <Check size={10} strokeWidth={3} />}
+                  </span>
                   <span className="min-w-0">
                     <span className="block text-[12.5px] font-medium text-ink-900">{s.label}</span>
                     <span className="block text-[11.5px] text-stone-500">{s.who}</span>
@@ -119,7 +136,10 @@ export function ScreeningAside({ id }: { id: string }) {
                 <div className="text-stone-500">{c.matches[0].list}</div>
               </div>
             )}
-            <Link href={`/admin/compliance?tab=screening#${c.id}`} className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-semibold text-ink-900 underline-offset-2 hover:underline">
+            <Link
+              href={`/admin/compliance?tab=screening#${c.id}`}
+              className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-semibold text-ink-900 underline-offset-2 hover:underline"
+            >
               Open in Compliance <ArrowUpRight size={13} />
             </Link>
           </>
@@ -142,8 +162,17 @@ function useKycState(id: string, server: SectionState): SectionState {
 export function KycSectionMark({ id, server }: { id: string; server: SectionState }) {
   const st = useKycState(id, server);
   return (
-    <span className={cx("flex h-5 w-5 items-center justify-center rounded-full", st === "complete" ? "bg-positive" : st === "attention" ? "bg-caution" : "border border-stone-300 bg-stone-100")}>
-      {st === "complete" ? <Check size={13} strokeWidth={2.5} className="text-white" /> : st === "attention" ? <AlertTriangle size={12} strokeWidth={2.2} className="text-white" /> : null}
+    <span
+      className={cx(
+        "flex h-5 w-5 items-center justify-center rounded-full",
+        st === "complete" ? "bg-positive" : st === "attention" ? "bg-caution" : "border border-stone-300 bg-stone-100",
+      )}
+    >
+      {st === "complete" ? (
+        <Check size={13} strokeWidth={2.5} className="text-white" />
+      ) : st === "attention" ? (
+        <AlertTriangle size={12} strokeWidth={2.2} className="text-white" />
+      ) : null}
     </span>
   );
 }

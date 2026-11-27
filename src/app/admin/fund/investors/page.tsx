@@ -11,20 +11,34 @@ export const metadata: Metadata = { title: "Investors" };
 
 export default async function InvestorsPage() {
   const fx = await reportingRate();
-  const vehicles: Vehicle[] = funds.map((f) => ({
-    id: f.id,
-    name: f.name,
-    shortName: f.shortName,
-    currency: f.currency,
-    gp: gpById(f.gpId)?.shortName ?? f.gp,
-    status: f.status,
-    rows: capitalAccounts
-      .filter((c) => c.fundId === f.id)
-      .map((c) => {
-        const inv = investorById(c.investorId)!;
-        return { investorId: inv.id, name: inv.name, contact: inv.contact, type: inv.type, kyc: inv.kyc, closeDate: c.closeDate, commitment: c.commitment, called: c.called, unfunded: c.unfunded, distributed: c.distributed, nav: c.nav };
-      }),
-  }));
+  const vehicles: Vehicle[] = [...funds]
+    .sort((a, b) => (gpById(a.gpId)?.shortName ?? a.gp).localeCompare(gpById(b.gpId)?.shortName ?? b.gp))
+    .map((f) => ({
+      id: f.id,
+      name: f.name,
+      shortName: f.shortName,
+      currency: f.currency,
+      gp: gpById(f.gpId)?.shortName ?? f.gp,
+      status: f.status,
+      rows: capitalAccounts
+        .filter((c) => c.fundId === f.id)
+        .map((c) => {
+          const inv = investorById(c.investorId)!;
+          return {
+            investorId: inv.id,
+            name: inv.name,
+            contact: inv.contact,
+            type: inv.type,
+            kyc: inv.kyc,
+            closeDate: c.closeDate,
+            commitment: c.commitment,
+            called: c.called,
+            unfunded: c.unfunded,
+            distributed: c.distributed,
+            nav: c.nav,
+          };
+        }),
+    }));
   const master: MasterRow[] = investors
     .map((inv) => {
       const accts = capitalAccounts.filter((c) => c.investorId === inv.id);
@@ -62,11 +76,7 @@ export default async function InvestorsPage() {
         }
       />
       <InvestorsView vehicles={vehicles} master={master} fxNote={`Vehicle registers in fund currency · totals by investor in USD, ${fxLabel(fx)}`} />
-      <Panel
-        title="Profile change requests"
-        actions={<span className="text-stone-500">Submitted by investors from the portal</span>}
-        flush
-      >
+      <Panel title="Profile change requests" actions={<span className="text-stone-500">Submitted by investors from the portal</span>} flush>
         <table className="data-table">
           <thead>
             <tr>

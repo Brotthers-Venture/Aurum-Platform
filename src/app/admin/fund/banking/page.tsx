@@ -27,14 +27,11 @@ export default function BankingPage() {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h2 className="text-[14px] font-semibold">Plaid connectivity</h2>
-            <span className="rounded-[2px] border border-stone-300 px-1.5 py-[2px] text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-500">
-              Integration pending
-            </span>
+            <span className="rounded-[2px] border border-stone-300 px-1.5 py-[2px] text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-500">Integration pending</span>
           </div>
           <p className="mt-1 max-w-[720px] text-[13px] leading-relaxed text-stone-600">
-            Once connected, balances and transactions sync daily, incoming wires are matched to capital calls automatically,
-            and investors can verify their distribution accounts through Plaid during onboarding. Until then, statements are
-            uploaded manually.
+            Once connected, balances and transactions sync daily, incoming wires are matched to capital calls automatically, and investors can verify their distribution accounts
+            through Plaid during onboarding. Until then, statements are uploaded manually.
           </p>
         </div>
         <Button variant="secondary" disabled className="self-center">

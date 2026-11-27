@@ -44,6 +44,9 @@ export type MasterRow = {
 export function InvestorsView({ vehicles, master, fxNote }: { vehicles: Vehicle[]; master: MasterRow[]; fxNote: string }) {
   const [view, setView] = useState<"vehicle" | "investor">("vehicle");
   const [fund, setFund] = useState<string>("all");
+  const [mgr, setMgr] = useState<string>("all");
+  const managers = [...new Set(vehicles.map((v) => v.gp))].sort((a, b) => a.localeCompare(b));
+  const inMgr = vehicles.filter((v) => mgr === "all" || v.gp === mgr);
   const [q, setQ] = useState("");
   // Deep link from search: ?q=<name>&view=investor
   useEffect(() => {
@@ -55,7 +58,7 @@ export function InvestorsView({ vehicles, master, fxNote }: { vehicles: Vehicle[
   }, []);
   const [closed, setClosed] = useState<Record<string, boolean>>({});
   const match = (s: string) => !q || s.toLowerCase().includes(q.toLowerCase());
-  const shown = vehicles.filter((v) => fund === "all" || v.id === fund);
+  const shown = inMgr.filter((v) => fund === "all" || v.id === fund);
 
   return (
     <div className="space-y-4">
@@ -90,11 +93,39 @@ export function InvestorsView({ vehicles, master, fxNote }: { vehicles: Vehicle[
 
       {view === "vehicle" && (
         <>
-          <div className="flex flex-wrap gap-1.5">
-            <Chip on={fund === "all"} onClick={() => setFund("all")} label="All vehicles" n={vehicles.length} />
-            {vehicles.map((v) => (
-              <Chip key={v.id} on={fund === v.id} onClick={() => setFund(v.id)} label={v.shortName} n={v.rows.length} />
-            ))}
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-1" role="group" aria-label="Manager">
+              <Chip
+                on={mgr === "all"}
+                onClick={() => {
+                  setMgr("all");
+                  setFund("all");
+                }}
+                label="All managers"
+                n={vehicles.reduce((a, v) => a + v.rows.length, 0)}
+              />
+              {managers.map((m) => (
+                <Chip
+                  key={m}
+                  on={mgr === m}
+                  onClick={() => {
+                    setMgr(m);
+                    setFund("all");
+                  }}
+                  label={m}
+                  n={vehicles.filter((v) => v.gp === m).reduce((a, v) => a + v.rows.length, 0)}
+                />
+              ))}
+            </div>
+            {mgr !== "all" && inMgr.length > 1 && (
+              <div className="flex flex-wrap items-center gap-1 border-l-2 border-d-line pl-3" role="group" aria-label="Vehicle">
+                <span className="mr-1 text-[12px] text-d-text-3">{mgr}’s vehicles</span>
+                <Chip on={fund === "all"} onClick={() => setFund("all")} label="All" n={inMgr.reduce((a, v) => a + v.rows.length, 0)} small />
+                {inMgr.map((v) => (
+                  <Chip key={v.id} on={fund === v.id} onClick={() => setFund(v.id)} label={v.shortName} n={v.rows.length} small />
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="matte overflow-hidden">
@@ -106,8 +137,9 @@ export function InvestorsView({ vehicles, master, fxNote }: { vehicles: Vehicle[
               <span className="text-right max-md:hidden">Called</span>
               <span className="text-right">NAV</span>
             </div>
-            {shown.map((v) => {
+            {shown.map((v, vi) => {
               const rows = v.rows.filter((r) => match(r.name) || match(r.contact));
+              const firstOfMgr = vi === 0 || shown[vi - 1].gp !== v.gp;
               const t = v.rows.reduce(
                 (a, r) => ({
                   commitment: a.commitment + r.commitment,
@@ -123,6 +155,14 @@ export function InvestorsView({ vehicles, master, fxNote }: { vehicles: Vehicle[
               const calledPct = t.commitment ? t.called / t.commitment : 0;
               return (
                 <section key={v.id} className="border-b border-d-line-soft last:border-0">
+                  {firstOfMgr && (
+                    <div className="flex items-baseline gap-2 border-b border-d-line-soft bg-[color-mix(in_oklab,var(--d-raise)_45%,transparent)] px-4 py-2">
+                      <span className="text-[12.5px] font-semibold text-d-text">{v.gp}</span>
+                      <span className="text-[11.5px] text-d-text-3">
+                        {shown.filter((x) => x.gp === v.gp).length} {shown.filter((x) => x.gp === v.gp).length === 1 ? "vehicle" : "vehicles"}
+                      </span>
+                    </div>
+                  )}
                   <button
                     onClick={() => (fund === "all" ? setClosed((c) => ({ ...c, [v.id]: !(c[v.id] ?? true) })) : setFund("all"))}
                     className={cx(
@@ -136,7 +176,7 @@ export function InvestorsView({ vehicles, master, fxNote }: { vehicles: Vehicle[
                     <span className="min-w-0">
                       <span className="block truncate text-[14px] font-semibold text-d-text">{v.name}</span>
                       <span className="text-[12px] text-d-text-3">
-                        {v.gp} · {v.status} · {v.currency}
+                        {v.status} · {v.currency}
                       </span>
                     </span>
                     <span className="num text-right text-[13.5px] text-d-text max-md:hidden">{v.rows.length}</span>
@@ -280,12 +320,14 @@ export function InvestorsView({ vehicles, master, fxNote }: { vehicles: Vehicle[
   );
 }
 
-function Chip({ on, onClick, label, n }: { on: boolean; onClick: () => void; label: string; n: number }) {
+function Chip({ on, onClick, label, n, small }: { on: boolean; onClick: () => void; label: string; n: number; small?: boolean }) {
   return (
     <button
       onClick={onClick}
+      aria-pressed={on}
       className={cx(
-        "flex h-8 items-center gap-1.5 rounded-[6px] px-3 text-[12px] font-semibold transition-colors",
+        "flex items-center gap-1.5 rounded-[6px] font-semibold transition-colors",
+        small ? "h-7 px-2.5 text-[12px]" : "h-8 px-3 text-[12.5px]",
         on ? "bg-d-raise text-d-text ring-1 ring-d-line-strong" : "text-d-text-2 hover:bg-[color-mix(in_oklab,var(--d-raise)_55%,transparent)] hover:text-d-text",
       )}
     >

@@ -26,19 +26,43 @@ const norm = (s: string) =>
     .trim();
 
 /** Short words that are ordinary words, not acronyms, when title-casing GLEIF's upper-case names. */
-const SMALL_WORDS = new Set(["of", "and", "the", "for", "inc", "ltd", "co", "de", "da", "do", "dos", "das", "del", "e", "em", "no", "na", "com", "y", "la", "le", "on", "at", "in", "to"]);
+const SMALL_WORDS = new Set([
+  "of",
+  "and",
+  "the",
+  "for",
+  "inc",
+  "ltd",
+  "co",
+  "de",
+  "da",
+  "do",
+  "dos",
+  "das",
+  "del",
+  "e",
+  "em",
+  "no",
+  "na",
+  "com",
+  "y",
+  "la",
+  "le",
+  "on",
+  "at",
+  "in",
+  "to",
+]);
 /** GLEIF stores names in capitals; show them in title case but keep acronyms (STX, LP, LLC, II) intact. */
 const titleCase = (s: string) =>
   s === s.toUpperCase()
-    ? s
-        .toLowerCase()
-        .replace(/[a-z0-9]+/g, (w, i: number) => {
-          if (/^[ivx]+$/.test(w) && w.length <= 4) return w.toUpperCase(); // roman numerals
-          if (w.length <= 3 && !SMALL_WORDS.has(w)) return w.toUpperCase(); // STX, LP, LLC, SPV, FIP
-          if (SMALL_WORDS.has(w) && i > 0 && !["inc", "ltd", "co"].includes(w)) return w;
-          return w[0].toUpperCase() + w.slice(1);
-        })
-    : s
+    ? s.toLowerCase().replace(/[a-z0-9]+/g, (w, i: number) => {
+        if (/^[ivx]+$/.test(w) && w.length <= 4) return w.toUpperCase(); // roman numerals
+        if (w.length <= 3 && !SMALL_WORDS.has(w)) return w.toUpperCase(); // STX, LP, LLC, SPV, FIP
+        if (SMALL_WORDS.has(w) && i > 0 && !["inc", "ltd", "co"].includes(w)) return w;
+        return w[0].toUpperCase() + w.slice(1);
+      })
+    : s;
 
 function Section({ n, title, desc, aside, children }: { n: number; title: string; desc?: string; aside?: ReactNode; children: ReactNode }) {
   return (
@@ -222,7 +246,10 @@ export function NewVehicleForm() {
     setLoadingLei(lei);
     setError(null);
     try {
-      const known = gps.map((g) => g.lei).filter(Boolean).join(",");
+      const known = gps
+        .map((g) => g.lei)
+        .filter(Boolean)
+        .join(",");
       const res = await fetch(`/api/gleif/record?lei=${lei}${known ? `&match=${known}` : ""}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
@@ -298,10 +325,14 @@ export function NewVehicleForm() {
           <h1 className="mt-4 text-[22px] font-semibold">{legalName} is set up</h1>
           <p className="mt-1 text-[13px] text-stone-600">{gp?.name} · economics pending LPA review</p>
           <dl className="mt-6 border-t border-stone-200 pt-2">
-            <Row label="LEI" mono={Boolean(vehicle)}>{vehicle ? vehicle.lei : manual?.viaRapidLei ? "Requested via RapidLEI" : "—"}</Row>
+            <Row label="LEI" mono={Boolean(vehicle)}>
+              {vehicle ? vehicle.lei : manual?.viaRapidLei ? "Requested via RapidLEI" : "—"}
+            </Row>
             <Row label="Domicile">{vehicle?.jurisdictionLabel ?? manual?.domicile}</Row>
             <Row label="Currency">{currency}</Row>
-            <Row label="Corporate documents">{roomFiles.length} file{roomFiles.length === 1 ? "" : "s"}</Row>
+            <Row label="Corporate documents">
+              {roomFiles.length} file{roomFiles.length === 1 ? "" : "s"}
+            </Row>
             <Row label="LPA review">{lpaFile ? `${lpaFile.title} · queued` : "Awaiting LPA"}</Row>
           </dl>
           <div className="mt-6 flex gap-2">
@@ -357,7 +388,6 @@ export function NewVehicleForm() {
                 />
                 {searching && <Loader2 size={15} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-stone-400" />}
               </div>
-
             </div>
 
             {error && <Notice tone="warn">{error}</Notice>}
@@ -387,7 +417,11 @@ export function NewVehicleForm() {
               <Button variant="ghost" size="sm" onClick={() => setManual(blankManual(false))}>
                 Enter manually
               </Button>
-              <Button variant="secondary" size="sm" onClick={() => setManual({ ...blankManual(true), legalName: q.trim().length >= 3 && !/^[A-Z0-9]{18}[0-9]{2}$/i.test(q.trim()) ? q.trim() : "" })}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setManual({ ...blankManual(true), legalName: q.trim().length >= 3 && !/^[A-Z0-9]{18}[0-9]{2}$/i.test(q.trim()) ? q.trim() : "" })}
+              >
                 Create LEI with RapidLEI
               </Button>
             </div>
@@ -422,7 +456,12 @@ export function NewVehicleForm() {
             <div>
               <div className="text-[15px] font-semibold">{legalName || "Manual entry"}</div>
               {vehicle ? (
-                <a href={leiUrl(vehicle.lei)} target="_blank" rel="noreferrer" className="mt-0.5 inline-flex items-center gap-1 font-mono text-[12px] text-stone-500 hover:text-ink-900">
+                <a
+                  href={leiUrl(vehicle.lei)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-0.5 inline-flex items-center gap-1 font-mono text-[12px] text-stone-500 hover:text-ink-900"
+                >
                   {vehicle.lei} <ExternalLink size={11} />
                 </a>
               ) : (
@@ -439,10 +478,14 @@ export function NewVehicleForm() {
           {vehicle ? (
             <>
               <dl className="grid grid-cols-2 gap-x-8 gap-y-5 md:grid-cols-4">
-                <Fact label="Legal name" wide>{legalName}</Fact>
+                <Fact label="Legal name" wide>
+                  {legalName}
+                </Fact>
                 <Fact label="Legal form">{vehicle.legalFormName ?? "—"}</Fact>
                 <Fact label="Domicile">{vehicle.jurisdictionLabel}</Fact>
-                <Fact label="Registry no." mono>{vehicle.registeredAs ?? "—"}</Fact>
+                <Fact label="Registry no." mono>
+                  {vehicle.registeredAs ?? "—"}
+                </Fact>
                 <Fact label="Formed">{vehicle.creationDate ? date(vehicle.creationDate) : "—"}</Fact>
                 <Fact label="LEI status">
                   <span className="inline-flex items-center gap-2">
@@ -451,8 +494,12 @@ export function NewVehicleForm() {
                   </span>
                 </Fact>
                 <Fact label="Fund manager">{vehicle.fundManager ? titleCase(vehicle.fundManager.legalName) : <span className="text-stone-400">Not reported</span>}</Fact>
-                <Fact label="Registered office" wide>{formatAddress(vehicle.legalAddress)}</Fact>
-                <Fact label="Principal office" wide>{formatAddress(vehicle.hqAddress)}</Fact>
+                <Fact label="Registered office" wide>
+                  {formatAddress(vehicle.legalAddress)}
+                </Fact>
+                <Fact label="Principal office" wide>
+                  {formatAddress(vehicle.hqAddress)}
+                </Fact>
               </dl>
               {vehicle.registrationStatus !== "ISSUED" && (
                 <Notice tone="warn">
@@ -554,7 +601,13 @@ export function NewVehicleForm() {
               <input className={input} placeholder="e.g. Venture capital" value={strategy} onChange={(e) => setStrategy(e.target.value)} />
             </Field>
             <Field label="Vintage">
-              <input inputMode="numeric" className={input} placeholder="Year of first close" value={vintage} onChange={(e) => setVintage(e.target.value.replace(/\D/g, "").slice(0, 4))} />
+              <input
+                inputMode="numeric"
+                className={input}
+                placeholder="Year of first close"
+                value={vintage}
+                onChange={(e) => setVintage(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              />
             </Field>
           </div>
         </Section>
@@ -576,12 +629,23 @@ export function NewVehicleForm() {
           </dl>
           {gp && !gp.lei && <Notice tone="warn">{gp.name} has no LEI on file.</Notice>}
           <div className="flex flex-wrap items-end gap-3 border-t border-stone-100 pt-5">
-            <a href={RAPIDLEI_URL} target="_blank" rel="noreferrer" className="mb-[22px] inline-flex h-10 items-center gap-2 rounded-[3px] bg-ink-900 px-4 text-[13px] font-semibold text-white hover:bg-ink-800">
+            <a
+              href={RAPIDLEI_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mb-[22px] inline-flex h-10 items-center gap-2 rounded-[3px] bg-ink-900 px-4 text-[13px] font-semibold text-white hover:bg-ink-800"
+            >
               Open RapidLEI <ExternalLink size={13} />
             </a>
             <div className="ml-auto flex items-end gap-2">
               <Field label="Issued LEI" hint={leiCheck.state === "pending" ? "Not in GLEIF yet (can take a day)" : leiCheck.state === "invalid" ? "Invalid LEI" : " "}>
-                <input aria-label="Issued LEI" className={cx(input, "w-[260px] font-mono uppercase")} maxLength={20} value={manual.lei} onChange={(e) => setManual({ ...manual, lei: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") })} />
+                <input
+                  aria-label="Issued LEI"
+                  className={cx(input, "w-[260px] font-mono uppercase")}
+                  maxLength={20}
+                  value={manual.lei}
+                  onChange={(e) => setManual({ ...manual, lei: e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") })}
+                />
               </Field>
               <Button variant="secondary" className="mb-[22px] h-10" disabled={!manual.lei || leiCheck.state === "checking"} onClick={verifyIssuedLei}>
                 {leiCheck.state === "checking" ? <Loader2 size={13} className="animate-spin" /> : null} Verify in GLEIF
@@ -597,7 +661,13 @@ export function NewVehicleForm() {
           <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
             <div className="grid content-start gap-5 sm:grid-cols-2">
               <Field label="Cover title">
-                <input aria-label="Cover title" className={input} placeholder={(shortName || legalName).split(" ")[0].toUpperCase() || "e.g. ANCHOR"} value={card.code} onChange={(e) => setCard({ ...card, code: e.target.value.toUpperCase().slice(0, 14) })} />
+                <input
+                  aria-label="Cover title"
+                  className={input}
+                  placeholder={(shortName || legalName).split(" ")[0].toUpperCase() || "e.g. ANCHOR"}
+                  value={card.code}
+                  onChange={(e) => setCard({ ...card, code: e.target.value.toUpperCase().slice(0, 14) })}
+                />
               </Field>
               <Field label="Badge">
                 <select className={input} value={card.badge} onChange={(e) => setCard({ ...card, badge: e.target.value })}>
@@ -610,7 +680,15 @@ export function NewVehicleForm() {
               </Field>
               <div className="sm:col-span-2">
                 <Field label="Short description">
-                  <textarea aria-label="Short description" rows={2} maxLength={160} className={cx(input, "h-auto py-2.5")} placeholder="One sentence on what the fund invests in" value={card.tagline} onChange={(e) => setCard({ ...card, tagline: e.target.value })} />
+                  <textarea
+                    aria-label="Short description"
+                    rows={2}
+                    maxLength={160}
+                    className={cx(input, "h-auto py-2.5")}
+                    placeholder="One sentence on what the fund invests in"
+                    value={card.tagline}
+                    onChange={(e) => setCard({ ...card, tagline: e.target.value })}
+                  />
                 </Field>
               </div>
               <Field label="Minimum investment">
@@ -649,7 +727,10 @@ export function NewVehicleForm() {
                     tagline: card.tagline || "Short description of the strategy.",
                     minInvestment: card.min || "—",
                     liquidity: card.liquidity || "—",
-                    tags: card.tags.split(",").map((t) => t.trim()).filter(Boolean),
+                    tags: card.tags
+                      .split(",")
+                      .map((t) => t.trim())
+                      .filter(Boolean),
                     badge: card.badge || undefined,
                     cover: card.cover || undefined,
                   }}
@@ -660,7 +741,9 @@ export function NewVehicleForm() {
                   ]}
                 />
               ) : (
-                <div className="flex h-full min-h-[300px] items-center justify-center rounded-[10px] border border-dashed border-stone-300 text-[12px] text-stone-400">Select the GP client to preview</div>
+                <div className="flex h-full min-h-[300px] items-center justify-center rounded-[10px] border border-dashed border-stone-300 text-[12px] text-stone-400">
+                  Select the GP client to preview
+                </div>
               )}
             </div>
           </div>

@@ -37,8 +37,7 @@ export function JournalTable({ entries, currency, compact }: { entries: JournalE
                 <td />
                 {!compact && <td />}
                 <td className={l.credit ? "pl-8" : ""}>
-                  <span className="font-mono text-[11px] text-stone-400">{l.account}</span>{" "}
-                  <span className="text-ink-800">{accountByCode(l.account).name}</span>
+                  <span className="font-mono text-[11px] text-stone-400">{l.account}</span> <span className="text-ink-800">{accountByCode(l.account).name}</span>
                 </td>
                 <td className="text-[12px] text-stone-500">{l.partnerId ? investorById(l.partnerId)?.name : ""}</td>
                 <td className="num r">{m(l.debit)}</td>

@@ -55,7 +55,21 @@ function Field({ label, required, hint, error, children }: { label: string; requ
   );
 }
 
-function LogoDrop({ label, hint, surface, value, onChange, error }: { label: string; hint: string; surface: string; value: Logo; onChange: (l: Logo) => void; error?: string | null }) {
+function LogoDrop({
+  label,
+  hint,
+  surface,
+  value,
+  onChange,
+  error,
+}: {
+  label: string;
+  hint: string;
+  surface: string;
+  value: Logo;
+  onChange: (l: Logo) => void;
+  error?: string | null;
+}) {
   const [problem, setProblem] = useState<string | null>(null);
   return (
     <div>
@@ -158,7 +172,9 @@ function HeroDrop({ value, onChange, tint }: { value: Logo; onChange: (l: Logo) 
           </label>
         )}
       </div>
-      <div className="mt-1 text-[12px] text-stone-500">{problem ? <span className="text-negative">{problem}</span> : value ? `${value.name} · ${value.kb} KB` : "Optional. Landscape, at least 1600 px wide."}</div>
+      <div className="mt-1 text-[12px] text-stone-500">
+        {problem ? <span className="text-negative">{problem}</span> : value ? `${value.name} · ${value.kb} KB` : "Optional. Landscape, at least 1600 px wide."}
+      </div>
     </div>
   );
 }
@@ -167,7 +183,13 @@ function ColorField({ label, value, onChange, hint }: { label: string; value: st
   return (
     <Field label={label} required hint={hint} error={isHex(value) ? null : "Enter a 6-digit hex colour, e.g. #1F3A5F"}>
       <div className="flex gap-2">
-        <input type="color" value={isHex(value) ? value : "#000000"} onChange={(e) => onChange(e.target.value.toUpperCase())} className="h-10 w-12 cursor-pointer rounded-[3px] border border-stone-300 bg-white p-1" aria-label={`${label} picker`} />
+        <input
+          type="color"
+          value={isHex(value) ? value : "#000000"}
+          onChange={(e) => onChange(e.target.value.toUpperCase())}
+          className="h-10 w-12 cursor-pointer rounded-[3px] border border-stone-300 bg-white p-1"
+          aria-label={`${label} picker`}
+        />
         <input className={`${input} font-mono uppercase`} value={value} onChange={(e) => onChange(e.target.value.trim())} maxLength={7} />
       </div>
     </Field>
@@ -234,8 +256,8 @@ export function NewGpForm() {
           </span>
           <h1 className="mt-5 text-[24px] font-semibold tracking-[-0.015em]">{legal} has been set up</h1>
           <p className="mt-2 text-[14px] text-stone-600">
-            Portal reserved at <span className="font-mono text-[12px] text-ink-900">{slug}.portal.aurumasset.us</span>. Portals stay closed
-            to the GP and investors until the steps below are complete.
+            Portal reserved at <span className="font-mono text-[12px] text-ink-900">{slug}.portal.aurumasset.us</span>. Portals stay closed to the GP and investors until the steps
+            below are complete.
           </p>
         </div>
         <div className="rounded-[8px] border border-stone-200/70 bg-white shadow-card">
@@ -279,8 +301,7 @@ export function NewGpForm() {
         <div className="eyebrow">Fund Solution</div>
         <h1 className="mt-2 text-[26px] font-semibold tracking-[-0.015em]">New GP client</h1>
         <p className="mt-1.5 max-w-[680px] text-[14px] text-stone-600">
-          Set up a fund manager as a client. Their logos and colours brand the GP portal, the investor portal, notices and reports;
-          Aurum appears only as administrator.
+          Set up a fund manager as a client. Their logos and colours brand the GP portal, the investor portal, notices and reports; Aurum appears only as administrator.
         </p>
       </div>
 
@@ -386,7 +407,11 @@ export function NewGpForm() {
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Portal address" required hint="Lowercase letters, numbers and hyphens.">
                 <div className="flex items-center rounded-[3px] border border-stone-300 bg-white focus-within:border-ink-900">
-                  <input className="h-10 w-full rounded-[3px] px-3 font-mono text-[13px] focus:outline-none" value={slug} onChange={(e) => setSubdomain(slugFrom(e.target.value))} />
+                  <input
+                    className="h-10 w-full rounded-[3px] px-3 font-mono text-[13px] focus:outline-none"
+                    value={slug}
+                    onChange={(e) => setSubdomain(slugFrom(e.target.value))}
+                  />
                   <span className="whitespace-nowrap pr-3 font-mono text-[12px] text-stone-500">.portal.aurumasset.us</span>
                 </div>
               </Field>
@@ -395,8 +420,8 @@ export function NewGpForm() {
               </Field>
             </div>
             <div className="text-[12px] text-stone-500">
-              Notices are sent as <span className="font-mono text-ink-900">{shown || "Display name"} via Aurum &lt;notices@portal.aurumasset.us&gt;</span>; a sender on the
-              GP’s own domain can be configured after DNS verification.
+              Notices are sent as <span className="font-mono text-ink-900">{shown || "Display name"} via Aurum &lt;notices@portal.aurumasset.us&gt;</span>; a sender on the GP’s own
+              domain can be configured after DNS verification.
             </div>
           </Section>
 
@@ -442,15 +467,20 @@ export function NewGpForm() {
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={hero.url} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                    <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${ok.primary ? primary : "#0F2340"}55 0%, ${ok.primary ? primary : "#0F2340"}e6 100%)` }} />
+                    <div
+                      className="absolute inset-0"
+                      style={{ background: `linear-gradient(180deg, ${ok.primary ? primary : "#0F2340"}55 0%, ${ok.primary ? primary : "#0F2340"}e6 100%)` }}
+                    />
                   </>
                 )}
-                <div className="relative">{logoDark ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logoDark.url} alt="" className="max-h-9 max-w-[130px] object-contain" />
-                ) : (
-                  <span className="text-[13px] font-semibold">{shown || "Logo (dark)"}</span>
-                )}</div>
+                <div className="relative">
+                  {logoDark ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={logoDark.url} alt="" className="max-h-9 max-w-[130px] object-contain" />
+                  ) : (
+                    <span className="text-[13px] font-semibold">{shown || "Logo (dark)"}</span>
+                  )}
+                </div>
                 <div className="relative">
                   <div className="text-[9px] font-semibold uppercase tracking-[0.18em]" style={{ color: ok.secondary ? secondary : undefined }}>
                     Investor Portal
@@ -462,15 +492,16 @@ export function NewGpForm() {
                 <div className="text-[12px] font-semibold">Sign in</div>
                 <div className="mt-3 h-6 rounded-[2px] border border-stone-200" />
                 <div className="mt-2 h-6 rounded-[2px] border border-stone-200" />
-                <div className="mt-3 flex h-7 items-center justify-center rounded-[2px] text-[10px] font-semibold" style={{ background: ok.primary ? primary : "#0F2340", color: ink }}>
+                <div
+                  className="mt-3 flex h-7 items-center justify-center rounded-[2px] text-[10px] font-semibold"
+                  style={{ background: ok.primary ? primary : "#0F2340", color: ink }}
+                >
                   Continue
                 </div>
               </div>
             </div>
           </div>
-          <p className="text-[11px] leading-relaxed text-stone-500">
-            Investor sign-in: portal image (if any) under the primary colour, with the dark-background logo.
-          </p>
+          <p className="text-[11px] leading-relaxed text-stone-500">Investor sign-in: portal image (if any) under the primary colour, with the dark-background logo.</p>
         </aside>
       </div>
     </div>

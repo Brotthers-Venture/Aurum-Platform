@@ -25,12 +25,7 @@ export function FlowsChart({ flows: quarterlyFlows, note }: { flows: { q: string
     const h = pad.t + ih - top;
     const r = Math.min(3, h);
     // rounded top, square baseline
-    return (
-      <path
-        d={`M${x},${pad.t + ih}V${top + r}Q${x},${top} ${x + r},${top}H${x + bw - r}Q${x + bw},${top} ${x + bw},${top + r}V${pad.t + ih}Z`}
-        fill={color}
-      />
-    );
+    return <path d={`M${x},${pad.t + ih}V${top + r}Q${x},${top} ${x + r},${top}H${x + bw - r}Q${x + bw},${top} ${x + bw},${top + r}V${pad.t + ih}Z`} fill={color} />;
   };
 
   const h = hover !== null ? quarterlyFlows[hover] : null;

@@ -5,17 +5,7 @@ import { Button, ButtonLink, KeyValue, PageHeader, Panel, Stat, StatRow, Status 
 import { Tabs } from "@/components/Tabs";
 import { FundCorporateRecords } from "@/components/fund/FundCorporateRecords";
 import { corporateRecords } from "@/lib/corporateDocs";
-import {
-  capitalAccounts,
-  capitalCalls,
-  distributions,
-  documents,
-  fundById,
-  funds,
-  fundTotals,
-  investorById,
-  onboarding,
-} from "@/lib/data";
+import { capitalAccounts, capitalCalls, distributions, documents, fundById, funds, fundTotals, investorById, onboarding } from "@/lib/data";
 import { date, money, moneyShort, multiple, pct } from "@/lib/format";
 
 export function generateStaticParams() {
@@ -153,7 +143,9 @@ export default async function FundDetail({ params }: { params: Promise<{ id: str
         <tbody>
           {calls.length === 0 && (
             <tr>
-              <td colSpan={7} className="py-10 text-center text-stone-500">No capital calls issued for this vehicle.</td>
+              <td colSpan={7} className="py-10 text-center text-stone-500">
+                No capital calls issued for this vehicle.
+              </td>
             </tr>
           )}
           {calls.map((c) => (
@@ -189,7 +181,9 @@ export default async function FundDetail({ params }: { params: Promise<{ id: str
         <tbody>
           {dists.length === 0 && (
             <tr>
-              <td colSpan={5} className="py-10 text-center text-stone-500">No distributions to date.</td>
+              <td colSpan={5} className="py-10 text-center text-stone-500">
+                No distributions to date.
+              </td>
             </tr>
           )}
           {dists.map((d) => (

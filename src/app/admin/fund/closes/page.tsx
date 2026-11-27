@@ -100,8 +100,7 @@ export default function ClosesPage() {
           </div>
         </div>
         <div className="num border-t border-stone-100 px-5 py-3 text-[12px] text-stone-500">
-          Capital called before close {mu(up.priorCalled)} · commitments after close {mu(up.totalCommit)} · funded after close{" "}
-          {pct(up.priorCalled / up.totalCommit)}
+          Capital called before close {mu(up.priorCalled)} · commitments after close {mu(up.totalCommit)} · funded after close {pct(up.priorCalled / up.totalCommit)}
         </div>
       </Panel>
 
