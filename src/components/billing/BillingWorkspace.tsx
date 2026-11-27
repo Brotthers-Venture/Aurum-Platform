@@ -6,7 +6,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { Check, Plus, Printer, Send, Trash2, X } from "lucide-react";
 import { cx } from "@/components/ui";
-import { AurumLogo, AurumMark } from "@/components/brand/Logo";
+import { AurumLogo } from "@/components/brand/Logo";
 import { money } from "@/lib/format";
 import {
   BILLING,
@@ -219,13 +219,10 @@ export function BillingWorkspace({ tab: initialTab, filter: initialFilter, brlPe
   return (
     <div className="mx-auto max-w-[1320px] px-8 pb-16 pt-4">
       <div className="flex items-end justify-between gap-6">
-        <div className="flex items-center gap-3">
-          <AurumMark size={30} color={BILLING} />
-          <div>
-            <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.015em] text-ink-900">
-              <ModuleName id="billing" />
-            </h1>
-          </div>
+        <div>
+          <h1 className="text-[26px] font-semibold leading-tight tracking-[-0.015em] text-ink-900">
+            <ModuleName id="billing" />
+          </h1>
         </div>
         <button
           onClick={() => setTab("new")}
@@ -284,7 +281,10 @@ export function BillingWorkspace({ tab: initialTab, filter: initialFilter, brlPe
               </div>
               <div className="flex items-center gap-2">
                 {open.status === "Draft" && (
-                  <button onClick={() => (update(open.id, { status: "Awaiting approval" }), flash("Submitted for approval"))} className="h-8 rounded-[9px] border border-stone-300 bg-white px-3 text-[12px] font-semibold text-ink-900 hover:border-ink-900">
+                  <button
+                    onClick={() => (update(open.id, { status: "Awaiting approval" }), flash("Submitted for approval"))}
+                    className="h-8 rounded-[9px] border border-stone-300 bg-white px-3 text-[12px] font-semibold text-ink-900 hover:border-ink-900"
+                  >
                     Submit for approval
                   </button>
                 )}
@@ -293,7 +293,10 @@ export function BillingWorkspace({ tab: initialTab, filter: initialFilter, brlPe
                     <span className="text-[12px] text-stone-500">A second person must approve</span>
                   ) : (
                     <button
-                      onClick={() => (update(open.id, { status: "Sent", approvedBy: ME_NAME, issued: BILL_TODAY, due: addDays(BILL_TODAY, 30) }), flash(`${open.number} approved and sent`))}
+                      onClick={() => (
+                        update(open.id, { status: "Sent", approvedBy: ME_NAME, issued: BILL_TODAY, due: addDays(BILL_TODAY, 30) }),
+                        flash(`${open.number} approved and sent`)
+                      )}
                       className="flex h-8 items-center gap-1.5 rounded-[9px] px-3 text-[12px] font-semibold text-white"
                       style={{ background: BILLING }}
                     >
@@ -302,7 +305,10 @@ export function BillingWorkspace({ tab: initialTab, filter: initialFilter, brlPe
                   ))}
                 {isOpen(open) && (
                   <>
-                    <button onClick={() => flash(`Reminder sent for ${open.number}`)} className="h-8 rounded-[9px] border border-stone-300 bg-white px-3 text-[12px] font-semibold text-ink-900 hover:border-ink-900">
+                    <button
+                      onClick={() => flash(`Reminder sent for ${open.number}`)}
+                      className="h-8 rounded-[9px] border border-stone-300 bg-white px-3 text-[12px] font-semibold text-ink-900 hover:border-ink-900"
+                    >
                       Send reminder
                     </button>
                     <button onClick={() => setPaying(open.id)} className="h-8 rounded-[9px] px-3 text-[12px] font-semibold text-white" style={{ background: BILLING }}>
@@ -310,10 +316,18 @@ export function BillingWorkspace({ tab: initialTab, filter: initialFilter, brlPe
                     </button>
                   </>
                 )}
-                <button onClick={() => window.print()} className="flex h-8 w-8 items-center justify-center rounded-[9px] text-stone-500 hover:bg-stone-100 hover:text-ink-900" aria-label="Print">
+                <button
+                  onClick={() => window.print()}
+                  className="flex h-8 w-8 items-center justify-center rounded-[9px] text-stone-500 hover:bg-stone-100 hover:text-ink-900"
+                  aria-label="Print"
+                >
                   <Printer size={15} />
                 </button>
-                <button onClick={() => setOpenId(null)} className="flex h-8 w-8 items-center justify-center rounded-[9px] text-stone-500 hover:bg-stone-100 hover:text-ink-900" aria-label="Close">
+                <button
+                  onClick={() => setOpenId(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-[9px] text-stone-500 hover:bg-stone-100 hover:text-ink-900"
+                  aria-label="Close"
+                >
                   <X size={16} />
                 </button>
               </div>
@@ -452,7 +466,10 @@ function Overview({
               <ul className="space-y-1">
                 {pending.map((i) => (
                   <li key={i.id}>
-                    <button onClick={() => onOpen(i.id)} className="flex w-full items-center justify-between gap-3 rounded-[10px] px-2 py-2 text-left text-[12.5px] hover:bg-stone-50">
+                    <button
+                      onClick={() => onOpen(i.id)}
+                      className="flex w-full items-center justify-between gap-3 rounded-[10px] px-2 py-2 text-left text-[12.5px] hover:bg-stone-50"
+                    >
                       <span>
                         <span className="block font-medium text-ink-900">{billingClient(i.clientId)?.short}</span>
                         <span className="block text-[11px] text-stone-500">
@@ -495,7 +512,19 @@ function Overview({
   );
 }
 
-function InvoiceList({ invs, pays, filter, setFilter, onOpen }: { invs: Invoice[]; pays: Payment[]; filter: string; setFilter: (f: string) => void; onOpen: (id: string) => void }) {
+function InvoiceList({
+  invs,
+  pays,
+  filter,
+  setFilter,
+  onOpen,
+}: {
+  invs: Invoice[];
+  pays: Payment[];
+  filter: string;
+  setFilter: (f: string) => void;
+  onOpen: (id: string) => void;
+}) {
   const filters: [string, string, (i: Invoice) => boolean][] = [
     ["all", "All", () => true],
     ["draft", "Drafts", (i) => i.status === "Draft" || i.status === "Awaiting approval"],
@@ -645,7 +674,14 @@ function Subscriptions() {
                 <td className="px-3 py-3 text-stone-600">{fmtDate(s.start)}</td>
                 <td className="px-3 py-3 text-stone-600">{fmtDate(s.renews)}</td>
                 <td className="px-5 py-3">
-                  <span className={cx("inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold", s.status === "Active" ? "bg-[#E7F2EB] text-[#245F3C]" : "bg-gold-50 text-gold-700")}>{s.status}</span>
+                  <span
+                    className={cx(
+                      "inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                      s.status === "Active" ? "bg-[#E7F2EB] text-[#245F3C]" : "bg-gold-50 text-gold-700",
+                    )}
+                  >
+                    {s.status}
+                  </span>
                 </td>
               </tr>
             ))}
@@ -839,15 +875,46 @@ function InvoiceBuilder({ brlPerUsd, nextNo, onSave }: { brlPerUsd: number; next
             {lines.map((l) => (
               <div key={l.id} className="rounded-[12px] border border-stone-200 p-3">
                 <div className="flex gap-2">
-                  <input value={l.description} onChange={(e) => setLine(l.id, { description: e.target.value })} placeholder="Description" aria-label="Description" className={cx(field, "flex-1 font-medium")} />
-                  <button onClick={() => setLines((ls) => ls.filter((x) => x.id !== l.id))} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-stone-400 hover:bg-stone-100 hover:text-[#9A4422]" aria-label="Remove line">
+                  <input
+                    value={l.description}
+                    onChange={(e) => setLine(l.id, { description: e.target.value })}
+                    placeholder="Description"
+                    aria-label="Description"
+                    className={cx(field, "flex-1 font-medium")}
+                  />
+                  <button
+                    onClick={() => setLines((ls) => ls.filter((x) => x.id !== l.id))}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] text-stone-400 hover:bg-stone-100 hover:text-[#9A4422]"
+                    aria-label="Remove line"
+                  >
                     <Trash2 size={14} />
                   </button>
                 </div>
                 <div className="mt-2 grid grid-cols-[1fr_70px_120px_110px] items-center gap-2">
-                  <input value={l.detail ?? ""} onChange={(e) => setLine(l.id, { detail: e.target.value })} placeholder="Detail (optional)" aria-label="Detail" className={cx(field, "text-[12px] text-stone-600")} />
-                  <input type="number" min={0} value={l.qty} onChange={(e) => setLine(l.id, { qty: Number(e.target.value) })} aria-label="Quantity" className={cx(field, "num text-right")} />
-                  <input type="number" min={0} step="0.01" value={l.unit} onChange={(e) => setLine(l.id, { unit: Number(e.target.value) })} aria-label="Unit price" className={cx(field, "num text-right")} />
+                  <input
+                    value={l.detail ?? ""}
+                    onChange={(e) => setLine(l.id, { detail: e.target.value })}
+                    placeholder="Detail (optional)"
+                    aria-label="Detail"
+                    className={cx(field, "text-[12px] text-stone-600")}
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    value={l.qty}
+                    onChange={(e) => setLine(l.id, { qty: Number(e.target.value) })}
+                    aria-label="Quantity"
+                    className={cx(field, "num text-right")}
+                  />
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={l.unit}
+                    onChange={(e) => setLine(l.id, { unit: Number(e.target.value) })}
+                    aria-label="Unit price"
+                    className={cx(field, "num text-right")}
+                  />
                   <span className="num text-right text-[13px] font-semibold text-ink-900">{usd(lineTotal(l))}</span>
                 </div>
               </div>
@@ -868,12 +935,21 @@ function InvoiceBuilder({ brlPerUsd, nextNo, onSave }: { brlPerUsd: number; next
         <Card className="p-5">
           <label>
             <span className={label}>Internal note</span>
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="w-full resize-none rounded-[9px] border border-stone-300 px-3 py-2 text-[13px] focus:border-ink-900 focus:outline-none" />
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              className="w-full resize-none rounded-[9px] border border-stone-300 px-3 py-2 text-[13px] focus:border-ink-900 focus:outline-none"
+            />
           </label>
           <div className="mt-4 flex items-center justify-between">
             <span className="text-[11.5px] text-stone-500">Invoices go out only after a second person approves.</span>
             <div className="flex gap-2">
-              <button disabled={!valid} onClick={() => onSave(draft)} className="h-9 rounded-[10px] border border-stone-300 bg-white px-4 text-[13px] font-semibold text-ink-900 hover:border-ink-900 disabled:opacity-40">
+              <button
+                disabled={!valid}
+                onClick={() => onSave(draft)}
+                className="h-9 rounded-[10px] border border-stone-300 bg-white px-4 text-[13px] font-semibold text-ink-900 hover:border-ink-900 disabled:opacity-40"
+              >
                 Save draft
               </button>
               <button
@@ -942,7 +1018,16 @@ function PaymentDialog({ invs, pays, invoiceId, onClose, onSave }: { invs: Invoi
           ))}
         </select>
         <div className="grid grid-cols-2 gap-3">
-          <input type="number" step="0.01" min={0.01} max={max} value={amount} onChange={(e) => setAmount(Number(e.target.value))} className={cx(field, "num")} aria-label="Amount" />
+          <input
+            type="number"
+            step="0.01"
+            min={0.01}
+            max={max}
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            className={cx(field, "num")}
+            aria-label="Amount"
+          />
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={field} aria-label="Date received" />
           <select value={method} onChange={(e) => setMethod(e.target.value as Payment["method"])} className={field} aria-label="Method">
             {["Wire", "ACH", "Check"].map((m) => (

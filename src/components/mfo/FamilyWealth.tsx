@@ -22,12 +22,7 @@ export function FamilyWealth({ id }: { id: string }) {
       <Link href="/admin/multi-family" className="mb-3 inline-flex items-center gap-1 text-[12.5px] font-medium text-d-text-2 hover:text-d-text">
         <ArrowLeft size={13} /> Families
       </Link>
-      <ModuleHeader
-        mark={false}
-        color="var(--tenant-accent)"
-        title={f.name}
-        action={<DiscussButton refTo={{ kind: "family", id: f.id }} label={f.name} title={`${f.name} — family`} />}
-      />
+      <ModuleHeader color="var(--tenant-accent)" title={f.name} action={<DiscussButton refTo={{ kind: "family", id: f.id }} label={f.name} title={`${f.name} — family`} />} />
       <p className="mb-5 mt-1 text-[13px] text-d-text-3">
         {servedBy} · relationship manager {f.rm.name}
       </p>

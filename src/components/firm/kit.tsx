@@ -3,7 +3,6 @@
 import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { cx } from "@/components/ui";
-import { AurumMark } from "@/components/brand/Logo";
 
 /** Tab state mirrored into ?tab= without a navigation, so unsaved work survives. */
 export function useTab<T extends string>(initial: T) {
@@ -16,15 +15,14 @@ export function useTab<T extends string>(initial: T) {
   return [tab, setTab] as const;
 }
 
-export function ModuleHeader({ color, title, action, mark = true }: { color: string; title: string; action?: ReactNode; mark?: boolean }) {
+/**
+ * Page title for a solution or workspace. The coloured hexagons live in the Hexa Room sidebar only; titles carry no mark.
+ * `color` is kept so callers can still pass the module colour, which the tabs and buttons below the title use.
+ */
+export function ModuleHeader({ title, action }: { color?: string; title: string; action?: ReactNode }) {
   return (
     <div className="flex items-end justify-between gap-6">
-      <div className="flex items-center gap-3">
-        {mark && <AurumMark size={30} color={color} />}
-        <div>
-          <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.02em] text-ink-900">{title}</h1>
-        </div>
-      </div>
+      <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.02em] text-ink-900">{title}</h1>
       {action}
     </div>
   );

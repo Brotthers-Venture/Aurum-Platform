@@ -3,7 +3,6 @@ import { TenantName } from "@/components/brand/TenantName";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AppShell } from "@/components/shell/AppShell";
-import { AurumMark } from "@/components/brand/Logo";
 import { solutionById, solutions } from "@/lib/solutions";
 
 export function generateStaticParams() {
@@ -34,8 +33,7 @@ export default async function ComingSoon({ params }: { params: Promise<{ solutio
             <h1 className="mt-4 font-serif text-[44px] leading-[1.08] tracking-[-0.01em] text-ink-900">{s.name}</h1>
             <p className="mt-5 max-w-[560px] text-[16px] leading-relaxed text-stone-600">{s.summary}</p>
             <p className="mt-4 max-w-[560px] text-[14px] leading-relaxed text-stone-500">
-              This solution will share the platform’s client records, entity registry, document vault and permission
-              model with Fund Solution. Planned modules are listed below.
+              This solution will share the platform’s client records, entity registry, document vault and permission model with Fund Solution. Planned modules are listed below.
             </p>
             <ol className="mt-10 grid border-t border-stone-200 sm:grid-cols-2">
               {s.modules.map((m, i) => (
@@ -47,15 +45,9 @@ export default async function ComingSoon({ params }: { params: Promise<{ solutio
             </ol>
           </div>
           <aside className="self-start rounded-[8px] border border-stone-200/70 bg-white shadow-card p-6">
-            <AurumMark size={26} />
-            <h2 className="mt-5 text-[15px] font-semibold text-ink-900">Fund Solution is available now</h2>
-            <p className="mt-2 text-[13px] leading-relaxed text-stone-600">
-              Fund administration and investor onboarding are live on the platform today.
-            </p>
-            <Link
-              href="/admin/fund"
-              className="mt-5 inline-flex h-9 items-center rounded-[3px] bg-ink-900 px-4 text-[13px] font-semibold text-white hover:bg-ink-700"
-            >
+            <h2 className="text-[15px] font-semibold text-ink-900">Fund Solution is available now</h2>
+            <p className="mt-2 text-[13px] leading-relaxed text-stone-600">Fund administration and investor onboarding are live on the platform today.</p>
+            <Link href="/admin/fund" className="mt-5 inline-flex h-9 items-center rounded-[3px] bg-ink-900 px-4 text-[13px] font-semibold text-white hover:bg-ink-700">
               Open Fund Solution
             </Link>
             <div className="mt-6 border-t border-stone-100 pt-4 text-[12px] text-stone-500">

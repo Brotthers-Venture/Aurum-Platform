@@ -266,14 +266,21 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
       },
     ];
   });
-  // Resting on a workspace opens nothing; a click goes to its page.
+  // Resting on a workspace opens nothing. A click opens its ring of sections in the hub, the way the centre opens the
+  // solutions; a section then goes to its page. The firm's mark, in the workspace's old place, leads back to the solutions.
   const orbitNode = (o: (typeof orbit)[number]): Node => ({ id: `orbit-${o.id}`, slot: "ne", label: [""], sub: "" });
-  const orbitGo = (o: (typeof orbit)[number]) => (o.id === "aurum" ? toRoot() : router.push(o.href));
+  const orbitGo = (o: (typeof orbit)[number]) =>
+    o.id === "aurum"
+      ? toRoot()
+      : // people outside the firm see only their own conversations, so the chat opens directly for them
+        o.id === "communication" && member.party !== "employee"
+        ? router.push(o.href)
+        : go({ kind: "module", id: o.id, from: { x: o.x, y: o.y } });
 
   // Pulse: quiet while anything is open, hovered or in use.
   const transmission = useTransmission(variation === "pulse" && animate && !hidden, orbit.length, quiet || level.kind !== "root" || active !== null || !orbitShown);
 
-  const levelKey = level.kind === "gp" ? `gp-${level.gpId}` : level.kind;
+  const levelKey = level.kind === "gp" ? `gp-${level.gpId}` : level.kind === "module" ? `module-${level.id}` : level.kind;
   const animateRing = level.kind !== "root";
 
   const activate = (n: Node) => (n.open ? n.open() : n.href && router.push(n.href));
