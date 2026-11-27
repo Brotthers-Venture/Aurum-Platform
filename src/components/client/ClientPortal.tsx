@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, Building2, Check, Coins, FileText, ListChecks, LogOut, MessagesSquare, Users } from "lucide-react";
+import { ArrowRight, Building2, Check, Coins, FileText, Landmark, ListChecks, LogOut, MessagesSquare, Users } from "lucide-react";
 import { cx } from "@/components/ui";
 import { AurumLogo } from "@/components/brand/Logo";
 import { usePreviewRole } from "@/components/admin/PreviewRole";
@@ -15,6 +15,8 @@ import { familyOf } from "@/lib/wealth";
 import { progress } from "@/lib/checklist";
 import { WealthPlatform } from "@/components/wealth/WealthPlatform";
 import { OwnerWallet } from "@/components/blockchain/OwnerWallet";
+import { ClientBanking } from "@/components/banking/ClientBanking";
+import { ENTITIES } from "@/lib/banking/data";
 import { TOKENS } from "@/lib/blockchain/data";
 import { ClientChecklist, useChecklists } from "@/components/onboarding/Checklist";
 
@@ -49,7 +51,7 @@ const DOCS = [
  */
 export function ClientPortal() {
   const { member } = usePreviewRole();
-  const [tab, setTab] = useState<"overview" | "documents" | "messages" | "wealth" | "onboarding" | "shares">("wealth");
+  const [tab, setTab] = useState<"overview" | "documents" | "messages" | "wealth" | "onboarding" | "shares" | "banking">("wealth");
   const lists = useChecklists() ?? [];
   if (member.party !== "client")
     return (
@@ -75,7 +77,8 @@ export function ClientPortal() {
   const mine = lists.filter((l) => l.org === member.org);
   const openLists = mine.filter((l) => progress(l).open > 0);
   const hasShares = TOKENS.some((t) => t.clientOrg === member.org && t.status === "Live");
-  const view = tab === "wealth" && !family ? "overview" : tab === "shares" && !hasShares ? "overview" : tab;
+  const hasBanking = ENTITIES.some((e) => e.clientOrg === member.org);
+  const view = tab === "wealth" && !family ? "overview" : tab === "shares" && !hasShares ? "overview" : tab === "banking" && !hasBanking ? "overview" : tab;
   const entities = [
     ...(FAMILY_ENTITIES[member.org] ?? []),
     ...forms
@@ -105,6 +108,7 @@ export function ClientPortal() {
                         ["overview", "Overview", Building2],
                         ["documents", "Documents", FileText],
                       ] as const)),
+                  ...(hasBanking ? ([["banking", "Banking", Landmark]] as const) : []),
                   ...(hasShares ? ([["shares", "Shares", Coins]] as const) : []),
                   ...(mine.length
                     ? ([["onboarding", openLists.length ? `Onboarding · ${openLists.reduce((n, l) => n + progress(l).open, 0)}` : "Onboarding", ListChecks]] as const)
@@ -148,6 +152,11 @@ export function ClientPortal() {
               <ClientChecklist key={c.id} c={c} actor={member.name} />
             ))}
           />
+        ) : view === "banking" ? (
+          <div className="mx-auto max-w-[1120px]">
+            <h1 className="mb-5 text-[24px] font-semibold tracking-[-0.02em] text-ink-900">Banking</h1>
+            <ClientBanking org={member.org} person={member.name} />
+          </div>
         ) : view === "shares" ? (
           <div className="mx-auto max-w-[1120px]">
             <h1 className="mb-5 text-[24px] font-semibold tracking-[-0.02em] text-ink-900">Shares</h1>

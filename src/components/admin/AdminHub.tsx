@@ -135,15 +135,17 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
         id: s.id,
         slot: s.slot,
         label: s.lines,
-        sub: !s.live
-          ? "Coming soon"
-          : s.id === "fund"
-            ? `${gps.length} GPs`
-            : s.id === "blockchain"
-              ? `${TOKENS.filter((t) => t.status === "Live").length} companies live`
-              : s.id === "offering"
-                ? `${OFFERINGS.filter((o) => o.status !== "Preparing" && o.status !== "Closed").length} open offerings`
-                : `${formations.filter((f) => f.stage !== "Post-formation").length} in progress`,
+        sub: s.prototype
+          ? "Prototype"
+          : !s.live
+            ? "Coming soon"
+            : s.id === "fund"
+              ? `${gps.length} GPs`
+              : s.id === "blockchain"
+                ? `${TOKENS.filter((t) => t.status === "Live").length} companies live`
+                : s.id === "offering"
+                  ? `${OFFERINGS.filter((o) => o.status !== "Preparing" && o.status !== "Closed").length} open offerings`
+                  : `${formations.filter((f) => f.stage !== "Post-formation").length} in progress`,
         subTone: s.live ? "accent" : "muted",
         outline: s.live,
         ...(s.id === "fund" ? { open: () => go({ kind: "fund", from: s.slot }) } : { href: s.href }),

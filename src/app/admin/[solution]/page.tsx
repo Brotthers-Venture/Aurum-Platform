@@ -7,7 +7,9 @@ import { AurumMark } from "@/components/brand/Logo";
 import { solutionById, solutions } from "@/lib/solutions";
 
 export function generateStaticParams() {
-  return solutions.filter((s) => !s.live).map((s) => ({ solution: s.id }));
+  const soon = solutions.filter((s) => !s.live).map((s) => ({ solution: s.id }));
+  // Cache Components needs at least one entry; when every solution is live, a placeholder that renders "not found"
+  return soon.length ? soon : [{ solution: "_" }];
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ solution: string }> }) {

@@ -8,7 +8,7 @@ import { FIRM, type FirmId } from "./firm-colors";
 import { firmModules } from "./firm";
 import { onboarding } from "./data";
 
-export type HexaId = "fund" | "corporate" | "multi-family" | "offering" | "blockchain" | FirmId;
+export type HexaId = "fund" | "corporate" | "multi-family" | "offering" | "blockchain" | "banking" | FirmId;
 export type HexaPage = { label: string; href: string; group?: string; badge?: number };
 export type Hexa = {
   id: HexaId;
@@ -96,6 +96,21 @@ export const HEXAS: Hexa[] = [
     ],
   },
   {
+    id: "banking",
+    name: "Banking Solution",
+    color: "var(--tenant-accent)",
+    href: "/admin/banking",
+    base: "/admin/banking",
+    pages: [
+      { label: "Cash position", href: "/admin/banking" },
+      { label: "Payments", href: "/admin/banking/payments", group: "Money movement" },
+      { label: "Payees", href: "/admin/banking/payees", group: "Money movement" },
+      { label: "Accounts", href: "/admin/banking/accounts", group: "Accounts" },
+      { label: "Reconciliation", href: "/admin/banking/reconciliation", group: "Accounts" },
+      { label: "Approval policies", href: "/admin/banking/policies", group: "Controls" },
+    ],
+  },
+  {
     id: "multi-family",
     name: "Multi-Family Office",
     color: "var(--tenant-accent)",
@@ -158,12 +173,12 @@ export const DEFAULTS: Record<PartyType, HexaId[]> = {
   lp: [],
   guest: [],
 };
-export const GRANTABLE: HexaId[] = ["fund", "corporate", "multi-family", "offering", "blockchain", "dataroom", "billing", "compliance", "sales", "communication", "pmo"];
+export const GRANTABLE: HexaId[] = ["fund", "corporate", "multi-family", "offering", "blockchain", "banking", "dataroom", "billing", "compliance", "sales", "communication", "pmo"];
 export const MAIN_ADMIN: RoleId = "platform_admin";
 
 export type Invitation = { email: string; hexa: HexaId; by: string; at: string; expires?: string };
 const SEED_INVITES: Invitation[] = [
-  ...(["fund", "corporate", "multi-family", "offering", "blockchain", "dataroom", "billing", "compliance", "sales"] as HexaId[]).map((h) => ({
+  ...(["fund", "corporate", "multi-family", "offering", "blockchain", "banking", "dataroom", "billing", "compliance", "sales"] as HexaId[]).map((h) => ({
     email: "luiza@aurumasset.us",
     hexa: h,
     by: "Thiago Brandão",
@@ -172,7 +187,8 @@ const SEED_INVITES: Invitation[] = [
   ...(["fund", "billing", "dataroom"] as HexaId[]).map((h) => ({ email: "rafael@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2024-08-01" })),
   ...(["fund", "sales", "corporate", "offering", "dataroom"] as HexaId[]).map((h) => ({ email: "juliana@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2025-02-03" })),
   ...(["fund", "compliance", "corporate", "dataroom"] as HexaId[]).map((h) => ({ email: "carla@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2024-08-01" })),
-  ...(["multi-family", "corporate"] as HexaId[]).map((h) => ({ email: "helena@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2025-01-10" })),
+  ...(["multi-family", "corporate", "banking"] as HexaId[]).map((h) => ({ email: "helena@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2025-01-10" })),
+  ...(["banking", "fund"] as HexaId[]).map((h) => ({ email: "noah@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2026-11-24" })),
   ...(["corporate", "compliance"] as HexaId[]).map((h) => ({ email: "eduardo@aurumasset.us", hexa: h, by: "Thiago Brandão", at: "2025-01-10" })),
   { email: "bianca@aurumasset.us", hexa: "corporate", by: "Eduardo Sales", at: "2025-03-02" },
   { email: "mhale@cordillera-infra.com", hexa: "dataroom", by: "Thiago Brandão", at: "2026-11-21" },

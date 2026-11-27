@@ -4,6 +4,8 @@ export type Solution = {
   lines: [string, string];
   href: string;
   live: boolean;
+  /** shown as a prototype on the hub: simulated, not connected to real providers */
+  prototype?: boolean;
   /** position in the ring around Client Portal, clockwise from upper-right */
   slot: "ne" | "e" | "se" | "sw" | "w" | "nw";
   summary: string;
@@ -36,10 +38,11 @@ export const solutions: Solution[] = [
     name: "Banking Solution",
     lines: ["Banking", "Solution"],
     href: "/admin/banking",
-    live: false,
+    live: true,
+    prototype: true,
     slot: "se",
-    summary: "Account connectivity, cash visibility and payment workflows across fund and corporate accounts.",
-    modules: ["Account connectivity", "Cash positions", "Reconciliation", "Payments", "Escrow", "Treasury reporting"],
+    summary: "Accounts opened in each client entity’s name at a partner bank, cash across every entity, and payments with client approval and callback-verified payees.",
+    modules: ["Cash position", "Accounts", "Payments and approvals", "Payee verification", "Reconciliation", "Approval policies"],
   },
   {
     id: "blockchain",
@@ -47,6 +50,7 @@ export const solutions: Solution[] = [
     lines: ["Blockchain", "Solution"],
     href: "/admin/blockchain",
     live: true,
+    prototype: true,
     slot: "sw",
     summary:
       "Tokenized share registers for the companies we form and administer: owners hold their shares in their own wallets, every transfer checked against the company’s rules.",
