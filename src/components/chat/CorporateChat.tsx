@@ -8,19 +8,23 @@ import { FinishScope } from "@/components/shell/FinishScope";
 import { HexaRoom } from "@/components/shell/HexaRoom";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { recordAudit } from "@/lib/audit-local";
-import { addPlanRow, loadChat, saveChat, type ChatState } from "@/lib/chat-store";
+import { CHAT_KEY, addPlanRow, loadChat, saveChat, type ChatState } from "@/lib/chat-store";
+import { emit } from "@/lib/spine";
 import { draftLocalAnswer } from "@/lib/dataroom-local";
 import { questions as roomQuestions } from "@/lib/dataroom";
 import { plans } from "@/lib/plans";
 import {
   MATTER_STATUSES,
   PREFIX,
+  mayApprove,
+  maskNumbers,
   PRIORITIES,
   VIEWER,
   chatPeople,
   parseMentions,
   parseRefs,
   personName,
+  isExternal as isExternalId,
   type ChatAttachment,
   type ChatMessage,
   type Filters,
@@ -152,6 +156,15 @@ export function CorporateChat() {
     return () => window.clearInterval(t);
   }, [params]);
 
+  // Replies written in a portal (another tab, or another person on this device) arrive without a reload.
+  useEffect(() => {
+    const on = (e: StorageEvent) => {
+      if (e.key === CHAT_KEY) setS(loadChat());
+    };
+    window.addEventListener("storage", on);
+    return () => window.removeEventListener("storage", on);
+  }, []);
+
   const commit = useCallback((fn: (st: ChatState) => ChatState) => {
     setS((prev) => {
       if (!prev) return prev;
@@ -214,7 +227,7 @@ export function CorporateChat() {
   const canDecide = (m: Matter) => {
     if (m.status !== "Awaiting approval") return { ok: false, why: "This matter is not awaiting approval." };
     if (m.requestedBy === VIEWER) return { ok: false, why: "You requested this approval. A second person must decide (four-eyes)." };
-    return { ok: true };
+    return mayApprove(VIEWER, m.linked.kind);
   };
   const decide = (id: string, decision: "approved" | "rejected", note?: string) => {
     const m = matterById(id);
@@ -238,7 +251,28 @@ export function CorporateChat() {
       return y;
     });
     audit(decision === "approved" ? "Approved" : "Rejected", m, note ?? "");
-    flash(decision === "approved" ? `${m.ref} approved` : `${m.ref} rejected`);
+    // The decision belongs to the record: it joins the record's activity and its review status, not only this chat.
+    const kindMap: Partial<Record<Matter["linked"]["kind"], "call" | "bank" | "investor" | "subscription" | "plan" | "room" | "formation">> = {
+      call: "call",
+      bank: "bank",
+      investor: "investor",
+      subscription: "subscription",
+      plan: "plan",
+      room: "room",
+      formation: "formation",
+    };
+    const rk = kindMap[m.linked.kind];
+    if (rk && m.linked.id)
+      emit(
+        {
+          actor: personName(VIEWER),
+          type: `${rk}.second_review.${decision}`,
+          ref: { kind: rk, id: m.linked.id },
+          text: `${personName(VIEWER)} ${decision} ${m.linked.label} as second reviewer (${m.ref})${note ? ` — ${note}` : ""}.`,
+        },
+        { chat: false },
+      );
+    flash(decision === "approved" ? `${m.ref} approved — recorded on ${m.linked.label}` : `${m.ref} rejected — recorded on ${m.linked.label}`);
   };
 
   const createMatter = ({ title, linkedFrom, status = "Open", priority = "Normal" }: { title: string; linkedFrom?: string; status?: MatterStatus; priority?: Priority }) => {
@@ -334,9 +368,9 @@ export function CorporateChat() {
     }
   };
 
-  const send = (where: string, body: string, attachments: ChatAttachment[], replyTo?: string) => {
+  const send = (where: string, body: string, attachments: ChatAttachment[], replyTo?: string, internal?: boolean) => {
     if (!body.trim() && !attachments.length) return;
-    if (!replyTo && body.trim().startsWith("/") && runCommand(where, body)) {
+    if (!replyTo && !internal && body.trim().startsWith("/") && runCommand(where, body)) {
       commit((x) => ({ ...x, drafts: { ...x.drafts, [where]: "" } }));
       return;
     }
@@ -351,6 +385,7 @@ export function CorporateChat() {
       refs: parseRefs(body),
       attachments: attachments.length ? attachments : undefined,
       replyTo,
+      internal: internal || undefined,
     };
     commit((x) => ({
       ...x,
@@ -422,6 +457,48 @@ export function CorporateChat() {
     flash(`Saved view “${name}”`);
   };
 
+  /** Bank details never travel by message: open a four-eyes change request carrying the text instead. */
+  const openChange = (source: { where: string; author: string; body: string; messageId?: string }) => {
+    const m = matterById(source.where);
+    const used = (s?.matters ?? []).filter((x) => x.ref.startsWith("BNK-")).map((x) => Number(x.ref.split("-")[1]) || 0);
+    const ref = `BNK-${Math.max(0, ...used) + 1}`;
+    const id = "mt-" + uid();
+    const conv = s?.channels.find((c) => c.id === source.where)?.name;
+    const label = m?.linked.label ?? (conv ? `#${conv}` : personName(source.author));
+    const cr: Matter = {
+      id,
+      ref,
+      title: `Change request — ${source.body.split(String.fromCharCode(10))[0].slice(0, 70)}`,
+      status: "Awaiting approval",
+      priority: "High",
+      owner: VIEWER,
+      participants: [...new Set([VIEWER, source.author, "carla"])].filter((p) => !isExternalId(p)),
+      linked: { kind: "bank", id: "cr-" + uid(), label },
+      labels: ["Four-eyes", "Bank details"],
+      createdAt: iso(),
+      updatedAt: iso(),
+      requestedBy: VIEWER,
+      source: source.messageId ? { where: source.where, messageId: source.messageId } : undefined,
+    };
+    commit((x) => ({
+      ...x,
+      matters: [cr, ...x.matters],
+      drafts: source.messageId ? x.drafts : { ...x.drafts, [source.where]: "" },
+      messages: [
+        ...x.messages,
+        ...(source.messageId ? [event(source.where, `converted a message to change request ${ref} — bank details go through the four-eyes change request`)] : []),
+        event(id, `opened this change request from ${source.messageId ? `a message by ${personName(source.author)}` : "a message held before sending"}`),
+        { id: uid(), where: id, author: source.author, at: iso(), body: maskNumbers(source.body), kind: "message" as const, internal: true },
+        event(id, "requested approval — a second approver verifies the details by callback to contact data already on file before anything changes"),
+      ],
+    }));
+    audit("Opened change request", cr, source.messageId ? `from message ${source.messageId}` : "from a held message");
+    flash(`${ref} opened — a second approver must verify it`);
+    setSelected(id);
+    setNavState({ kind: "view", id: "v-open" });
+    setFilters({ status: "open" });
+  };
+
   const convert: ChatApi["convert"] = (msgId, to) => {
     const msg = s?.messages.find((m) => m.id === msgId);
     if (!msg) return;
@@ -430,46 +507,7 @@ export function CorporateChat() {
       setNewM({ title: msg.body.split("\n")[0].slice(0, 90), from: msg.where });
       return;
     }
-    if (to === "change") {
-      // Bank details are never handled in chat: open a four-eyes change request instead.
-      const used = (s?.matters ?? []).filter((x) => x.ref.startsWith("BNK-")).map((x) => Number(x.ref.split("-")[1]) || 0);
-      const ref = `BNK-${Math.max(0, ...used) + 1}`;
-      const id = "mt-" + uid();
-      const conv = s?.channels.find((c) => c.id === msg.where)?.name;
-      const label = m?.linked.label ?? (conv ? `#${conv}` : personName(msg.author));
-      const cr: Matter = {
-        id,
-        ref,
-        title: `Change request — ${msg.body.split(String.fromCharCode(10))[0].slice(0, 70)}`,
-        status: "Awaiting approval",
-        priority: "High",
-        owner: VIEWER,
-        participants: [...new Set([VIEWER, msg.author, "carla"])],
-        linked: { kind: "bank", id: "cr-" + uid(), label },
-        labels: ["Four-eyes", "Bank details"],
-        createdAt: iso(),
-        updatedAt: iso(),
-        requestedBy: VIEWER,
-        source: { where: msg.where, messageId: msg.id },
-      };
-      commit((x) => ({
-        ...x,
-        matters: [cr, ...x.matters],
-        messages: [
-          ...x.messages,
-          event(msg.where, `converted a message to change request ${ref} — bank details go through the four-eyes change request`),
-          event(id, `opened this change request from a message by ${personName(msg.author)}`),
-          { ...msg, id: uid(), where: id, replyTo: undefined, reactions: undefined },
-          event(id, "requested approval — a second approver verifies the details before anything is sent"),
-        ],
-      }));
-      audit("Opened change request", cr, `from message ${msg.id}`);
-      flash(`${ref} opened — a second approver must verify it`);
-      setSelected(id);
-      setNavState({ kind: "view", id: "v-open" });
-      setFilters({ status: "open" });
-      return;
-    }
+    if (to === "change") return openChange({ where: msg.where, author: msg.author, body: msg.body, messageId: msg.id });
     if (to === "task") {
       if (m?.linked.kind !== "plan") return flash("Only matters linked to a project plan can create PMO tasks.");
       const res = addPlanRow(m.linked.id, msg.body.split("\n")[0].slice(0, 120), { owner: personName(VIEWER) });
@@ -650,6 +688,7 @@ export function CorporateChat() {
             setPriority,
             setDue,
             decide,
+            openChange,
             canDecide,
             editMessage,
             react,

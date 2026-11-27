@@ -4,6 +4,7 @@ import { ArrowLeft, BellRing, Check, Download, Landmark } from "lucide-react";
 import { Button, PageHeader, Panel, Progress, Stat, StatRow, Status } from "@/components/ui";
 import { Tabs } from "@/components/Tabs";
 import { JournalTable } from "@/components/fund/JournalTable";
+import { SecondReview } from "@/components/spine/SecondReview";
 import { buildBooks, TODAY } from "@/lib/accounting/engine";
 import { bankAccounts, capitalCalls, fundById, investorById } from "@/lib/data";
 import { date, money, pct } from "@/lib/format";
@@ -196,6 +197,7 @@ export default async function CapitalCallDetail({ params }: { params: Promise<{ 
                 </li>
               ))}
             </ol>
+            <SecondReview refTo={{ kind: "call", id: call.id }} />
           </Panel>
         </aside>
       </div>

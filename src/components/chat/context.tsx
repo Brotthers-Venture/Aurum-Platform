@@ -40,7 +40,7 @@ export type ChatApi = {
   mobilePane: "list" | "detail";
   setMobilePane: (p: "list" | "detail") => void;
   // actions
-  send: (where: string, body: string, attachments: ChatAttachment[], replyTo?: string) => void;
+  send: (where: string, body: string, attachments: ChatAttachment[], replyTo?: string, internal?: boolean) => void;
   setStatus: (id: string, st: MatterStatus) => void;
   setOwner: (id: string, owner: string) => void;
   setPriority: (id: string, p: Priority) => void;
@@ -55,6 +55,7 @@ export type ChatApi = {
   saveView: (name: string) => void;
   createMatter: (m: { title: string; linkedFrom?: string; status?: MatterStatus; priority?: Priority }) => string;
   convert: (msgId: string, to: "matter" | "task" | "qa" | "change") => void;
+  openChange: (source: { where: string; author: string; body: string; messageId?: string }) => void;
 };
 
 export const ChatCtx = createContext<ChatApi | null>(null);

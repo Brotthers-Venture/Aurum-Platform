@@ -4,8 +4,11 @@
  */
 import {
   VIEWER,
+  clientWaiting,
   defaultViews,
   isExternal,
+  orgOf,
+  parseMentions,
   personName,
   seedChannels,
   seedDirects,
@@ -22,7 +25,7 @@ import {
 import { loadPlans, planFolders, plans as seedPlans, savePlans, type PlanRow } from "./plans";
 
 export const CHAT_KEY = "aurum-chat-v1";
-const VERSION = 4;
+const VERSION = 5;
 
 export type ChatState = {
   v: number;
@@ -37,9 +40,11 @@ export type ChatState = {
 };
 
 export function seedState(): ChatState {
+  // A matter left "Awaiting client" after the client has answered goes back to the team.
+  const matters = seedMatters.map((m) => (m.status === "Awaiting client" && clientWaiting(m.id, seedMessages) ? { ...m, status: "Open" as const } : m));
   return {
     v: VERSION,
-    matters: seedMatters,
+    matters,
     messages: seedMessages,
     channels: seedChannels,
     directs: seedDirects,
@@ -81,7 +86,14 @@ export function postToChat(where: string, body: string, author = VIEWER) {
 
 /* ───────────────────────── inbox ───────────────────────── */
 
-export type InboxItem = { id: string; where: string; at: string; reason: "Mention" | "Assigned" | "Approval requested" | "Status change" | "Client reply"; text: string; author: string };
+export type InboxItem = {
+  id: string;
+  where: string;
+  at: string;
+  reason: "Mention" | "Assigned" | "Approval requested" | "Status change" | "Client reply";
+  text: string;
+  author: string;
+};
 
 export function inboxItems(s: ChatState): InboxItem[] {
   const mine = new Set(s.matters.filter((m) => m.participants.includes(VIEWER)).map((m) => m.id));
@@ -93,10 +105,14 @@ export function inboxItems(s: ChatState): InboxItem[] {
     else if (mine.has(m.where) && m.kind === "event" && m.body === "requested approval") {
       const mt = s.matters.find((x) => x.id === m.where);
       if (mt?.requestedBy !== VIEWER) items.push({ id: m.id, where: m.where, at: m.at, reason: "Approval requested", text, author: m.author });
-    } else if (mine.has(m.where) && m.kind === "event" && /^(changed status|set the owner to Luiza)/.test(m.body)) items.push({ id: m.id, where: m.where, at: m.at, reason: m.body.startsWith("set the owner") ? "Assigned" : "Status change", text, author: m.author });
-    else if (mine.has(m.where) && m.kind === "message" && isExternal(m.author) && !m.replyTo) items.push({ id: m.id, where: m.where, at: m.at, reason: "Client reply", text, author: m.author });
+    } else if (mine.has(m.where) && m.kind === "event" && /^(changed status|set the owner to Luiza)/.test(m.body))
+      items.push({ id: m.id, where: m.where, at: m.at, reason: m.body.startsWith("set the owner") ? "Assigned" : "Status change", text, author: m.author });
+    else if (mine.has(m.where) && m.kind === "message" && isExternal(m.author) && !m.replyTo)
+      items.push({ id: m.id, where: m.where, at: m.at, reason: "Client reply", text, author: m.author });
   }
-  for (const mt of s.matters) if (mt.owner === VIEWER && mt.status !== "Resolved") items.push({ id: "own-" + mt.id, where: mt.id, at: mt.createdAt, reason: "Assigned", text: `You own ${mt.ref} · ${mt.title}`, author: mt.owner });
+  for (const mt of s.matters)
+    if (mt.owner === VIEWER && mt.status !== "Resolved")
+      items.push({ id: "own-" + mt.id, where: mt.id, at: mt.createdAt, reason: "Assigned", text: `You own ${mt.ref} · ${mt.title}`, author: mt.owner });
   return items.sort((a, b) => b.at.localeCompare(a.at));
 }
 
@@ -182,4 +198,45 @@ export function postPlanRequest(planId: string, planName: string, text: string) 
   s.matters = s.matters.map((x) => (x.id === m!.id ? { ...x, status: "Awaiting client", updatedAt: at } : x));
   saveChat(s);
   return m;
+}
+
+/* ───────────────────────── the client side ───────────────────────── */
+
+/**
+ * What a person outside the firm may see: matters and channels that include someone from their own
+ * organisation, and their direct conversations. Internal notes and the firm's system events never leave the firm.
+ */
+export function conversationsFor(s: ChatState, personId: string) {
+  const org = orgOf(personId);
+  const ours = (ids: string[]) => ids.includes(personId) || ids.some((id) => isExternal(id) && orgOf(id) === org);
+  return {
+    matters: s.matters.filter((m) => ours(m.participants)),
+    channels: s.channels.filter((c) => c.external && ours(c.members)),
+    directs: s.directs.filter((d) => d.members.includes(personId)),
+  };
+}
+export const clientVisible = (m: ChatMessage) => m.kind === "message" && !m.internal;
+export const portalReadKey = (personId: string, where: string) => `p:${personId}:${where}`;
+
+/** A message written in a portal. A matter waiting on the client comes back to the firm's team. */
+export function postFromPortal(personId: string, where: string, body: string, replyTo?: string) {
+  const s = loadChat();
+  const at = new Date().toISOString();
+  const id = `m${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  const m = s.matters.find((x) => x.id === where);
+  const back = m?.status === "Awaiting client";
+  s.messages = [
+    ...s.messages,
+    { id, where, author: personId, at, body: body.trim(), kind: "message", replyTo, mentions: parseMentions(body) },
+    ...(back ? [{ id: id + "-e", where, author: "system", at, body: `marked this Open — ${personName(personId)} replied`, kind: "event" as const }] : []),
+  ];
+  s.matters = s.matters.map((x) => (x.id === where ? { ...x, updatedAt: at, status: back ? "Open" : x.status } : x));
+  s.read = { ...s.read, [portalReadKey(personId, where)]: at };
+  saveChat(s);
+}
+
+export function markPortalRead(personId: string, where: string) {
+  const s = loadChat();
+  s.read = { ...s.read, [portalReadKey(personId, where)]: new Date().toISOString() };
+  saveChat(s);
 }

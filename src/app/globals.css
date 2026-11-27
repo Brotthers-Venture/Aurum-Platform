@@ -1544,3 +1544,31 @@ html[data-theme="light"] .eco-stage[data-hub]::before {
     display: table-header-group;
   }
 }
+
+/* ───────── Corporate Chat correspondence record: US Letter portrait ───────── */
+@page chat {
+  size: letter portrait;
+  margin: 0.35in 0 0.5in 0;
+  @bottom-left {
+    padding-left: 0.6in;
+    font: 400 8pt var(--font-serif, Georgia), serif;
+    color: #6b7a90;
+  }
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    padding-right: 0.6in;
+    font: 400 8pt var(--font-serif, Georgia), serif;
+    color: #6b7a90;
+  }
+}
+@page chat:first {
+  margin-top: 0;
+}
+@media print {
+  .chat-record {
+    page: chat;
+    width: auto !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

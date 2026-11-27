@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { CommsWorkspace } from "@/components/comms/CommsWorkspace";
+import { PortalChat } from "@/components/chat/PortalChat";
 import { gpById, gps } from "@/lib/gps";
 import { clients, people } from "@/lib/comms";
 
@@ -39,14 +39,7 @@ async function Messages({ params }: { params: Promise<{ gpId: string }> }) {
     );
   return (
     <div className="mx-auto w-full max-w-[1640px] px-6 py-4 2xl:px-8">
-      <CommsWorkspace
-        mode="client"
-        clientId={client.id}
-        personId={person.id}
-        accent={gp.brand.primary}
-        accentInk={gp.brand.primaryInk}
-        className="h-[calc(100dvh-64px-32px)] min-h-[560px]"
-      />
+      <PortalChat personId={person.id} className="h-[calc(100dvh-64px-32px)] min-h-[560px]" />
     </div>
   );
 }

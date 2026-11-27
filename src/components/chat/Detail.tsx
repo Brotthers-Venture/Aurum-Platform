@@ -1,12 +1,45 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { ArrowLeft, Check, ChevronDown, CornerDownRight, FileText, Hash, Menu as MenuIcon, MoreHorizontal, PanelRight, Pencil, Reply, ShieldAlert, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Check,
+  ChevronDown,
+  Clock3,
+  CornerDownRight,
+  Download,
+  FileText,
+  Hash,
+  Lock,
+  Menu as MenuIcon,
+  MoreHorizontal,
+  PanelRight,
+  Pencil,
+  Reply,
+  ShieldAlert,
+  X,
+} from "lucide-react";
 import { cx } from "@/components/ui";
 import { Menu, menuHead, menuItem } from "@/components/shell/WorkstationTopBar";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { withTenant } from "@/lib/brand";
-import { MATTER_STATUSES, PRIORITIES, REACTIONS, VIEWER, chatPeople, isExternal, personName, type ChatMessage, type Matter } from "@/lib/chat";
+import {
+  MATTER_STATUSES,
+  PRIORITIES,
+  REACTIONS,
+  VIEWER,
+  chatPeople,
+  clientWaiting,
+  detectBankDetails,
+  isExternal,
+  orgName,
+  orgOf,
+  person,
+  personName,
+  waited,
+  type ChatMessage,
+  type Matter,
+} from "@/lib/chat";
 import { useChat } from "./context";
 import { Composer } from "./Composer";
 import { ContextRail } from "./Rail";
@@ -38,7 +71,8 @@ function Prop({ label, open, onToggle, children, value }: { label: string; open:
 }
 
 function MatterHeader({ m }: { m: Matter }) {
-  const { propMenu, setPropMenu, setStatus, setOwner, setPriority, setDue, rail, setRail, canDecide, decide, setMobilePane, mode } = useChat();
+  const { propMenu, setPropMenu, setStatus, setOwner, setPriority, setDue, rail, setRail, canDecide, decide, setMobilePane, mode, s, now } = useChat();
+  const wait = clientWaiting(m.id, s.messages);
   const toggle = (k: "status" | "owner" | "priority" | "due") => () => setPropMenu(propMenu === k ? null : k);
   const d = canDecide(m);
   const [note, setNote] = useState("");
@@ -56,11 +90,27 @@ function MatterHeader({ m }: { m: Matter }) {
         </button>
         <div className="min-w-0 flex-1">
           <h2 className="text-[17px] font-[560] leading-snug tracking-[-0.01em] text-d-text">{m.title}</h2>
-          <div className="mt-0.5 text-[12.5px] text-d-text-3">
-            <span className="tnum">{m.ref}</span> · {m.linked.label}
+          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[12.5px] text-d-text-3">
+            <span>
+              <span className="tnum">{m.ref}</span> · {m.linked.label}
+            </span>
+            {wait && now > 0 && (
+              <span className="flex items-center gap-1 font-medium text-d-warn" title="A client wrote and nobody at the firm has replied yet">
+                <Clock3 size={12} aria-hidden /> Client waiting {waited(wait, now)}
+              </span>
+            )}
           </div>
         </div>
         {mode === "focus" && <ModeSwitch />}
+        <a
+          href={`/chat-export?m=${m.id}`}
+          target="_blank"
+          rel="noreferrer"
+          title="A PDF record of this matter, with every message, note, decision and edit"
+          className="flex h-7 items-center gap-1.5 rounded-[5px] px-2 text-[12.5px] font-medium text-d-text-2 transition-colors hover:bg-d-raise hover:text-d-text"
+        >
+          <Download size={14} /> <span className="max-sm:hidden">Export</span>
+        </a>
         <button
           onClick={() => setRail(!rail)}
           aria-pressed={rail}
@@ -200,13 +250,22 @@ function MatterHeader({ m }: { m: Matter }) {
   );
 }
 
-function ExternalBanner({ names }: { names: string[] }) {
+function ExternalBanner({ ids }: { ids: string[] }) {
   const { brand } = useBrand();
+  const byOrg = new Map<string, string[]>();
+  for (const id of ids) byOrg.set(orgOf(id), [...(byOrg.get(orgOf(id)) ?? []), `${personName(id)}${person(id)?.clientRole === "guest" ? " (guest)" : ""}`]);
   return (
-    <div className="flex shrink-0 items-center gap-2 border-b border-d-line-soft bg-d-surface-2 px-4 py-1.5 text-[12px] text-d-text-2">
+    <div className="flex shrink-0 items-start gap-2 border-b border-d-line-soft bg-d-surface-2 px-4 py-1.5 text-[12px] text-d-text-2">
       <ExternalTag />
-      <span className="truncate">
-        Includes people outside {brand.name}: {names.join(", ")}. Everything posted here is visible to them.
+      <span className="min-w-0">
+        Shared outside {brand.name} with{" "}
+        {[...byOrg].map(([org, names], i) => (
+          <span key={org}>
+            {i > 0 && "; "}
+            <span className="font-semibold text-d-text">{orgName(org)}</span> ({names.join(", ")})
+          </span>
+        ))}
+        . Replies are visible to them; internal notes are not.
       </span>
     </div>
   );
@@ -236,8 +295,15 @@ function MessageItem({ m, replies, onThread }: { m: ChatMessage; replies: number
       </div>
     );
   const ext = isExternal(m.author);
+  const bank = ext ? detectBankDetails(m.body) : null;
   return (
-    <article className="group relative flex gap-3 rounded-[4px] py-2 pr-2 hover:bg-d-surface-2/60" aria-label={`${personName(m.author)} at ${clock(m.at)}`}>
+    <article
+      className={cx(
+        "group relative flex gap-3 rounded-[4px] py-2 pr-2",
+        m.internal ? "my-1 bg-[color-mix(in_oklab,var(--d-warn)_8%,transparent)] pl-1" : "hover:bg-d-surface-2/60",
+      )}
+      aria-label={`${m.internal ? "Internal note from " : ""}${personName(m.author)} at ${clock(m.at)}`}
+    >
       <span className="relative z-[1] pt-0.5">
         <Avatar id={m.author} size={26} />
       </span>
@@ -245,6 +311,11 @@ function MessageItem({ m, replies, onThread }: { m: ChatMessage; replies: number
         <div className="flex flex-wrap items-baseline gap-x-2">
           <span className="text-[13px] font-semibold">{personName(m.author)}</span>
           {ext && <ExternalTag />}
+          {m.internal && (
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-d-warn">
+              <Lock size={10} aria-hidden /> Internal note
+            </span>
+          )}
           <span className="tnum text-[11px] text-d-text-3">
             {shortDay(m.at)} {clock(m.at)}
           </span>
@@ -281,6 +352,15 @@ function MessageItem({ m, replies, onThread }: { m: ChatMessage; replies: number
         ) : (
           <div className="mt-0.5 space-y-1 text-[14px] leading-[1.55] text-d-text">
             <RichText body={withTenant(m.body, brand.name)} onRef={openRef} />
+          </div>
+        )}
+        {bank && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 rounded-[4px] border border-d-line-strong px-2.5 py-1.5 text-[12px] text-d-text-2">
+            <ShieldAlert size={13} className="shrink-0 text-d-warn" aria-hidden />
+            <span className="min-w-0 flex-1">Mentions {bank.what}. Don&rsquo;t act on payment details from a message: verify by calling a contact already on file.</span>
+            <button onClick={() => convert(m.id, "change")} className="font-semibold text-d-text underline-offset-2 hover:underline">
+              Open a change request
+            </button>
           </div>
         )}
         {history && m.edits && (
@@ -485,7 +565,7 @@ export function Detail({ onMenu }: { onMenu: () => void }) {
             Back to matters
           </button>
         </header>
-        {ext.length > 0 && <ExternalBanner names={ext.map(personName)} />}
+        {ext.length > 0 && <ExternalBanner ids={ext} />}
         <div className="relative flex min-h-0 flex-1">
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="min-h-0 flex-1 overflow-y-auto">
@@ -523,7 +603,7 @@ export function Detail({ onMenu }: { onMenu: () => void }) {
     <section className="flex min-w-0 flex-1" aria-label={`${m.ref} ${m.title}`}>
       <div className="relative flex min-w-0 flex-1 flex-col">
         <MatterHeader m={m} />
-        {ext.length > 0 && <ExternalBanner names={ext.map(personName)} />}
+        {ext.length > 0 && <ExternalBanner ids={ext} />}
         <div className="relative flex min-h-0 flex-1">
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="min-h-0 flex-1 overflow-y-auto">

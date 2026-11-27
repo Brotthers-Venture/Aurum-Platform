@@ -6,7 +6,20 @@ import { cx } from "@/components/ui";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { withTenant } from "@/lib/brand";
 import { Menu, menuHead, menuItem } from "@/components/shell/WorkstationTopBar";
-import { MATTER_STATUSES, VIEWER, chatPeople, isExternal, matchesFilters, personName, priorityRank, type Filters, type LinkKind, type Matter } from "@/lib/chat";
+import {
+  MATTER_STATUSES,
+  VIEWER,
+  chatPeople,
+  clientWaiting,
+  isExternal,
+  matchesFilters,
+  personName,
+  priorityRank,
+  waited,
+  type Filters,
+  type LinkKind,
+  type Matter,
+} from "@/lib/chat";
 import { visibleInbox } from "@/lib/chat-store";
 import { useChat } from "./context";
 import { Highlight, Kbd, StatusRing, relTime, shortDay } from "./ui";
@@ -63,6 +76,7 @@ function MatterRow({ m, active, onClick, now, q }: { m: Matter; active: boolean;
   const { s } = useChat();
   const last = s.messages.filter((x) => x.where === m.id).at(-1);
   const isUnread = !!last && last.author !== VIEWER && (s.read[m.id] ?? "") < last.at && last.at > "2026-11-24T00:00:00Z";
+  const wait = m.status !== "Resolved" ? clientWaiting(m.id, s.messages) : null;
   return (
     <button
       onClick={onClick}
@@ -86,6 +100,7 @@ function MatterRow({ m, active, onClick, now, q }: { m: Matter; active: boolean;
         <span className="mt-0.5 flex items-center gap-1.5 text-[12px] text-d-text-3">
           <span className="truncate">{m.linked.label}</span>
           {m.dueDate && m.status !== "Resolved" && <span className="tnum shrink-0">· due {shortDay(m.dueDate)}</span>}
+          {wait && now > 0 && <span className="shrink-0 font-medium text-d-warn">· client waiting {waited(wait, now)}</span>}
         </span>
       </span>
       <span className="tnum self-start pt-0.5 text-[11.5px] text-d-text-3">{relTime(m.updatedAt, now)}</span>

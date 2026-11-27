@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AtSign, FileText, Hash, Paperclip, Search, SendHorizontal, Slash, X } from "lucide-react";
+import { AtSign, FileText, Hash, Lock, Paperclip, Search, SendHorizontal, ShieldAlert, Slash, X } from "lucide-react";
+import { useBrand } from "@/components/brand/BrandProvider";
 import { cx } from "@/components/ui";
 import { Menu } from "@/components/shell/WorkstationTopBar";
-import { attachables, chatPeople, isExternal, type ChatAttachment, type MatterStatus } from "@/lib/chat";
+import { VIEWER, attachables, chatPeople, detectBankDetails, isExternal, orgName, orgOf, type ChatAttachment, type MatterStatus } from "@/lib/chat";
 import { useChat } from "./context";
 import { Avatar, ExternalTag, Kbd, StatusRing, fileSize } from "./ui";
 
@@ -56,7 +57,10 @@ function AttachPicker({ onPick, onClose }: { onPick: (a: ChatAttachment) => void
 }
 
 export function Composer({ where, replyTo }: { where: string; replyTo?: string }) {
-  const { s, send, setDraft } = useChat();
+  const { s, send, setDraft, openChange } = useChat();
+  const { brand } = useBrand();
+  const [internal, setInternal] = useState(false);
+  const [hold, setHold] = useState<string | null>(null);
   const [text, setText] = useState(() => (replyTo ? "" : (s.drafts[where] ?? "")));
   const [files, setFiles] = useState<ChatAttachment[]>([]);
   const [picker, setPicker] = useState(false);
@@ -64,6 +68,11 @@ export function Composer({ where, replyTo }: { where: string; replyTo?: string }
   const [idx, setIdx] = useState(0);
   const ta = useRef<HTMLTextAreaElement>(null);
   const matter = s.matters.find((m) => m.id === where);
+
+  const members = matter?.participants ?? s.channels.find((c) => c.id === where)?.members ?? s.directs.find((d) => d.id === where)?.members ?? [];
+  const ext = members.some(isExternal);
+  const orgs = [...new Set(members.filter(isExternal).map((id) => orgName(orgOf(id))))];
+  const note = ext && internal;
 
   // Autosave the draft for this matter or conversation (not for thread replies).
   useEffect(() => {
@@ -112,14 +121,22 @@ export function Composer({ where, replyTo }: { where: string; replyTo?: string }
   };
   const submit = () => {
     if (!text.trim() && !files.length) return;
-    send(where, text, files, replyTo);
+    // Bank details never travel by message, not even as an internal note.
+    const bank = detectBankDetails(text);
+    if (bank?.hard) return setHold(bank.what);
+    send(where, text, files, replyTo, ext && internal);
     setText("");
     setFiles([]);
     setSug(null);
   };
 
-  const placeholder = replyTo ? "Reply in thread" : matter ? "Write a message — @ to mention, # to reference, / for commands" : "Write a message — @ to mention, # to reference";
-  const ext = (matter?.participants ?? s.channels.find((c) => c.id === where)?.members ?? s.directs.find((d) => d.id === where)?.members ?? []).some(isExternal);
+  const placeholder = note
+    ? "Internal note — only your team sees this"
+    : replyTo
+      ? "Reply in thread"
+      : matter
+        ? "Write a message — @ to mention, # to reference, / for commands"
+        : "Write a message — @ to mention, # to reference";
 
   return (
     <div className={cx("chat-composer relative shrink-0 bg-d-bg px-4 pb-3 pt-2", replyTo ? "border-t border-d-line" : "mx-auto w-full max-w-[792px]")}>
@@ -154,7 +171,71 @@ export function Composer({ where, replyTo }: { where: string; replyTo?: string }
           }}
         />
       )}
-      <div className="group/composer rounded-[6px] bg-d-surface ring-1 ring-d-line transition-shadow focus-within:ring-d-line-strong">
+      {hold && (
+        <div role="alert" className="mb-2 rounded-[6px] border border-d-line-strong bg-d-surface p-3 text-[12.5px]">
+          <div className="flex items-start gap-2">
+            <ShieldAlert size={15} className="mt-0.5 shrink-0 text-d-warn" aria-hidden />
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold text-d-text">Not sent: this looks like {hold}.</div>
+              <p className="mt-0.5 text-d-text-2">
+                Bank details are never sent or changed by message. A change request holds them for a second approver, who verifies them by calling a contact already on file.
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  onClick={() => {
+                    openChange({ where, author: VIEWER, body: text });
+                    setText("");
+                    setHold(null);
+                  }}
+                  className="h-7 rounded-[4px] bg-d-text px-2.5 font-semibold text-d-bg"
+                >
+                  Open a change request instead
+                </button>
+                <button
+                  onClick={() => (setHold(null), ta.current?.focus())}
+                  className="h-7 rounded-[4px] border border-d-line-strong px-2.5 font-medium text-d-text hover:bg-d-raise"
+                >
+                  Edit the message
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {ext && (
+        <div className="mb-1.5 flex flex-wrap items-center gap-2 text-[12px]">
+          <div role="radiogroup" aria-label="Who sees this message" className="flex rounded-[5px] bg-d-raise p-0.5">
+            {(
+              [
+                [false, "Reply"],
+                [true, "Internal note"],
+              ] as const
+            ).map(([v, l]) => (
+              <button
+                key={l}
+                role="radio"
+                aria-checked={internal === v}
+                onClick={() => setInternal(v)}
+                className={cx(
+                  "flex h-6 items-center gap-1 rounded-[4px] px-2 font-medium",
+                  internal === v ? "bg-d-surface text-d-text shadow-sm" : "text-d-text-2 hover:text-d-text",
+                )}
+              >
+                {v && <Lock size={11} aria-hidden />} {l}
+              </button>
+            ))}
+          </div>
+          <span className="min-w-0 truncate text-d-text-2">{note ? `Only ${brand.name} staff see this note.` : <>Visible to {orgs.join(", ")}</>}</span>
+        </div>
+      )}
+      <div
+        className={cx(
+          "group/composer rounded-[6px] ring-1 transition-shadow",
+          note
+            ? "bg-[color-mix(in_oklab,var(--d-warn)_9%,var(--d-surface))] ring-[color-mix(in_oklab,var(--d-warn)_45%,transparent)]"
+            : "bg-d-surface ring-d-line focus-within:ring-d-line-strong",
+        )}
+      >
         {files.length > 0 && (
           <div className="flex flex-wrap gap-1.5 px-2.5 pt-2.5">
             {files.map((f) => (
@@ -229,7 +310,7 @@ export function Composer({ where, replyTo }: { where: string; replyTo?: string }
             </button>
           ))}
           <span className="ml-2 hidden items-center gap-1 whitespace-nowrap text-[11px] text-d-text-3 min-[1600px]:flex">
-            <Kbd>Enter</Kbd> send · <Kbd>Shift</Kbd>+<Kbd>Enter</Kbd> new line{ext && " · visible to external participants"}
+            <Kbd>Enter</Kbd> send · <Kbd>Shift</Kbd>+<Kbd>Enter</Kbd> new line
           </span>
           <button
             onClick={submit}
@@ -239,7 +320,7 @@ export function Composer({ where, replyTo }: { where: string; replyTo?: string }
               text.trim() || files.length ? "bg-d-text text-d-bg" : "border border-d-line-strong text-d-text-2",
             )}
           >
-            Send <SendHorizontal size={13} />
+            {note ? "Add note" : "Send"} <SendHorizontal size={13} />
           </button>
         </div>
       </div>

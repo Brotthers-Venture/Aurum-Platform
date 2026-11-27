@@ -50,7 +50,7 @@ export const eventsFor = (all: LedgerEvent[], ref: Ref) => all.filter((e) => ref
  * Record a change. It joins the ledger, the audit log, and the timeline of every Corporate Chat matter linked
  * to the same record — so nobody has to post "FYI" by hand.
  */
-export function emit(e: Omit<LedgerEvent, "id" | "at" | "visibility"> & { at?: string; visibility?: LedgerEvent["visibility"] }) {
+export function emit(e: Omit<LedgerEvent, "id" | "at" | "visibility"> & { at?: string; visibility?: LedgerEvent["visibility"] }, opts: { chat?: boolean } = {}) {
   const ev: LedgerEvent = { visibility: "internal", ...e, id: `ev-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`, at: e.at ?? new Date().toISOString() };
   try {
     const all = read();
@@ -60,7 +60,8 @@ export function emit(e: Omit<LedgerEvent, "id" | "at" | "visibility"> & { at?: s
     /* storage unavailable: the event lasts for this visit */
   }
   recordAudit({ user: ev.actor, action: ev.type, object: ev.text });
-  postToLinkedMatters(ev);
+  // Corporate Chat writes its own timeline when the event starts there.
+  if (opts.chat !== false) postToLinkedMatters(ev);
   try {
     window.dispatchEvent(new CustomEvent(BUS, { detail: ev }));
   } catch {
