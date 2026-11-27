@@ -281,7 +281,7 @@ function EditCell({
         onClick={onDouble ? undefined : () => setEditing(true)}
         onDoubleClick={onDouble ? () => setEditing(true) : undefined}
         title={onDouble ? "Double-click to rename" : undefined}
-        className={cx("h-full w-full px-2.5 py-2", onDouble ? "cursor-pointer" : "cursor-text hover:bg-[#F6F1FA]", className)}
+        className={cx("h-full w-full px-2.5 py-2", onDouble ? "cursor-pointer" : "cursor-text hover:bg-d-raise", className)}
       >
         {children}
       </div>
@@ -433,14 +433,14 @@ function Grid({
                       const over = isOverdue(t);
                       const holds = holdsUp(all, t.id);
                       return (
-                        <div key={t.id} className="group grid border-b border-stone-100 hover:bg-[#FAF9F7]" style={{ gridTemplateColumns: COLS }}>
-                          <div className="num sticky left-0 z-[5] flex items-center justify-center border-r border-stone-100 bg-white text-[11px] text-stone-400 group-hover:bg-[#FAF9F7]">
+                        <div key={t.id} className="group grid border-b border-stone-100 hover:bg-d-raise" style={{ gridTemplateColumns: COLS }}>
+                          <div className="num sticky left-0 z-[5] flex items-center justify-center border-r border-stone-100 bg-white text-[11px] text-stone-400 group-hover:bg-d-raise">
                             {n}
                           </div>
-                          <div className="num sticky left-[40px] z-[5] flex items-center border-r border-stone-100 bg-white px-2.5 text-stone-600 group-hover:bg-[#FAF9F7]">
+                          <div className="num sticky left-[40px] z-[5] flex items-center border-r border-stone-100 bg-white px-2.5 text-stone-600 group-hover:bg-d-raise">
                             {t.id}
                           </div>
-                          <div className={cx("flex min-w-0 items-center border-r border-stone-100 bg-white group-hover:bg-[#FAF9F7]", STICKY_TASK)}>
+                          <div className={cx("flex min-w-0 items-center border-r border-stone-100 bg-white group-hover:bg-d-raise", STICKY_TASK)}>
                             <EditCell value={t.title} kind="text" onSave={(v) => v.trim() && onUpdate(t.id, { title: v.trim() })} className="min-w-0 pl-6">
                               <span className="block whitespace-normal leading-snug text-ink-900">{t.title}</span>
                               {wait.length > 0 && (

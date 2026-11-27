@@ -273,7 +273,7 @@ function Overview({ plans, folders, onOpen, onNew }: { plans: Plan[]; folders: P
                 const nd = nextDeadline(p.rows);
                 const path = folderPath(folders, p.folder).map((f) => f.name);
                 return (
-                  <tr key={p.id} onClick={() => onOpen(p.id)} className="cursor-pointer border-b border-stone-100 last:border-0 hover:bg-[#FAF9F7]">
+                  <tr key={p.id} onClick={() => onOpen(p.id)} className="cursor-pointer border-b border-stone-100 last:border-0 hover:bg-d-raise">
                     <td className="px-4 py-2.5">
                       <div className="font-semibold text-ink-900">{p.name}</div>
                       <div className="text-[11.5px] text-stone-500">{path.length ? path.join(" / ") : (p.vehicle ?? "")}</div>
@@ -380,7 +380,7 @@ function OpenTasks({ plans, onOpen }: { plans: Plan[]; onOpen: (plan: string, ro
                   const wait = row.dependsOn.filter((d) => plan.rows.find((x) => x.id === d)?.status !== "Completed");
                   const Icon = row.status === "Blocked" ? AlertCircle : row.status === "In progress" ? Clock3 : CheckCircle2;
                   return (
-                    <tr key={`${plan.id}-${row.id}`} onClick={() => onOpen(plan.id, row.id)} className="cursor-pointer border-b border-stone-100 last:border-0 hover:bg-[#FAF9F7]">
+                    <tr key={`${plan.id}-${row.id}`} onClick={() => onOpen(plan.id, row.id)} className="cursor-pointer border-b border-stone-100 last:border-0 hover:bg-d-raise">
                       <td className="num whitespace-nowrap px-4 py-2.5">
                         <span className="text-ink-900">{row.deadline ? fmtShort(row.deadline) : "—"}</span>
                         {days !== null && (

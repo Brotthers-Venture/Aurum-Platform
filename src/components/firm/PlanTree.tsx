@@ -3,7 +3,6 @@
 import { useState, type ReactNode } from "react";
 import { ChevronDown, ChevronRight, Ellipsis, FileSpreadsheet, Folder, FolderOpen, FolderPlus, Pencil, Plus, Trash2 } from "lucide-react";
 import { cx } from "@/components/ui";
-import { AurumMark } from "@/components/brand/Logo";
 import { solutions } from "@/lib/solutions";
 import { blankPlan, descendants, folderPath, summary, type Plan, type PlanFolder } from "@/lib/plans";
 
@@ -217,7 +216,7 @@ export function PlanTree({
         return (
           <div key={sol.id}>
             <div className="group relative flex h-8 cursor-pointer items-center gap-2 rounded-[8px] px-2 text-[13px] hover:bg-white" onClick={() => flip(key)}>
-              <AurumMark size={15} color={sol.live ? "var(--tenant-accent)" : "#D1C8B5"} />
+              {isOpen ? <ChevronDown size={13} className="shrink-0 text-stone-400" /> : <ChevronRight size={13} className="shrink-0 text-stone-400" />}
               <span className={cx("min-w-0 flex-1 truncate", n ? "font-semibold text-ink-900" : "text-stone-500")}>{sol.name.replace(" Solution", "")}</span>
               {n > 0 && <span className="num text-[11px] text-stone-400 group-hover:hidden">{n}</span>}
               {actions(key, "solution")}
