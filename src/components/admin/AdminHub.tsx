@@ -148,7 +148,8 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
                   : `${formations.filter((f) => f.stage !== "Post-formation").length} in progress`,
         subTone: s.live ? "accent" : "muted",
         outline: s.live,
-        ...(s.id === "fund" ? { open: () => go({ kind: "fund", from: s.slot }) } : { href: s.href }),
+        // The six solutions are the deepest the hub opens: a click goes to the solution's page.
+        href: s.href,
       }));
     center = <MarkCenter expanded={revealed} />;
   } else if (level.kind === "fund") {
@@ -265,13 +266,8 @@ export function AdminHub({ variation = "ambient", animate = false, quiet = false
       },
     ];
   });
-  const orbitNode = (o: (typeof orbit)[number]): Node => ({
-    id: `orbit-${o.id}`,
-    slot: "ne",
-    label: [""],
-    sub: "",
-    open: () => (o.id === "aurum" ? toRoot() : go({ kind: "module", id: o.id, from: { x: o.x, y: o.y } })),
-  });
+  // Resting on a workspace opens nothing; a click goes to its page.
+  const orbitNode = (o: (typeof orbit)[number]): Node => ({ id: `orbit-${o.id}`, slot: "ne", label: [""], sub: "" });
   const orbitGo = (o: (typeof orbit)[number]) => (o.id === "aurum" ? toRoot() : router.push(o.href));
 
   // Pulse: quiet while anything is open, hovered or in use.
