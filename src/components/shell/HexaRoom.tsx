@@ -218,7 +218,18 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
       )}
     >
       {active && accent && <span aria-hidden className="absolute -left-2 bottom-2 top-2 w-[2px] rounded-full" style={{ background: accent }} />}
-      <Link href={href} aria-current={active ? "page" : undefined} className="flex min-w-0 flex-1 items-center gap-2.5 pl-2.5 pr-1">
+      <Link
+        href={href}
+        aria-current={active ? "page" : undefined}
+        aria-expanded={toggle ? expanded : undefined}
+        onClick={(e) => {
+          // The whole row opens and closes its pages: a click on the open, current entry folds it instead of reloading it.
+          if (!toggle) return;
+          if (expanded && active) e.preventDefault();
+          if (expanded ? active : true) toggle();
+        }}
+        className="flex h-full min-w-0 flex-1 items-center gap-2.5 pl-2.5 pr-1"
+      >
         {icon}
         <span className={cx("truncate", active ? "font-semibold text-d-text" : "font-medium text-d-text-2 group-hover:text-d-text")}>{label}</span>
       </Link>

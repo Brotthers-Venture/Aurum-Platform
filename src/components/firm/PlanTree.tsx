@@ -31,9 +31,12 @@ export function PlanTree({
   const [open, setOpen] = useState<Record<string, boolean>>(() => {
     const o: Record<string, boolean> = {};
     for (const p of data.plans) o[`s:${p.solution}`] = true;
-    if (sel) for (const f of folderPath(data.folders, sel.folder)) o[f.id] = true;
     return o;
   });
+  // The selected plan's solution and folders stay unfolded, wherever it was opened from, unless the user folds them.
+  const reveal = new Set(sel ? [`s:${sel.solution}`, ...folderPath(data.folders, sel.folder).map((f) => f.id)] : []);
+  const isOpenId = (id: string) => open[id] ?? reveal.has(id);
+  const flip = (id: string) => setOpen((o) => ({ ...o, [id]: !(o[id] ?? reveal.has(id)) }));
   const [menu, setMenu] = useState<Menu>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
 
@@ -130,14 +133,14 @@ export function PlanTree({
     return (
       <>
         {folders.map((f) => {
-          const isOpen = open[f.id];
+          const isOpen = isOpenId(f.id);
           const count = data.plans.filter((p) => p.folder === f.id || (p.folder && descendants(data.folders, f.id).includes(p.folder))).length;
           return (
             <div key={f.id}>
               <div
                 className="group relative flex h-7 cursor-pointer items-center gap-1.5 rounded-[6px] pr-1 text-[12.5px] text-stone-700 hover:bg-white"
                 style={pad}
-                onClick={() => setOpen((o) => ({ ...o, [f.id]: !o[f.id] }))}
+                onClick={() => flip(f.id)}
                 onDoubleClick={() => setRenaming(f.id)}
               >
                 {isOpen ? <ChevronDown size={12} className="shrink-0 text-stone-400" /> : <ChevronRight size={12} className="shrink-0 text-stone-400" />}
@@ -209,14 +212,11 @@ export function PlanTree({
     <div>
       {solutions.map((sol) => {
         const key = `s:${sol.id}`;
-        const isOpen = open[key];
+        const isOpen = isOpenId(key);
         const n = data.plans.filter((p) => p.solution === sol.id).length;
         return (
           <div key={sol.id}>
-            <div
-              className="group relative flex h-8 cursor-pointer items-center gap-2 rounded-[8px] px-2 text-[13px] hover:bg-white"
-              onClick={() => setOpen((o) => ({ ...o, [key]: !o[key] }))}
-            >
+            <div className="group relative flex h-8 cursor-pointer items-center gap-2 rounded-[8px] px-2 text-[13px] hover:bg-white" onClick={() => flip(key)}>
               <AurumMark size={15} color={sol.live ? "var(--tenant-accent)" : "#D1C8B5"} />
               <span className={cx("min-w-0 flex-1 truncate", n ? "font-semibold text-ink-900" : "text-stone-500")}>{sol.name.replace(" Solution", "")}</span>
               {n > 0 && <span className="num text-[11px] text-stone-400 group-hover:hidden">{n}</span>}

@@ -7,7 +7,7 @@ import { solutions } from "./solutions";
 import { spaceUnreadCount, totalUnread } from "./comms";
 import { billingCounts } from "./billing";
 import { salesCounts } from "./sales";
-import { pmoCounts } from "./pmo";
+import { pmoCounts } from "./plans";
 import { dataroomCounts } from "./dataroom";
 import { complianceCounts } from "./compliance";
 
@@ -45,15 +45,12 @@ export const firmModules: FirmModule[] = [
     name: "Project management office",
     color: FIRM.pmo,
     href: "/admin/pmo",
-    badge: p.atRisk,
-    badgeLabel: "projects need attention",
+    badge: p.attention,
+    badgeLabel: "plans need attention",
     ring: [
-      { id: "portfolio", label: ["Projects"], sub: `${p.active} active`, href: "/admin/pmo?tab=portfolio" },
-      { id: "new", label: ["New", "project"], sub: "Start", href: "/admin/pmo?tab=new" },
-      { id: "timeline", label: ["Timeline"], sub: `${p.milestones} milestones`, href: "/admin/pmo?tab=timeline" },
-      { id: "tasks", label: ["Tasks"], sub: `${p.dueWeek} this week`, alert: p.dueWeek > 0, href: "/admin/pmo?tab=tasks" },
-      { id: "risks", label: ["Risks"], sub: `${p.risks} open`, alert: p.risks > 0, href: "/admin/pmo?tab=risks" },
-      { id: "capacity", label: ["Capacity"], sub: p.over ? `${p.over} over 100%` : "Balanced", alert: p.over > 0, href: "/admin/pmo?tab=capacity" },
+      { id: "overview", label: ["Overview"], sub: `${p.plans} plans`, href: "/admin/pmo" },
+      { id: "tasks", label: ["Open", "tasks"], sub: p.overdue ? `${p.overdue} overdue` : `${p.dueWeek} this week`, alert: p.overdue > 0, href: "/admin/pmo?tab=tasks" },
+      { id: "reports", label: ["Reports"], sub: "PDF for the board", href: "/admin/pmo?tab=reports" },
     ],
   },
   {

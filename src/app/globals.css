@@ -1507,3 +1507,40 @@ html[data-theme="light"] .eco-stage[data-hub]::before {
     print-color-adjust: exact;
   }
 }
+
+/* ───────── PMO report: US Letter landscape; the page box carries the footer and page numbers ───────── */
+@page pmo {
+  size: letter landscape;
+  margin: 0.35in 0 0.45in 0;
+  @bottom-left {
+    padding-left: 0.45in;
+    font: 400 8.5pt var(--font-serif, Georgia), serif;
+    color: #6b7a90;
+  }
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    padding-right: 0.45in;
+    font: 400 8.5pt var(--font-serif, Georgia), serif;
+    color: #6b7a90;
+  }
+}
+@page pmo:first {
+  margin-top: 0;
+}
+@media print {
+  .pmo-report {
+    page: pmo;
+    width: auto !important;
+  }
+  .pmo-report .report-sheet {
+    break-after: page;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .pmo-report .report-sheet:last-child {
+    break-after: auto;
+  }
+  .pmo-report thead {
+    display: table-header-group;
+  }
+}

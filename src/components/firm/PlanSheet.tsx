@@ -5,7 +5,7 @@ import { useBrand } from "@/components/brand/BrandProvider";
 import { moduleName } from "@/lib/brand";
 import { postPlanRequest } from "@/lib/chat-store";
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AlertTriangle, CalendarRange, ChevronDown, ChevronRight, Copy, Download, FileText, MessageSquare, Paperclip, Plus, Printer, Send, Table2, X } from "lucide-react";
+import { AlertTriangle, CalendarRange, ChevronDown, ChevronRight, Copy, Download, FileText, MessageSquare, Paperclip, Plus, Send, Table2, X } from "lucide-react";
 import { cx } from "@/components/ui";
 import { inkFor } from "@/lib/gps";
 import { FIRM } from "@/lib/firm-colors";
@@ -22,7 +22,7 @@ const longDate = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateStrin
 
 type View = "grid" | "gantt" | "requests";
 
-export function PlanSheet({ plan: seed, crumbs = [], onChange }: { plan: Plan; crumbs?: string[]; onChange?: (rows: PlanRow[]) => void }) {
+export function PlanSheet({ plan: seed, crumbs = [], onChange, openRowId }: { plan: Plan; crumbs?: string[]; onChange?: (rows: PlanRow[]) => void; openRowId?: string }) {
   const [rows, setRows] = useState<PlanRow[]>(seed.rows);
   const first = useRef(true);
   useEffect(() => {
@@ -36,7 +36,7 @@ export function PlanSheet({ plan: seed, crumbs = [], onChange }: { plan: Plan; c
   const [party, setParty] = useState<string>("all");
   const [view, setView] = useState<View>("grid");
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [openRow, setOpenRow] = useState<string | null>(null);
+  const [openRow, setOpenRow] = useState<string | null>(openRowId ?? null);
   const [toast, setToast] = useState<string | null>(null);
   const flash = (t: string) => {
     setToast(t);
@@ -151,12 +151,14 @@ export function PlanSheet({ plan: seed, crumbs = [], onChange }: { plan: Plan; c
           >
             <Download size={14} /> Export
           </button>
-          <button
-            onClick={() => window.print()}
-            className="flex h-9 items-center gap-1.5 rounded-[10px] border border-stone-300 bg-white px-3 text-[12.5px] font-semibold text-ink-900 hover:border-ink-900"
+          <a
+            href={`/pmo-report?plan=${seed.id}${party === "all" ? "" : `&party=${party}`}`}
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-9 items-center gap-1.5 rounded-[10px] bg-brand px-3 text-[12.5px] font-semibold text-brand-ink hover:opacity-90"
           >
-            <Printer size={14} /> Print
-          </button>
+            <FileText size={14} /> PDF report
+          </a>
         </div>
       </div>
 
@@ -260,9 +262,12 @@ function EditCell({
   onSave,
   children,
   className,
+  onDouble,
 }: {
   value: string;
   kind: "text" | "date" | "select" | "list";
+  /** Edit on double click, so a single click can do something else (fold a topic). */
+  onDouble?: boolean;
   options?: readonly string[];
   onSave: (v: string) => void;
   children: ReactNode;
@@ -272,7 +277,12 @@ function EditCell({
   const ref = useRef<HTMLInputElement & HTMLSelectElement>(null);
   if (!editing)
     return (
-      <div onClick={() => setEditing(true)} className={cx("h-full w-full cursor-text px-2.5 py-2 hover:bg-[#F6F1FA]", className)}>
+      <div
+        onClick={onDouble ? undefined : () => setEditing(true)}
+        onDoubleClick={onDouble ? () => setEditing(true) : undefined}
+        title={onDouble ? "Double-click to rename" : undefined}
+        className={cx("h-full w-full px-2.5 py-2", onDouble ? "cursor-pointer" : "cursor-text hover:bg-[#F6F1FA]", className)}
+      >
         {children}
       </div>
     );
@@ -301,6 +311,7 @@ function EditCell({
       type={kind === "date" ? "date" : "text"}
       defaultValue={value}
       onBlur={(e) => done(e.target.value)}
+      onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => {
         if (e.key === "Enter") (e.target as HTMLInputElement).blur();
         if (e.key === "Escape") setEditing(false);
@@ -377,16 +388,22 @@ function Grid({
             n++;
             return (
               <Fragment key={r.id}>
-                <div className="grid border-b border-stone-200 text-white" style={{ gridTemplateColumns: COLS, background: "#2B4366" }}>
+                <div
+                  className="grid cursor-pointer select-none border-b border-stone-200 text-white"
+                  style={{ gridTemplateColumns: COLS, background: "#2B4366" }}
+                  onClick={() => setCollapsed((c) => ({ ...c, [r.id]: !c[r.id] }))}
+                  aria-expanded={!isC}
+                >
                   <div className="num sticky left-0 z-[5] flex items-center justify-center bg-[#2B4366] text-[11px] text-white/60">{n}</div>
                   <div className="num sticky left-[40px] z-[5] flex items-center bg-[#2B4366] px-2.5 font-bold">{r.id}</div>
                   <div className={cx("flex min-w-0 items-center gap-2 bg-[#2B4366] px-2", STICKY_TASK)}>
-                    <button onClick={() => setCollapsed((c) => ({ ...c, [r.id]: !c[r.id] }))} className="rounded p-0.5 hover:bg-white/10" aria-label={isC ? "Expand" : "Collapse"}>
+                    <span className="rounded p-0.5" aria-hidden>
                       {isC ? <ChevronRight size={15} /> : <ChevronDown size={15} />}
-                    </button>
+                    </span>
                     <EditCell
                       value={r.title}
                       kind="text"
+                      onDouble
                       onSave={(v) => v.trim() && onUpdate(r.id, { title: v.trim() })}
                       className="min-w-0 !px-1 font-bold uppercase tracking-[0.04em] hover:!bg-white/10"
                     >

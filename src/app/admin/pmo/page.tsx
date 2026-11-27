@@ -5,7 +5,9 @@ import { PmoWorkspace, type PmoTab } from "@/components/firm/PmoWorkspace";
 
 export const metadata: Metadata = { title: "Project management office" };
 
-const tabs: PmoTab[] = ["portfolio", "timeline", "tasks", "risks", "capacity", "new", "plan"];
+const tabs: PmoTab[] = ["overview", "tasks", "reports", "plan"];
+// Links from before the PMO ran on plans alone.
+const legacy: Record<string, PmoTab> = { portfolio: "overview", timeline: "overview", capacity: "overview", risks: "tasks", new: "overview" };
 
 export default function Page({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   return (
@@ -19,6 +21,6 @@ export default function Page({ searchParams }: { searchParams: Promise<{ tab?: s
 
 async function Body({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const { tab } = await searchParams;
-  const t = tabs.includes(tab as PmoTab) ? (tab as PmoTab) : "portfolio";
+  const t = tabs.includes(tab as PmoTab) ? (tab as PmoTab) : (legacy[tab ?? ""] ?? "overview");
   return <PmoWorkspace key={t} tab={t} />;
 }

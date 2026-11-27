@@ -57,12 +57,58 @@ export const plans: Plan[] = [
     ],
     rows: [
       T("1", "Fund constitution", "strlex"),
-      T("1.1", "Certificate of Limited Partnership (Delaware) filed", "strlex", { owner: "Darci Welter", priority: "High", status: "Completed", deliverable: "Delaware Certificate of LP", notes: "Filed." }),
-      T("1.2", "Federal EIN obtained for the Fund", "strlex", { owner: "Darci Welter", dependsOn: ["1.1"], priority: "High", status: "Completed", deliverable: "IRS EIN confirmation letter", notes: "Obtained." }),
-      T("1.3", "Limited Partnership Agreement (LPA)", "strlex", { owner: "Darci Welter", dependsOn: ["1.2"], priority: "High", status: "Not started", start: "2026-10-01", deadline: "2026-10-08", deliverable: "Executed LPA" }),
-      T("1.4", "Legal Entity Identifier (LEI) for the Fund", "aurum", { owner: "Luca Ott", dependsOn: ["1.3"], priority: "High", status: "Not started", start: "2026-11-08", deadline: "2026-11-11", deliverable: "LEI certificate (GLEIF)" }),
-      T("1.5", "SEC EDGAR access — CIK", "aurum", { owner: "Luca Ott", dependsOn: ["1.4"], priority: "High", status: "Not started", start: "2026-11-11", deadline: "2026-11-14", deliverable: "CIK and EDGAR access codes" }),
-      T("1.6", "Open PNC bank account", "aurum", { owner: "Luca Ott", dependsOn: ["1.5"], priority: "High", status: "Not started", start: "2026-11-14", deadline: "2026-11-20", deliverable: "Account opening confirmation", notes: "Everything downstream waits on the account." }),
+      T("1.1", "Certificate of Limited Partnership (Delaware) filed", "strlex", {
+        owner: "Darci Welter",
+        priority: "High",
+        status: "Completed",
+        deliverable: "Delaware Certificate of LP",
+        notes: "Filed.",
+      }),
+      T("1.2", "Federal EIN obtained for the Fund", "strlex", {
+        owner: "Darci Welter",
+        dependsOn: ["1.1"],
+        priority: "High",
+        status: "Completed",
+        deliverable: "IRS EIN confirmation letter",
+        notes: "Obtained.",
+      }),
+      T("1.3", "Limited Partnership Agreement (LPA)", "strlex", {
+        owner: "Darci Welter",
+        dependsOn: ["1.2"],
+        priority: "High",
+        status: "Not started",
+        start: "2026-10-01",
+        deadline: "2026-10-08",
+        deliverable: "Executed LPA",
+      }),
+      T("1.4", "Legal Entity Identifier (LEI) for the Fund", "aurum", {
+        owner: "Luca Ott",
+        dependsOn: ["1.3"],
+        priority: "High",
+        status: "Not started",
+        start: "2026-11-08",
+        deadline: "2026-11-11",
+        deliverable: "LEI certificate (GLEIF)",
+      }),
+      T("1.5", "SEC EDGAR access — CIK", "aurum", {
+        owner: "Luca Ott",
+        dependsOn: ["1.4"],
+        priority: "High",
+        status: "Not started",
+        start: "2026-11-11",
+        deadline: "2026-11-14",
+        deliverable: "CIK and EDGAR access codes",
+      }),
+      T("1.6", "Open PNC bank account", "aurum", {
+        owner: "Luca Ott",
+        dependsOn: ["1.5"],
+        priority: "High",
+        status: "Not started",
+        start: "2026-11-14",
+        deadline: "2026-11-20",
+        deliverable: "Account opening confirmation",
+        notes: "Everything downstream waits on the account.",
+      }),
 
       T("2", "Aurum placement & administration cost", "aurum"),
       T("2.1", "Drummond accounting price", "aurum", { owner: "Luca Ott", priority: "High", status: "Not started", start: "2026-10-07", deadline: "2026-10-09" }),
@@ -74,24 +120,84 @@ export const plans: Plan[] = [
       T("3.2", "BAH Fund — Excel DD", "aurum", { owner: "Luca Ott", priority: "High", status: "Completed", start: "2026-10-07", deadline: "2026-10-09" }),
       T("3.3", "Word document DD", "aurum", { owner: "Luca Ott", priority: "High", status: "Completed", start: "2026-10-09", deadline: "2026-10-16" }),
       T("3.4", "Virtual data room", "aurum", { owner: "Luca Ott", dependsOn: ["4.2"], priority: "High", status: "In progress", start: "2026-10-09", deadline: "2026-10-17" }),
-      T("3.5", "Approval memo", "aurum", { owner: "Luca Ott", dependsOn: ["3.1", "3.2", "3.3"], priority: "High", status: "Not started", start: "2026-10-09", deadline: "2026-10-17" }),
+      T("3.5", "Approval memo", "aurum", {
+        owner: "Luca Ott",
+        dependsOn: ["3.1", "3.2", "3.3"],
+        priority: "High",
+        status: "Not started",
+        start: "2026-10-09",
+        deadline: "2026-10-17",
+      }),
 
       T("4", "Placement materials", "castle"),
-      T("4.1", "Castle review and feedback on materials", "castle", { owner: "Castle Placement", priority: "Medium", status: "Completed", start: "2026-10-03", deadline: "2026-10-06", deliverable: "Castle written feedback", notes: "Track follow-ups here." }),
-      T("4.2", "Prepare VDR", "castle", { owner: "Castle Placement", dependsOn: ["4.1"], priority: "High", status: "Completed", start: "2026-10-06", deadline: "2026-10-10", deliverable: "VDR index" }),
+      T("4.1", "Castle review and feedback on materials", "castle", {
+        owner: "Castle Placement",
+        priority: "Medium",
+        status: "Completed",
+        start: "2026-10-03",
+        deadline: "2026-10-06",
+        deliverable: "Castle written feedback",
+        notes: "Track follow-ups here.",
+      }),
+      T("4.2", "Prepare VDR", "castle", {
+        owner: "Castle Placement",
+        dependsOn: ["4.1"],
+        priority: "High",
+        status: "Completed",
+        start: "2026-10-06",
+        deadline: "2026-10-10",
+        deliverable: "VDR index",
+      }),
 
       T("5", "Project pipeline", "mazal"),
-      T("5.1", "Provide pipeline of the R$4 billion in projects mentioned", "mazal", { owner: "Mazal Group", priority: "High", status: "Completed", start: "2026-09-30", deadline: "2026-10-07", deliverable: "Pipeline schedule", notes: "Requested from Mazal." }),
-      T("5.2", "Strlex review of the Mazal pipeline", "strlex", { owner: "Darci Welter", dependsOn: ["5.1"], priority: "Medium", status: "In progress", start: "2026-10-08", deadline: "2026-11-28", deliverable: "Pipeline review notes" }),
+      T("5.1", "Provide pipeline of the R$4 billion in projects mentioned", "mazal", {
+        owner: "Mazal Group",
+        priority: "High",
+        status: "Completed",
+        start: "2026-09-30",
+        deadline: "2026-10-07",
+        deliverable: "Pipeline schedule",
+        notes: "Requested from Mazal.",
+      }),
+      T("5.2", "Strlex review of the Mazal pipeline", "strlex", {
+        owner: "Darci Welter",
+        dependsOn: ["5.1"],
+        priority: "Medium",
+        status: "In progress",
+        start: "2026-10-08",
+        deadline: "2026-11-28",
+        deliverable: "Pipeline review notes",
+      }),
 
       T("6", "Strlex — George", "strlex"),
-      T("6.1", "Bring the corporate website in line with the Advisers Act and SEC rules, including disclaimers and compliance disclosures", "strlex", { owner: "George", priority: "High", status: "Not started", start: "2026-10-07", deadline: "2026-10-21", deliverable: "Updated website with compliance disclosures" }),
+      T("6.1", "Bring the corporate website in line with the Advisers Act and SEC rules, including disclaimers and compliance disclosures", "strlex", {
+        owner: "George",
+        priority: "High",
+        status: "Not started",
+        start: "2026-10-07",
+        deadline: "2026-10-21",
+        deliverable: "Updated website with compliance disclosures",
+      }),
       T("6.2", "Create Tony’s corporate email", "strlex", { owner: "George", priority: "High", status: "Completed", start: "2026-10-07", deadline: "2026-10-09" }),
       T("6.3", "Share bio", "strlex", { owner: "George", priority: "High", status: "Completed", start: "2026-10-07", deadline: "2026-10-09" }),
-      T("6.4", "Provide 3 commercial references", "strlex", { owner: "George", priority: "High", status: "Not started", start: "2026-10-07", deadline: "2026-10-09", deliverable: "First and last name, title, relationship, email, phone for each" }),
+      T("6.4", "Provide 3 commercial references", "strlex", {
+        owner: "George",
+        priority: "High",
+        status: "Not started",
+        start: "2026-10-07",
+        deadline: "2026-10-09",
+        deliverable: "First and last name, title, relationship, email, phone for each",
+      }),
 
       T("7", "Strlex — Antonio Maciel", "strlex"),
-      T("7.1", "Provide 3 commercial references", "strlex", { owner: "Tony", priority: "High", status: "Not started", start: "2026-10-07", deadline: "2026-10-09", deliverable: "First and last name, title, relationship, email, phone for each" }),
+      T("7.1", "Provide 3 commercial references", "strlex", {
+        owner: "Tony",
+        priority: "High",
+        status: "Not started",
+        start: "2026-10-07",
+        deadline: "2026-10-09",
+        deliverable: "First and last name, title, relationship, email, phone for each",
+      }),
     ],
   },
 ];
@@ -119,7 +225,10 @@ export function blankPlan(solution: string, folder: string | null, name = "Untit
     vehicle: "",
     owner: "Luca Ott (Aurum)",
     parties: [{ id: "aurum", name: "Aurum", contact: "Luca Ott", color: "#B8975A" }],
-    rows: [T("1", "First topic", "aurum"), T("1.1", "First task", "aurum", { owner: "Luca Ott", priority: "Medium", status: "Not started", start: PLAN_TODAY, deadline: PLAN_TODAY })],
+    rows: [
+      T("1", "First topic", "aurum"),
+      T("1.1", "First task", "aurum", { owner: "Luca Ott", priority: "Medium", status: "Not started", start: PLAN_TODAY, deadline: PLAN_TODAY }),
+    ],
   };
 }
 
@@ -184,5 +293,32 @@ export function summary(rows: PlanRow[]) {
     onHold: count("On hold"),
     overdue: tasks.filter((t) => isOverdue(t)).length,
     pct: tasks.length ? count("Completed") / tasks.length : 0,
+  };
+}
+
+/* ───────────────────────── across plans ───────────────────────── */
+
+/** The next deadline still ahead: overdue dates are counted as overdue, not as "next". */
+export const nextDeadline = (rows: PlanRow[], today = PLAN_TODAY) =>
+  rows
+    .filter((r) => !isTopic(r) && r.status !== "Completed" && r.deadline && r.deadline >= today)
+    .map((r) => r.deadline!)
+    .sort()[0];
+
+/** Every task still to do, in every plan, soonest deadline first. */
+export function openTasks(all: Plan[]) {
+  return all
+    .flatMap((p) => p.rows.filter((r) => !isTopic(r) && r.status !== "Completed").map((r) => ({ plan: p, row: r, days: daysLeft(r) })))
+    .sort((a, b) => (a.row.deadline ?? "9999").localeCompare(b.row.deadline ?? "9999"));
+}
+
+/** Counts for the hub and the sidebar, from the seed plans (the browser copy may differ). */
+export function pmoCounts() {
+  const open = openTasks(plans);
+  return {
+    plans: plans.length,
+    attention: plans.filter((p) => summary(p.rows).overdue > 0 || summary(p.rows).blocked > 0).length,
+    overdue: open.filter((t) => t.days !== null && t.days < 0).length,
+    dueWeek: open.filter((t) => t.days !== null && t.days >= 0 && t.days <= 7).length,
   };
 }
