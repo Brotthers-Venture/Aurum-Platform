@@ -6,12 +6,16 @@ import { ButtonLink, Panel, cx } from "@/components/ui";
 import { WField, WizardShell, parseAmount, wizInput } from "./WizardShell";
 import { allocateCents, buildBooks, TODAY } from "@/lib/accounting/engine";
 import { accountByCode } from "@/lib/accounting/coa";
-import { bankAccounts, fundById, funds, investorById } from "@/lib/data";
+import { fundById, funds, investorById } from "@/lib/data";
 import { date, money, pct } from "@/lib/format";
+import { buildNotices } from "@/lib/capital-notice";
+import { useBrand } from "@/components/brand/BrandProvider";
+import { CallNotice } from "./CallNotice";
 
 const addDays = (iso: string, n: number) => new Date(Date.parse(iso) + n * 86_400_000).toISOString().slice(0, 10);
 
 export function CapitalCallWizard() {
+  const { brand } = useBrand();
   const [step, setStep] = useState(0);
   const [fundId, setFundId] = useState("meridian-cvc");
   const [notice, setNotice] = useState(TODAY);
@@ -42,8 +46,10 @@ export function CapitalCallWizard() {
 
   const totalUnfunded = partners.reduce((a, p) => a + p.commitment - p.called, 0);
   const overCommitted = alloc.some((a) => a.over);
-  const bank = bankAccounts.find((b) => b.fundId === fundId);
   const lp = alloc.find((a) => a.p.investorId === noticeFor) ?? alloc[0];
+  const previewNotice = lp
+    ? buildNotices(f, { number: nextNumber, noticeDate: notice, dueDate: due, status: "Draft", allocations: [{ investorId: lp.p.investorId, amount: lp.amount }] }, brand)[0]
+    : undefined;
 
   if (done) {
     return (
@@ -211,41 +217,10 @@ export function CapitalCallWizard() {
           ))}
         </ul>
       </Panel>
-      <div className="rounded-[8px] border border-stone-200/70 bg-white shadow-card px-10 py-9 font-serif text-[13px] leading-relaxed text-ink-800">
-        <div className="flex items-start justify-between font-sans">
-          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-900">{f.name}</div>
-          <div className="num text-[12px] text-stone-500">{date(notice)}</div>
-        </div>
-        <h2 className="mt-8 text-[20px] font-semibold text-ink-900">Capital Call Notice No. {nextNumber}</h2>
-        <p className="mt-4">To: {investorById(lp.p.investorId)?.name}</p>
-        <p className="mt-3">
-          Pursuant to the Limited Partnership Agreement, {f.gp} hereby calls capital from the Limited Partners in the aggregate amount of {m(total)}. Your share, based on your
-          commitment of {m(lp.p.commitment)}, is set out below and is due on <span className="font-semibold">{date(due)}</span>.
-        </p>
-        <table className="mt-5 w-full font-sans text-[12px]">
-          <tbody>
-            {[
-              ["Amount due", m(lp.amount, 2)],
-              ["Commitment", m(lp.p.commitment)],
-              ["Contributed to date (including this call)", m(lp.p.called + lp.amount, 2)],
-              ["Remaining unfunded commitment", m(lp.after, 2)],
-            ].map(([k, v], i) => (
-              <tr key={k} className="border-b border-stone-200">
-                <td className="py-2 text-stone-600">{k}</td>
-                <td className={cx("num py-2 text-right", i === 0 && "font-semibold text-ink-900")}>{v}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <div className="mt-6 rounded-[3px] bg-stone-50 p-4 font-sans text-[12px]">
-          <div className="font-semibold text-ink-900">Wire instructions</div>
-          <div className="mt-1 text-stone-600">
-            {bank?.institution} · {bank?.accountName} · Account ••{bank?.mask}
-            <br />
-            Reference: {investorById(lp.p.investorId)?.name} — Call {nextNumber}
-          </div>
-          <div className="mt-2 text-negative">Aurum will never change wire instructions by email. Confirm by phone before sending.</div>
-        </div>
+      {/* The same notice the investor receives, issued by the firm as administrator. */}
+      <div className="overflow-x-auto rounded-[8px] border border-stone-200 p-4">
+        {/* shown at 85% so the whole letter-size sheet fits beside the recipients */}
+        <div style={{ zoom: 0.85 }}>{previewNotice && <CallNotice n={previewNotice} />}</div>
       </div>
     </div>,
 

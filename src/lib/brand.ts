@@ -52,6 +52,8 @@ export type Brand = {
   /** each entrance's own look, by entrance id (see lib/entrances); unset doors inherit */
   entrances?: Record<string, { backdrop?: LoginBackdrop; image?: string; eyebrow?: string; headline?: string; text?: string }>;
   legal: { footer: string; privacyUrl: string; termsUrl: string };
+  /** The firm as fund administrator, printed on capital call notices it issues (the GP approves; the firm signs). */
+  administrator?: { entity: string; address: string; phone?: string };
 };
 
 export const SERIF: Record<SerifFont, { label: string; stack: string }> = {
@@ -75,6 +77,7 @@ export const AURUM: Brand = {
   domain: "aurumasset.us",
   supportEmail: "clientservices@aurumasset.us",
   city: "Orlando, Florida",
+  administrator: { entity: "Aurum Asset Management LLC", address: "7004 Tavistock Lakes Blvd, Unit 318, Orlando, FL 32827" },
   logo: "/brand/aurum-logo-dark.png",
   logoLight: "/brand/aurum-logo-white.png",
   mark: "hexagon",

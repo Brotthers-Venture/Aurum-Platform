@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, BellRing, Check, Download, Landmark } from "lucide-react";
-import { Button, PageHeader, Panel, Progress, Stat, StatRow, Status } from "@/components/ui";
+import { Button, ButtonLink, PageHeader, Panel, Progress, Stat, StatRow, Status } from "@/components/ui";
 import { Tabs } from "@/components/Tabs";
 import { JournalTable } from "@/components/fund/JournalTable";
 import { SecondReview } from "@/components/spine/SecondReview";
@@ -106,9 +106,9 @@ export default async function CapitalCallDetail({ params }: { params: Promise<{ 
         description={call.purpose}
         actions={
           <>
-            <Button variant="secondary">
+            <ButtonLink variant="secondary" href={`/notices/${call.id}`}>
               <Download size={14} strokeWidth={1.8} /> Notices (PDF)
-            </Button>
+            </ButtonLink>
             {call.status === "Partially funded" || call.status === "Issued" ? (
               <Button>
                 <BellRing size={14} strokeWidth={1.8} /> Remind outstanding

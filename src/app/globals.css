@@ -1572,3 +1572,30 @@ html[data-theme="light"] .eco-stage[data-hub]::before {
     print-color-adjust: exact;
   }
 }
+
+/* ───────── Capital call notices: US Letter portrait, one partner per page; each sheet carries its own margins ───────── */
+@page notice {
+  size: letter portrait;
+  margin: 0;
+}
+@media print {
+  .cc-book {
+    background: #fff !important;
+    padding: 0 !important;
+  }
+  .cc-book .print-pages {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .cc-sheet {
+    page: notice;
+    box-shadow: none !important;
+    break-after: page;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .cc-sheet:last-child {
+    break-after: auto;
+  }
+}

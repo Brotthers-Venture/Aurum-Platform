@@ -278,17 +278,7 @@ export const funds: Fund[] = [
 ];
 
 export type InvestorType =
-  | "Individual"
-  | "Joint"
-  | "Trust"
-  | "Corporation"
-  | "LLC"
-  | "Pension plan"
-  | "Endowment"
-  | "Foundation"
-  | "Insurance company"
-  | "Fund of funds"
-  | "Family office";
+  "Individual" | "Joint" | "Trust" | "Corporation" | "LLC" | "Pension plan" | "Endowment" | "Foundation" | "Insurance company" | "Fund of funds" | "Family office";
 
 export type Investor = {
   id: string;
@@ -300,23 +290,165 @@ export type Investor = {
   contact: string;
   email: string;
   relationshipManager: string;
+  /** mailing address for notices, one line per entry; capital call notices are held until it is on file */
+  address?: string[];
 };
 
 export const investors: Investor[] = [
-  { id: "inv-calloway", name: "Calloway Family Trust", type: "Trust", jurisdiction: "Florida, US", taxForm: "W-9", kyc: "Clear", contact: "Margaret Calloway", email: "m.calloway@callowaytrust.com", relationshipManager: "L. Andrade" },
-  { id: "inv-brightwater", name: "Brightwater Municipal Pension Plan", type: "Pension plan", jurisdiction: "Ohio, US", taxForm: "W-9", kyc: "Clear", contact: "Daniel Okafor", email: "dokafor@brightwaterpension.org", relationshipManager: "R. Mendes" },
-  { id: "inv-ferreira", name: "Ferreira Holdings Ltd.", type: "Corporation", jurisdiction: "British Virgin Islands", taxForm: "W-8BEN-E", kyc: "Clear", contact: "Paulo Ferreira", email: "paulo@ferreiraholdings.com", relationshipManager: "L. Andrade" },
-  { id: "inv-northgate", name: "Northgate University Endowment", type: "Endowment", jurisdiction: "Massachusetts, US", taxForm: "W-9", kyc: "Clear", contact: "Susan Whitfield", email: "swhitfield@northgate.edu", relationshipManager: "R. Mendes" },
-  { id: "inv-prado", name: "Helena M. Prado", type: "Individual", jurisdiction: "São Paulo, Brazil", taxForm: "W-8BEN", kyc: "Expiring", contact: "Helena Prado", email: "helena.prado@uol.com.br", relationshipManager: "L. Andrade" },
-  { id: "inv-lakeshore", name: "Lakeshore Capital Partners LLC", type: "LLC", jurisdiction: "Illinois, US", taxForm: "W-9", kyc: "Clear", contact: "Kevin Marsh", email: "kmarsh@lakeshorecp.com", relationshipManager: "J. Teixeira" },
-  { id: "inv-vasconcelos", name: "Vasconcelos Family Office", type: "Family office", jurisdiction: "Cayman Islands", taxForm: "W-8BEN-E", kyc: "Clear", contact: "Ricardo Vasconcelos", email: "rv@vasconcelosfo.com", relationshipManager: "L. Andrade" },
-  { id: "inv-ridgeway", name: "Ridgeway Mutual Insurance Co.", type: "Insurance company", jurisdiction: "Connecticut, US", taxForm: "W-9", kyc: "Clear", contact: "Amelia Grant", email: "agrant@ridgewaymutual.com", relationshipManager: "J. Teixeira" },
-  { id: "inv-monteiro", name: "Ana & Rafael Monteiro", type: "Joint", jurisdiction: "Florida, US", taxForm: "W-9", kyc: "Under review", contact: "Rafael Monteiro", email: "rafael.monteiro@gmail.com", relationshipManager: "R. Mendes" },
-  { id: "inv-corbel", name: "Corbel Fund of Funds IV, L.P.", type: "Fund of funds", jurisdiction: "Delaware, US", taxForm: "W-9", kyc: "Clear", contact: "Thomas Reyes", email: "treyes@corbelpartners.com", relationshipManager: "J. Teixeira" },
-  { id: "inv-sterling", name: "Sterling Ridge Foundation", type: "Foundation", jurisdiction: "New York, US", taxForm: "W-9", kyc: "Clear", contact: "Clara Huang", email: "chuang@sterlingridge.org", relationshipManager: "R. Mendes" },
-  { id: "inv-costa", name: "Mariano Costa", type: "Individual", jurisdiction: "Rio de Janeiro, Brazil", taxForm: "W-8BEN", kyc: "Clear", contact: "Mariano Costa", email: "mariano.costa@costaadv.com.br", relationshipManager: "L. Andrade" },
-  { id: "inv-previ-sul", name: "Previsul Fundação de Previdência", type: "Pension plan", jurisdiction: "Porto Alegre, Brazil", taxForm: "W-8BEN-E", kyc: "Clear", contact: "Fernanda Lima", email: "fernanda.lima@previsul.org.br", relationshipManager: "L. Andrade" },
-  { id: "inv-meridian", name: "Meridian Industrial Holdings, Inc.", type: "Corporation", jurisdiction: "Texas, US", taxForm: "W-9", kyc: "Clear", contact: "Gregory Lane", email: "glane@meridianindustrial.com", relationshipManager: "J. Teixeira" },
+  {
+    id: "inv-calloway",
+    name: "Calloway Family Trust",
+    type: "Trust",
+    jurisdiction: "Florida, US",
+    taxForm: "W-9",
+    kyc: "Clear",
+    contact: "Margaret Calloway",
+    email: "m.calloway@callowaytrust.com",
+    relationshipManager: "L. Andrade",
+  },
+  {
+    id: "inv-brightwater",
+    name: "Brightwater Municipal Pension Plan",
+    type: "Pension plan",
+    jurisdiction: "Ohio, US",
+    taxForm: "W-9",
+    kyc: "Clear",
+    contact: "Daniel Okafor",
+    email: "dokafor@brightwaterpension.org",
+    relationshipManager: "R. Mendes",
+  },
+  {
+    id: "inv-ferreira",
+    name: "Ferreira Holdings Ltd.",
+    type: "Corporation",
+    jurisdiction: "British Virgin Islands",
+    taxForm: "W-8BEN-E",
+    kyc: "Clear",
+    contact: "Paulo Ferreira",
+    email: "paulo@ferreiraholdings.com",
+    relationshipManager: "L. Andrade",
+  },
+  {
+    id: "inv-northgate",
+    name: "Northgate University Endowment",
+    type: "Endowment",
+    jurisdiction: "Massachusetts, US",
+    taxForm: "W-9",
+    kyc: "Clear",
+    contact: "Susan Whitfield",
+    email: "swhitfield@northgate.edu",
+    relationshipManager: "R. Mendes",
+  },
+  {
+    id: "inv-prado",
+    name: "Helena M. Prado",
+    type: "Individual",
+    jurisdiction: "São Paulo, Brazil",
+    taxForm: "W-8BEN",
+    kyc: "Expiring",
+    contact: "Helena Prado",
+    email: "helena.prado@uol.com.br",
+    relationshipManager: "L. Andrade",
+  },
+  {
+    id: "inv-lakeshore",
+    name: "Lakeshore Capital Partners LLC",
+    type: "LLC",
+    jurisdiction: "Illinois, US",
+    taxForm: "W-9",
+    kyc: "Clear",
+    contact: "Kevin Marsh",
+    email: "kmarsh@lakeshorecp.com",
+    relationshipManager: "J. Teixeira",
+  },
+  {
+    id: "inv-vasconcelos",
+    name: "Vasconcelos Family Office",
+    type: "Family office",
+    jurisdiction: "Cayman Islands",
+    taxForm: "W-8BEN-E",
+    kyc: "Clear",
+    contact: "Ricardo Vasconcelos",
+    email: "rv@vasconcelosfo.com",
+    relationshipManager: "L. Andrade",
+  },
+  {
+    id: "inv-ridgeway",
+    name: "Ridgeway Mutual Insurance Co.",
+    type: "Insurance company",
+    jurisdiction: "Connecticut, US",
+    taxForm: "W-9",
+    kyc: "Clear",
+    contact: "Amelia Grant",
+    email: "agrant@ridgewaymutual.com",
+    relationshipManager: "J. Teixeira",
+  },
+  {
+    id: "inv-monteiro",
+    name: "Ana & Rafael Monteiro",
+    type: "Joint",
+    jurisdiction: "Florida, US",
+    taxForm: "W-9",
+    kyc: "Under review",
+    contact: "Rafael Monteiro",
+    email: "rafael.monteiro@gmail.com",
+    relationshipManager: "R. Mendes",
+  },
+  {
+    id: "inv-corbel",
+    name: "Corbel Fund of Funds IV, L.P.",
+    type: "Fund of funds",
+    jurisdiction: "Delaware, US",
+    taxForm: "W-9",
+    kyc: "Clear",
+    contact: "Thomas Reyes",
+    email: "treyes@corbelpartners.com",
+    relationshipManager: "J. Teixeira",
+  },
+  {
+    id: "inv-sterling",
+    name: "Sterling Ridge Foundation",
+    type: "Foundation",
+    jurisdiction: "New York, US",
+    taxForm: "W-9",
+    kyc: "Clear",
+    contact: "Clara Huang",
+    email: "chuang@sterlingridge.org",
+    relationshipManager: "R. Mendes",
+  },
+  {
+    id: "inv-costa",
+    name: "Mariano Costa",
+    type: "Individual",
+    jurisdiction: "Rio de Janeiro, Brazil",
+    taxForm: "W-8BEN",
+    kyc: "Clear",
+    contact: "Mariano Costa",
+    email: "mariano.costa@costaadv.com.br",
+    relationshipManager: "L. Andrade",
+  },
+  {
+    id: "inv-previ-sul",
+    name: "Previsul Fundação de Previdência",
+    type: "Pension plan",
+    jurisdiction: "Porto Alegre, Brazil",
+    taxForm: "W-8BEN-E",
+    kyc: "Clear",
+    contact: "Fernanda Lima",
+    email: "fernanda.lima@previsul.org.br",
+    relationshipManager: "L. Andrade",
+  },
+  {
+    id: "inv-meridian",
+    name: "Meridian Industrial Holdings, Inc.",
+    type: "Corporation",
+    jurisdiction: "Texas, US",
+    taxForm: "W-9",
+    kyc: "Clear",
+    contact: "Gregory Lane",
+    email: "glane@meridianindustrial.com",
+    relationshipManager: "J. Teixeira",
+  },
 ];
 
 export type CapitalAccount = {
@@ -352,8 +484,7 @@ export const capitalAccounts: CapitalAccount[] = funds.flatMap((f) =>
 
 export function fundTotals(fundId: string) {
   const rows = capitalAccounts.filter((c) => c.fundId === fundId);
-  const sum = (k: "commitment" | "called" | "contributed" | "receivable" | "unfunded" | "distributed" | "nav") =>
-    rows.reduce((a, r) => a + r[k], 0);
+  const sum = (k: "commitment" | "called" | "contributed" | "receivable" | "unfunded" | "distributed" | "nav") => rows.reduce((a, r) => a + r[k], 0);
   const contributed = sum("contributed");
   const navExReceivable = sum("nav") - sum("receivable");
   return {
@@ -379,21 +510,11 @@ export function toUSD(amount: number, currency: Currency, brlPerUsd: number) {
 export type CapitalCall = CallRecord;
 export type Distribution = DistributionRecord;
 
-export const capitalCalls: CapitalCall[] = funds
-  .flatMap((f) => buildBooks(f.id).calls)
-  .sort((a, b) => b.noticeDate.localeCompare(a.noticeDate));
+export const capitalCalls: CapitalCall[] = funds.flatMap((f) => buildBooks(f.id).calls).sort((a, b) => b.noticeDate.localeCompare(a.noticeDate));
 
-export const distributions: Distribution[] = funds
-  .flatMap((f) => buildBooks(f.id).distributions)
-  .sort((a, b) => b.date.localeCompare(a.date));
+export const distributions: Distribution[] = funds.flatMap((f) => buildBooks(f.id).distributions).sort((a, b) => b.date.localeCompare(a.date));
 
-export type OnboardingStatus =
-  | "Invited"
-  | "In progress"
-  | "Submitted"
-  | "Changes requested"
-  | "Approved"
-  | "Countersigned";
+export type OnboardingStatus = "Invited" | "In progress" | "Submitted" | "Changes requested" | "Approved" | "Countersigned";
 
 export type OnboardingSubmission = {
   id: string;
@@ -414,30 +535,166 @@ export type OnboardingSubmission = {
 };
 
 export const onboarding: OnboardingSubmission[] = [
-  { id: "ob-1041", fundId: "atlantico-vp-ii", investorName: "Calloway Family Trust", investorType: "Trust", jurisdiction: "Florida, US", commitment: 7_500_000, status: "In progress", progress: 0.55, kyc: "Pending", accreditation: "Qualified purchaser", invitedOn: "2026-11-10", lastActivity: "2026-11-23", contactName: "Margaret Calloway", contactEmail: "m.calloway@callowaytrust.com", relationshipManager: "L. Andrade" },
-  { id: "ob-1038", fundId: "atlantico-vp-ii", investorName: "Sterling Ridge Foundation", investorType: "Foundation", jurisdiction: "New York, US", commitment: 10_000_000, status: "Submitted", progress: 1, kyc: "Clear", accreditation: "Qualified purchaser", invitedOn: "2026-11-03", lastActivity: "2026-11-21", contactName: "Clara Huang", contactEmail: "chuang@sterlingridge.org", relationshipManager: "R. Mendes" },
-  { id: "ob-1039", fundId: "atlantico-vp-ii", investorName: "Ana & Rafael Monteiro", investorType: "Joint", jurisdiction: "Florida, US", commitment: 1_000_000, status: "Changes requested", progress: 0.9, kyc: "Potential match", accreditation: "Accredited investor", invitedOn: "2026-11-03", lastActivity: "2026-11-19", contactName: "Rafael Monteiro", contactEmail: "rafael.monteiro@gmail.com", relationshipManager: "R. Mendes" },
-  { id: "ob-1036", fundId: "atlantico-vp-ii", investorName: "Previsul Fundação de Previdência", investorType: "Pension plan", jurisdiction: "Porto Alegre, Brazil", commitment: 12_000_000, status: "Approved", progress: 1, kyc: "Clear", accreditation: "Non-US person (Reg S)", invitedOn: "2026-10-27", lastActivity: "2026-11-18", contactName: "Fernanda Lima", contactEmail: "fernanda.lima@previsul.org.br", relationshipManager: "L. Andrade" },
-  { id: "ob-1033", fundId: "atlantico-vp-ii", investorName: "Ridgeway Mutual Insurance Co.", investorType: "Insurance company", jurisdiction: "Connecticut, US", commitment: 8_000_000, status: "Countersigned", progress: 1, kyc: "Clear", accreditation: "Qualified purchaser", invitedOn: "2026-10-20", lastActivity: "2026-11-14", contactName: "Amelia Grant", contactEmail: "agrant@ridgewaymutual.com", relationshipManager: "J. Teixeira" },
-  { id: "ob-1044", fundId: "atlantico-vp-ii", investorName: "Bayview Partners Holdings LLC", investorType: "LLC", jurisdiction: "California, US", commitment: 3_000_000, status: "Invited", progress: 0, kyc: "Not started", accreditation: "Not provided", invitedOn: "2026-11-22", lastActivity: "2026-11-22", contactName: "Owen Shah", contactEmail: "owen@bayviewph.com", relationshipManager: "J. Teixeira" },
-  { id: "ob-1045", fundId: "atlantico-vp-ii", investorName: "Duarte Participações S.A.", investorType: "Corporation", jurisdiction: "São Paulo, Brazil", commitment: 6_000_000, status: "In progress", progress: 0.3, kyc: "Pending", accreditation: "Non-US person (Reg S)", invitedOn: "2026-11-17", lastActivity: "2026-11-24", contactName: "Beatriz Duarte", contactEmail: "beatriz@duartepar.com.br", relationshipManager: "L. Andrade" },
-  { id: "ob-1046", fundId: "atlantico-vp-ii", investorName: "Kessler Revocable Trust", investorType: "Trust", jurisdiction: "Texas, US", commitment: 2_000_000, status: "Invited", progress: 0, kyc: "Not started", accreditation: "Not provided", invitedOn: "2026-11-24", lastActivity: "2026-11-24", contactName: "Jonah Kessler", contactEmail: "jkessler@kesslerlaw.com", relationshipManager: "R. Mendes" },
-  { id: "ob-1030", fundId: "meridian-cvc", investorName: "Northgate University Endowment", investorType: "Endowment", jurisdiction: "Massachusetts, US", commitment: 5_000_000, status: "Submitted", progress: 1, kyc: "Clear", accreditation: "Qualified purchaser", invitedOn: "2026-10-30", lastActivity: "2026-11-20", contactName: "Susan Whitfield", contactEmail: "swhitfield@northgate.edu", relationshipManager: "R. Mendes" },
+  {
+    id: "ob-1041",
+    fundId: "atlantico-vp-ii",
+    investorName: "Calloway Family Trust",
+    investorType: "Trust",
+    jurisdiction: "Florida, US",
+    commitment: 7_500_000,
+    status: "In progress",
+    progress: 0.55,
+    kyc: "Pending",
+    accreditation: "Qualified purchaser",
+    invitedOn: "2026-11-10",
+    lastActivity: "2026-11-23",
+    contactName: "Margaret Calloway",
+    contactEmail: "m.calloway@callowaytrust.com",
+    relationshipManager: "L. Andrade",
+  },
+  {
+    id: "ob-1038",
+    fundId: "atlantico-vp-ii",
+    investorName: "Sterling Ridge Foundation",
+    investorType: "Foundation",
+    jurisdiction: "New York, US",
+    commitment: 10_000_000,
+    status: "Submitted",
+    progress: 1,
+    kyc: "Clear",
+    accreditation: "Qualified purchaser",
+    invitedOn: "2026-11-03",
+    lastActivity: "2026-11-21",
+    contactName: "Clara Huang",
+    contactEmail: "chuang@sterlingridge.org",
+    relationshipManager: "R. Mendes",
+  },
+  {
+    id: "ob-1039",
+    fundId: "atlantico-vp-ii",
+    investorName: "Ana & Rafael Monteiro",
+    investorType: "Joint",
+    jurisdiction: "Florida, US",
+    commitment: 1_000_000,
+    status: "Changes requested",
+    progress: 0.9,
+    kyc: "Potential match",
+    accreditation: "Accredited investor",
+    invitedOn: "2026-11-03",
+    lastActivity: "2026-11-19",
+    contactName: "Rafael Monteiro",
+    contactEmail: "rafael.monteiro@gmail.com",
+    relationshipManager: "R. Mendes",
+  },
+  {
+    id: "ob-1036",
+    fundId: "atlantico-vp-ii",
+    investorName: "Previsul Fundação de Previdência",
+    investorType: "Pension plan",
+    jurisdiction: "Porto Alegre, Brazil",
+    commitment: 12_000_000,
+    status: "Approved",
+    progress: 1,
+    kyc: "Clear",
+    accreditation: "Non-US person (Reg S)",
+    invitedOn: "2026-10-27",
+    lastActivity: "2026-11-18",
+    contactName: "Fernanda Lima",
+    contactEmail: "fernanda.lima@previsul.org.br",
+    relationshipManager: "L. Andrade",
+  },
+  {
+    id: "ob-1033",
+    fundId: "atlantico-vp-ii",
+    investorName: "Ridgeway Mutual Insurance Co.",
+    investorType: "Insurance company",
+    jurisdiction: "Connecticut, US",
+    commitment: 8_000_000,
+    status: "Countersigned",
+    progress: 1,
+    kyc: "Clear",
+    accreditation: "Qualified purchaser",
+    invitedOn: "2026-10-20",
+    lastActivity: "2026-11-14",
+    contactName: "Amelia Grant",
+    contactEmail: "agrant@ridgewaymutual.com",
+    relationshipManager: "J. Teixeira",
+  },
+  {
+    id: "ob-1044",
+    fundId: "atlantico-vp-ii",
+    investorName: "Bayview Partners Holdings LLC",
+    investorType: "LLC",
+    jurisdiction: "California, US",
+    commitment: 3_000_000,
+    status: "Invited",
+    progress: 0,
+    kyc: "Not started",
+    accreditation: "Not provided",
+    invitedOn: "2026-11-22",
+    lastActivity: "2026-11-22",
+    contactName: "Owen Shah",
+    contactEmail: "owen@bayviewph.com",
+    relationshipManager: "J. Teixeira",
+  },
+  {
+    id: "ob-1045",
+    fundId: "atlantico-vp-ii",
+    investorName: "Duarte Participações S.A.",
+    investorType: "Corporation",
+    jurisdiction: "São Paulo, Brazil",
+    commitment: 6_000_000,
+    status: "In progress",
+    progress: 0.3,
+    kyc: "Pending",
+    accreditation: "Non-US person (Reg S)",
+    invitedOn: "2026-11-17",
+    lastActivity: "2026-11-24",
+    contactName: "Beatriz Duarte",
+    contactEmail: "beatriz@duartepar.com.br",
+    relationshipManager: "L. Andrade",
+  },
+  {
+    id: "ob-1046",
+    fundId: "atlantico-vp-ii",
+    investorName: "Kessler Revocable Trust",
+    investorType: "Trust",
+    jurisdiction: "Texas, US",
+    commitment: 2_000_000,
+    status: "Invited",
+    progress: 0,
+    kyc: "Not started",
+    accreditation: "Not provided",
+    invitedOn: "2026-11-24",
+    lastActivity: "2026-11-24",
+    contactName: "Jonah Kessler",
+    contactEmail: "jkessler@kesslerlaw.com",
+    relationshipManager: "R. Mendes",
+  },
+  {
+    id: "ob-1030",
+    fundId: "meridian-cvc",
+    investorName: "Northgate University Endowment",
+    investorType: "Endowment",
+    jurisdiction: "Massachusetts, US",
+    commitment: 5_000_000,
+    status: "Submitted",
+    progress: 1,
+    kyc: "Clear",
+    accreditation: "Qualified purchaser",
+    invitedOn: "2026-10-30",
+    lastActivity: "2026-11-20",
+    contactName: "Susan Whitfield",
+    contactEmail: "swhitfield@northgate.edu",
+    relationshipManager: "R. Mendes",
+  },
 ];
 
 export type DocumentRecord = {
   id: string;
   name: string;
   fundId: string;
-  category:
-    | "Fund formation"
-    | "Subscription"
-    | "Capital call notice"
-    | "Distribution notice"
-    | "Quarterly report"
-    | "Tax"
-    | "Financial statements"
-    | "KYC";
+  category: "Fund formation" | "Subscription" | "Capital call notice" | "Distribution notice" | "Quarterly report" | "Tax" | "Financial statements" | "KYC";
   date: string;
   visibility: "All investors" | "Investor-specific" | "Internal";
   size: string;
@@ -445,20 +702,68 @@ export type DocumentRecord = {
 };
 
 export const documents: DocumentRecord[] = [
-  { id: "doc-01", name: "Capital Call Notice No. 7", fundId: "cordillera-infra-i", category: "Capital call notice", date: "2026-11-17", visibility: "Investor-specific", size: "184 KB" },
+  {
+    id: "doc-01",
+    name: "Capital Call Notice No. 7",
+    fundId: "cordillera-infra-i",
+    category: "Capital call notice",
+    date: "2026-11-17",
+    visibility: "Investor-specific",
+    size: "184 KB",
+  },
   { id: "doc-02", name: "Q3 2026 Quarterly Report", fundId: "cordillera-infra-i", category: "Quarterly report", date: "2026-11-14", visibility: "All investors", size: "2.4 MB" },
-  { id: "doc-03", name: "Q3 2026 Capital Account Statement", fundId: "cordillera-infra-i", category: "Quarterly report", date: "2026-11-14", visibility: "Investor-specific", size: "212 KB" },
-  { id: "doc-04", name: "Distribution Notice — Q3 2026", fundId: "serra-re-spv", category: "Distribution notice", date: "2026-10-31", visibility: "Investor-specific", size: "141 KB" },
+  {
+    id: "doc-03",
+    name: "Q3 2026 Capital Account Statement",
+    fundId: "cordillera-infra-i",
+    category: "Quarterly report",
+    date: "2026-11-14",
+    visibility: "Investor-specific",
+    size: "212 KB",
+  },
+  {
+    id: "doc-04",
+    name: "Distribution Notice — Q3 2026",
+    fundId: "serra-re-spv",
+    category: "Distribution notice",
+    date: "2026-10-31",
+    visibility: "Investor-specific",
+    size: "141 KB",
+  },
   { id: "doc-05", name: "Amended & Restated LPA", fundId: "atlantico-vp-ii", category: "Fund formation", date: "2025-09-30", visibility: "All investors", size: "1.8 MB" },
   { id: "doc-06", name: "Private Placement Memorandum", fundId: "atlantico-vp-ii", category: "Fund formation", date: "2025-07-15", visibility: "All investors", size: "3.1 MB" },
-  { id: "doc-07", name: "Subscription Agreement — Second Close", fundId: "atlantico-vp-ii", category: "Subscription", date: "2026-11-01", visibility: "All investors", size: "640 KB" },
+  {
+    id: "doc-07",
+    name: "Subscription Agreement — Second Close",
+    fundId: "atlantico-vp-ii",
+    category: "Subscription",
+    date: "2026-11-01",
+    visibility: "All investors",
+    size: "640 KB",
+  },
   { id: "doc-08", name: "Schedule K-1 (2025)", fundId: "cordillera-infra-i", category: "Tax", date: "2026-03-13", visibility: "Investor-specific", size: "322 KB" },
-  { id: "doc-09", name: "Audited Financial Statements FY2025", fundId: "meridian-cvc", category: "Financial statements", date: "2026-04-28", visibility: "All investors", size: "1.2 MB" },
+  {
+    id: "doc-09",
+    name: "Audited Financial Statements FY2025",
+    fundId: "meridian-cvc",
+    category: "Financial statements",
+    date: "2026-04-28",
+    visibility: "All investors",
+    size: "1.2 MB",
+  },
   { id: "doc-10", name: "Informe Mensal — Outubro 2026", fundId: "fip-horizonte", category: "Quarterly report", date: "2026-11-10", visibility: "All investors", size: "880 KB" },
   { id: "doc-11", name: "Capital Call Notice No. 4", fundId: "meridian-cvc", category: "Capital call notice", date: "2026-11-03", visibility: "Investor-specific", size: "176 KB" },
   { id: "doc-13", name: "Capital Call Notice No. 2", fundId: "stx-anchor", category: "Capital call notice", date: "2026-03-02", visibility: "Investor-specific", size: "168 KB" },
   { id: "doc-14", name: "Q3 2026 Investor Report", fundId: "stx-brazil-housing", category: "Quarterly report", date: "2026-11-12", visibility: "All investors", size: "1.6 MB" },
-  { id: "doc-15", name: "Q3 2026 Capital Account Statement", fundId: "stx-anchor", category: "Quarterly report", date: "2026-11-12", visibility: "Investor-specific", size: "204 KB" },
+  {
+    id: "doc-15",
+    name: "Q3 2026 Capital Account Statement",
+    fundId: "stx-anchor",
+    category: "Quarterly report",
+    date: "2026-11-12",
+    visibility: "Investor-specific",
+    size: "204 KB",
+  },
   { id: "doc-16", name: "Limited Partnership Agreement", fundId: "stx-global", category: "Fund formation", date: "2026-06-30", visibility: "All investors", size: "2.2 MB" },
   { id: "doc-12", name: "AML Risk Assessment — Second Close", fundId: "atlantico-vp-ii", category: "KYC", date: "2026-11-20", visibility: "Internal", size: "96 KB" },
 ];
@@ -485,15 +790,77 @@ export type BankAccount = {
   currency: Currency;
   connection: "Not connected" | "Manual statements";
   lastStatement: string;
+  /** Full wire details, printed only on issued notices. The demo keeps none: notices show what is missing instead. */
+  wire?: { accountNumber: string; aba?: string; abaWire?: string; swift?: string; beneficiaryAddress: string };
 };
 
 export const bankAccounts: BankAccount[] = [
-  { id: "ba-1", fundId: "cordillera-infra-i", institution: "City National Bank", accountName: "Cordillera Infrastructure Partners I — Operating", mask: "4471", type: "Operating", currency: "USD", connection: "Manual statements", lastStatement: "2026-10-31" },
-  { id: "ba-2", fundId: "atlantico-vp-ii", institution: "Butterfield Bank (Cayman)", accountName: "Atlântico VP II — Subscription", mask: "0928", type: "Subscription escrow", currency: "USD", connection: "Not connected", lastStatement: "2026-10-31" },
-  { id: "ba-3", fundId: "meridian-cvc", institution: "J.P. Morgan Chase", accountName: "Meridian CVC — Operating", mask: "7310", type: "Operating", currency: "USD", connection: "Manual statements", lastStatement: "2026-10-31" },
-  { id: "ba-4", fundId: "serra-re-spv", institution: "Bank of Butterfield", accountName: "Serra SPV — Distribution", mask: "5582", type: "Distribution", currency: "USD", connection: "Not connected", lastStatement: "2026-09-30" },
-  { id: "ba-6", fundId: "stx-anchor", institution: "City National Bank", accountName: "STX-Anchor Capital Formation Fund — Operating", mask: "8814", type: "Operating", currency: "USD", connection: "Not connected", lastStatement: "2026-10-31" },
-  { id: "ba-5", fundId: "fip-horizonte", institution: "Itaú Unibanco", accountName: "FIP Horizonte — Conta Movimento", mask: "2209", type: "Operating", currency: "BRL", connection: "Manual statements", lastStatement: "2026-10-31" },
+  {
+    id: "ba-1",
+    fundId: "cordillera-infra-i",
+    institution: "City National Bank",
+    accountName: "Cordillera Infrastructure Partners I — Operating",
+    mask: "4471",
+    type: "Operating",
+    currency: "USD",
+    connection: "Manual statements",
+    lastStatement: "2026-10-31",
+  },
+  {
+    id: "ba-2",
+    fundId: "atlantico-vp-ii",
+    institution: "Butterfield Bank (Cayman)",
+    accountName: "Atlântico VP II — Subscription",
+    mask: "0928",
+    type: "Subscription escrow",
+    currency: "USD",
+    connection: "Not connected",
+    lastStatement: "2026-10-31",
+  },
+  {
+    id: "ba-3",
+    fundId: "meridian-cvc",
+    institution: "J.P. Morgan Chase",
+    accountName: "Meridian CVC — Operating",
+    mask: "7310",
+    type: "Operating",
+    currency: "USD",
+    connection: "Manual statements",
+    lastStatement: "2026-10-31",
+  },
+  {
+    id: "ba-4",
+    fundId: "serra-re-spv",
+    institution: "Bank of Butterfield",
+    accountName: "Serra SPV — Distribution",
+    mask: "5582",
+    type: "Distribution",
+    currency: "USD",
+    connection: "Not connected",
+    lastStatement: "2026-09-30",
+  },
+  {
+    id: "ba-6",
+    fundId: "stx-anchor",
+    institution: "City National Bank",
+    accountName: "STX-Anchor Capital Formation Fund — Operating",
+    mask: "8814",
+    type: "Operating",
+    currency: "USD",
+    connection: "Not connected",
+    lastStatement: "2026-10-31",
+  },
+  {
+    id: "ba-5",
+    fundId: "fip-horizonte",
+    institution: "Itaú Unibanco",
+    accountName: "FIP Horizonte — Conta Movimento",
+    mask: "2209",
+    type: "Operating",
+    currency: "BRL",
+    connection: "Manual statements",
+    lastStatement: "2026-10-31",
+  },
 ];
 
 export const fundById = (id: string) => funds.find((f) => f.id === id);
@@ -538,8 +905,48 @@ export type ProfileChangeRequest = {
 
 /** Investor-initiated changes. Sensitive fields (bank, signatories) require out-of-band verification. */
 export const profileChangeRequests: ProfileChangeRequest[] = [
-  { id: "pcr-311", investorId: "inv-ferreira", submitted: "2026-11-22", submittedBy: "Paulo Ferreira", field: "Distribution bank account", from: "Itaú BBA Nassau ••0917", to: "UBS Switzerland ••5530", control: "Callback to signatory on file + 5-day hold", status: "Pending review" },
-  { id: "pcr-309", investorId: "inv-calloway", submitted: "2026-11-20", submittedBy: "Margaret Calloway", field: "Mailing address", from: "1200 Brickell Bay Dr, Miami, FL", to: "1450 Brickell Avenue, Suite 2100, Miami, FL", control: "Standard review", status: "Pending review" },
-  { id: "pcr-307", investorId: "inv-prado", submitted: "2026-11-18", submittedBy: "Helena Prado", field: "Identity document (KYC refresh)", from: "Passport — expires Dec 31, 2026", to: "Passport — expires Oct 2, 2036", control: "Document verification", status: "Pending review" },
-  { id: "pcr-301", investorId: "inv-brightwater", submitted: "2026-11-04", submittedBy: "Daniel Okafor", field: "Authorized contact added", from: "—", to: "Priya Raman, CFO (view + notices)", control: "Signatory confirmation", status: "Approved" },
+  {
+    id: "pcr-311",
+    investorId: "inv-ferreira",
+    submitted: "2026-11-22",
+    submittedBy: "Paulo Ferreira",
+    field: "Distribution bank account",
+    from: "Itaú BBA Nassau ••0917",
+    to: "UBS Switzerland ••5530",
+    control: "Callback to signatory on file + 5-day hold",
+    status: "Pending review",
+  },
+  {
+    id: "pcr-309",
+    investorId: "inv-calloway",
+    submitted: "2026-11-20",
+    submittedBy: "Margaret Calloway",
+    field: "Mailing address",
+    from: "1200 Brickell Bay Dr, Miami, FL",
+    to: "1450 Brickell Avenue, Suite 2100, Miami, FL",
+    control: "Standard review",
+    status: "Pending review",
+  },
+  {
+    id: "pcr-307",
+    investorId: "inv-prado",
+    submitted: "2026-11-18",
+    submittedBy: "Helena Prado",
+    field: "Identity document (KYC refresh)",
+    from: "Passport — expires Dec 31, 2026",
+    to: "Passport — expires Oct 2, 2036",
+    control: "Document verification",
+    status: "Pending review",
+  },
+  {
+    id: "pcr-301",
+    investorId: "inv-brightwater",
+    submitted: "2026-11-04",
+    submittedBy: "Daniel Okafor",
+    field: "Authorized contact added",
+    from: "—",
+    to: "Priya Raman, CFO (view + notices)",
+    control: "Signatory confirmation",
+    status: "Approved",
+  },
 ];
