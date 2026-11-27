@@ -249,26 +249,12 @@ export function LegendWorkspace({
             </span>{" "}
             <span className="text-stone-500">this quarter</span>
           </div>
-          <div className="mt-3 h-[120px]">
-            <svg viewBox="0 0 240 110" preserveAspectRatio="none" className="h-full w-full" aria-hidden>
-              {(() => {
-                const nav = v.series.map((s) => s.nav);
-                const lo = Math.min(...nav);
-                const hi = Math.max(...nav);
-                const pts = nav.map((x, i) => `${((i / Math.max(1, nav.length - 1)) * 240).toFixed(1)},${(104 - ((x - lo) / (hi - lo || 1)) * 96).toFixed(1)}`).join(" ");
-                return (
-                  <>
-                    <polyline points={`0,110 ${pts} 240,110`} fill={UP} fillOpacity={0.08} stroke="none" />
-                    <polyline points={pts} fill="none" stroke={UP} strokeWidth={1.6} vectorEffect="non-scaling-stroke" />
-                  </>
-                );
-              })()}
-            </svg>
-          </div>
-          <div className="mt-3 text-[13px] font-semibold text-ink-900">Overview</div>
-          <dl className="mt-1 space-y-1.5 text-[13px]">
+          <div className="mt-5 border-t border-stone-100 pt-4 text-[13px] font-semibold text-ink-900">Overview</div>
+          <dl className="mt-2 space-y-2 text-[13px]">
             {(
               [
+                ["Commitments", usd0(v.end.commitment)],
+                ["Called to date", `${usd0(v.end.paidIn)} (${v.end.commitment ? Math.round((v.end.paidIn / v.end.commitment) * 100) : 0}%)`],
                 ["Unfunded commitments", usd0(v.end.commitment - v.end.paidIn)],
                 ["Distributed to date", usd0(v.end.distributed)],
                 ["TVPI · DPI", `${v.m.tvpi.toFixed(2)}x · ${v.m.dpi.toFixed(2)}x`],
