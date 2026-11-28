@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { AlertCircle, CheckCircle2, Clock3, FileText, LayoutList, ListChecks, Plus, Search } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock3, FileText, Hash, LayoutList, ListChecks, Plus, Search } from "lucide-react";
+import Link from "next/link";
 import { cx } from "@/components/ui";
 import { FIRM } from "@/lib/firm-colors";
 import { solutionById, solutions } from "@/lib/solutions";
@@ -87,6 +88,12 @@ export function PmoWorkspace({ tab: initial, show = "all", startNew = false }: {
     <div className="-mx-8 -mt-4 flex min-h-[calc(100vh-64px)]">
       <aside className="w-[260px] shrink-0 border-r border-stone-200 px-3 py-5">
         <div className="px-2 text-[13px] font-semibold text-ink-900">Project management</div>
+        {!external && (
+          // the room's own channel in Concourse
+          <Link href="/admin/communication?c=ch-pmo" className="mt-1 flex items-center gap-1.5 px-2 text-[12px] text-stone-500 hover:text-ink-900">
+            <Hash size={12} /> Team channel
+          </Link>
+        )}
         {external ? (
           <>
             <Heading>Your plans</Heading>

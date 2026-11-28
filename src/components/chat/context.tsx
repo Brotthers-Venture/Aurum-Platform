@@ -56,6 +56,13 @@ export type ChatApi = {
   createMatter: (m: { title: string; linkedFrom?: string; status?: MatterStatus; priority?: Priority }) => string;
   convert: (msgId: string, to: "matter" | "task" | "qa" | "change") => void;
   openChange: (source: { where: string; author: string; body: string; messageId?: string }) => void;
+  /** opens the dialog for a new channel or group */
+  openNewConversation: (kind: "channel" | "group", home?: string) => void;
+  createChannel: (c: { name: string; topic: string; home?: string; members: string[] }) => string;
+  startGroup: (members: string[], name?: string) => string;
+  updateChannel: (id: string, patch: { topic?: string; members?: string[]; archived?: boolean }) => void;
+  /** opens the dialog to manage a channel's people, topic and archive */
+  manageChannel: (id: string) => void;
 };
 
 export const ChatCtx = createContext<ChatApi | null>(null);

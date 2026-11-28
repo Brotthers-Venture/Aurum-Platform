@@ -1,12 +1,13 @@
 "use client";
 
-import { AtSign, CalendarDays, ChevronDown, FilePen, Hash, Inbox, Layers, PenSquare, UserRoundCheck, X } from "lucide-react";
+import { AtSign, CalendarDays, Plus, ChevronDown, FilePen, Hash, Inbox, Layers, PenSquare, UserRoundCheck, X } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { cx } from "@/components/ui";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { moduleName } from "@/lib/brand";
-import { VIEWER, matchesFilters, personName } from "@/lib/chat";
+import { VIEWER, directLabel, matchesFilters, personName } from "@/lib/chat";
+import { HexDot, useHomes } from "./homes";
 import { counts, unread } from "@/lib/chat-store";
 import { useChat, type Nav } from "./context";
 import { Avatar, Kbd } from "./ui";
@@ -47,6 +48,14 @@ function Row({
   );
 }
 
+function AddButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} aria-label={label} title={label} className="flex h-6 w-6 items-center justify-center rounded-[4px] text-d-text-3 hover:bg-d-raise hover:text-d-text">
+      <Plus size={13} />
+    </button>
+  );
+}
+
 function Group({ title, children, action }: { title: string; children: ReactNode; action?: ReactNode }) {
   const [open, setOpen] = useState(true);
   return (
@@ -68,7 +77,8 @@ function Group({ title, children, action }: { title: string; children: ReactNode
 }
 
 export function Sidebar({ brandName, onClose }: { brandName: string; onClose: () => void }) {
-  const { s, nav, setNav, openNew, openCmd } = useChat();
+  const { s, nav, setNav, openNew, openCmd, openNewConversation } = useChat();
+  const homes = useHomes();
   const { brand } = useBrand();
   const c = counts(s);
   const is = (n: Nav) => JSON.stringify(n) === JSON.stringify(nav);
@@ -126,23 +136,34 @@ export function Sidebar({ brandName, onClose }: { brandName: string; onClose: ()
           ))}
         </Group>
 
-        <Group title="Internal channels">
-          {s.channels
-            .filter((ch) => !ch.external)
-            .map((ch) => {
-              const u = unread(s, ch.id);
-              return (
-                <Row
-                  key={ch.id}
-                  active={is({ kind: "conv", id: ch.id })}
-                  onClick={() => setNav({ kind: "conv", id: ch.id })}
-                  icon={<Hash size={14} />}
-                  label={ch.name}
-                  strong={u > 0}
-                  count={u}
-                />
-              );
-            })}
+        <Group title="Channels" action={<AddButton label="New channel" onClick={() => openNewConversation("channel")} />}>
+          {/* Channels are filed under the Hexa room or solution they belong to, in the room's colour. */}
+          {[...homes, { id: "", name: "Firm-wide", color: "var(--d-text-3)", href: "" }].map((h) => {
+            const list = s.channels.filter((ch) => !ch.external && !ch.archived && (ch.home ?? "") === h.id);
+            if (!list.length) return null;
+            return (
+              <div key={h.id || "firm"} className="pt-1.5 first:pt-0">
+                <div className="flex h-6 items-center gap-1.5 px-2.5 text-[11px] text-d-text-3">
+                  <HexDot color={h.color} size={11} />
+                  <span className="truncate">{h.name}</span>
+                </div>
+                {list.map((ch) => {
+                  const u = unread(s, ch.id);
+                  return (
+                    <Row
+                      key={ch.id}
+                      active={is({ kind: "conv", id: ch.id })}
+                      onClick={() => setNav({ kind: "conv", id: ch.id })}
+                      icon={<Hash size={14} />}
+                      label={ch.name}
+                      strong={u > 0}
+                      count={u}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })}
         </Group>
 
         <Group title="External channels">
@@ -164,17 +185,26 @@ export function Sidebar({ brandName, onClose }: { brandName: string; onClose: ()
             })}
         </Group>
 
-        <Group title="Direct messages">
+        <Group title="Direct messages" action={<AddButton label="New group message" onClick={() => openNewConversation("group")} />}>
           {s.directs.map((d) => {
             const other = d.members.find((m) => m !== VIEWER) ?? VIEWER;
+            const group = d.members.length > 2;
             const u = unread(s, d.id);
             return (
               <Row
                 key={d.id}
                 active={is({ kind: "conv", id: d.id })}
                 onClick={() => setNav({ kind: "conv", id: d.id })}
-                icon={<Avatar id={other} size={16} />}
-                label={personName(other)}
+                icon={
+                  group ? (
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full border border-d-line-strong text-[9px] font-semibold text-d-text-2">
+                      {d.members.length}
+                    </span>
+                  ) : (
+                    <Avatar id={other} size={16} />
+                  )
+                }
+                label={group ? directLabel(d) : personName(other)}
                 strong={u > 0}
                 count={u}
               />

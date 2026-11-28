@@ -17,8 +17,10 @@ import {
   Pencil,
   Reply,
   ShieldAlert,
+  Users,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { cx } from "@/components/ui";
 import { Menu, menuHead, menuItem } from "@/components/shell/WorkstationTopBar";
 import { useBrand } from "@/components/brand/BrandProvider";
@@ -31,6 +33,7 @@ import {
   chatPeople,
   clientWaiting,
   detectBankDetails,
+  directLabel,
   isExternal,
   orgName,
   orgOf,
@@ -41,6 +44,7 @@ import {
   type Matter,
 } from "@/lib/chat";
 import { useChat } from "./context";
+import { HexDot, useHomes } from "./homes";
 import { Composer } from "./Composer";
 import { ContextRail } from "./Rail";
 import { ModeSwitch } from "./ModeSwitch";
@@ -538,7 +542,8 @@ function ThreadPanel({ id }: { id: string }) {
 }
 
 export function Detail({ onMenu }: { onMenu: () => void }) {
-  const { s, nav, selected, rail, setRail, thread, markConvRead, setNav } = useChat();
+  const { s, nav, selected, rail, setRail, thread, markConvRead, setNav, manageChannel } = useChat();
+  const homes = useHomes();
   const where = nav.kind === "conv" ? nav.id : selected;
   useEffect(() => {
     if (where) markConvRead(where);
@@ -550,16 +555,51 @@ export function Detail({ onMenu }: { onMenu: () => void }) {
     const members = ch?.members ?? dm?.members ?? [];
     const ext = members.filter(isExternal);
     const other = dm?.members.find((x) => x !== VIEWER);
+    const group = !!dm && dm.members.length > 2;
+    const title = ch ? ch.name : dm ? (group ? directLabel(dm) : personName(other ?? "")) : "";
+    const home = ch?.home ? homes.find((h) => h.id === ch.home) : undefined;
     return (
-      <section className="flex min-w-0 flex-1 flex-col" aria-label={ch ? `#${ch.name}` : personName(other ?? "")}>
+      <section className="flex min-w-0 flex-1 flex-col" aria-label={ch ? `#${ch.name}` : title}>
         <header className="flex h-12 shrink-0 items-center gap-2 border-b border-d-line px-4">
           <button onClick={onMenu} aria-label="Open navigation" className="flex h-7 w-7 items-center justify-center rounded-[4px] text-d-text-2 hover:bg-d-raise lg:hidden">
             <MenuIcon size={16} />
           </button>
-          {ch ? <Hash size={15} className="text-d-text-3" /> : <Avatar id={other ?? ""} size={20} />}
-          <h2 className="text-[14px] font-semibold">{ch ? ch.name : personName(other ?? "")}</h2>
-          {ch && <span className="hidden truncate text-[12px] text-d-text-3 sm:inline">· {ch.topic}</span>}
+          {ch ? (
+            <Hash size={15} className="text-d-text-3" />
+          ) : group ? (
+            <span className="flex -space-x-1.5">
+              {dm!.members
+                .filter((m) => m !== VIEWER)
+                .slice(0, 3)
+                .map((m) => (
+                  <Avatar key={m} id={m} size={20} />
+                ))}
+            </span>
+          ) : (
+            <Avatar id={other ?? ""} size={20} />
+          )}
+          <h2 className="truncate text-[14px] font-semibold">{title}</h2>
+          {home && (
+            // the room the channel belongs to; it opens the room
+            <Link
+              href={home.href}
+              className="hidden shrink-0 items-center gap-1 rounded-full border border-d-line px-2 py-0.5 text-[11.5px] text-d-text-2 hover:border-d-line-strong hover:text-d-text sm:flex"
+            >
+              <HexDot color={home.color} size={11} /> {home.name}
+            </Link>
+          )}
+          {ch?.topic && <span className="hidden truncate text-[12px] text-d-text-3 lg:inline">· {ch.topic}</span>}
+          {group && <span className="hidden truncate text-[12px] text-d-text-3 sm:inline">· {dm!.members.length} people</span>}
           <span className="ml-auto" />
+          {ch && (
+            <button
+              onClick={() => manageChannel(ch.id)}
+              className="flex h-7 shrink-0 items-center gap-1.5 rounded-[4px] px-2 text-[12px] text-d-text-2 hover:bg-d-raise hover:text-d-text"
+              aria-label={`People and settings for #${ch.name}`}
+            >
+              <Users size={14} /> {ch.members.length}
+            </button>
+          )}
           <ModeSwitch />
           <button onClick={() => setNav({ kind: "view", id: "v-open" })} className="hidden text-[12px] text-d-text-2 hover:text-d-text md:block">
             Back to matters

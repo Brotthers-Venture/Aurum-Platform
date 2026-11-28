@@ -61,6 +61,10 @@ export function loadChat(): ChatState {
     if (!raw) return seedState();
     const s = JSON.parse(raw) as ChatState;
     if (s.v !== VERSION || !Array.isArray(s.matters) || !Array.isArray(s.messages)) return seedState();
+    // Channels added to the seed after this browser saved its copy (e.g. #pmo) join without losing anything,
+    // and seeded channels pick up the room they belong to.
+    const known = new Set(s.channels.map((c) => c.id));
+    s.channels = [...s.channels.map((c) => ({ ...c, home: c.home ?? seedChannels.find((x) => x.id === c.id)?.home })), ...seedChannels.filter((c) => !known.has(c.id))];
     return s;
   } catch {
     return seedState();

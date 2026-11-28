@@ -46,8 +46,20 @@ export type Matter = {
   source?: { where: string; messageId: string };
 };
 
-export type Channel = { id: string; name: string; topic: string; external: boolean; members: string[] };
-export type Direct = { id: string; members: string[] };
+export type Channel = {
+  id: string;
+  name: string;
+  topic: string;
+  external: boolean;
+  members: string[];
+  /** the Hexa room or solution the channel belongs to ("pmo", "fund"…); the sidebar files it there */
+  home?: string;
+  createdBy?: string;
+  /** archived channels keep their history but leave the sidebar */
+  archived?: boolean;
+};
+/** A private conversation: two people, or a small group with an optional name. */
+export type Direct = { id: string; members: string[]; name?: string; createdBy?: string };
 
 export type ChatAttachment = { name: string; size: number; type: "pdf" | "xlsx" | "docx" | "csv" | "img" | "zip"; source?: string };
 export type ReactionKey = "ack" | "agree" | "seen";
@@ -331,9 +343,24 @@ export const seedMatters: Matter[] = [
 /* ───────────────────────── seed: channels & directs ───────────────────────── */
 
 const internalChannels: Channel[] = [
-  { id: "ch-fund-ops", name: "fund-ops", topic: "Fund Solution team — close, NAV and capital activity", external: false, members: ["luiza", "rafael", "juliana", "carla"] },
-  { id: "ch-corporate", name: "corporate", topic: "Corporate services — formations and annual filings", external: false, members: ["eduardo", "bianca", "carla", "luiza"] },
-  { id: "ch-compliance", name: "compliance", topic: "Screening, policy updates and training", external: false, members: ["carla", "luiza", "rafael"] },
+  {
+    id: "ch-fund-ops",
+    name: "fund-ops",
+    topic: "Fund Solution team — close, NAV and capital activity",
+    external: false,
+    members: ["luiza", "rafael", "juliana", "carla"],
+    home: "fund",
+  },
+  {
+    id: "ch-corporate",
+    name: "corporate",
+    topic: "Corporate services — formations and annual filings",
+    external: false,
+    members: ["eduardo", "bianca", "carla", "luiza"],
+    home: "corporate",
+  },
+  { id: "ch-compliance", name: "compliance", topic: "Screening, policy updates and training", external: false, members: ["carla", "luiza", "rafael"], home: "compliance" },
+  { id: "ch-pmo", name: "pmo", topic: "Plans, deadlines and what is blocked", external: false, members: ["luiza", "rafael", "juliana", "carla"], home: "pmo" },
 ];
 
 /**
@@ -855,3 +882,20 @@ export function mayApprove(personId: string, kind: LinkKind): { ok: boolean; why
   if (!u) return { ok: false, why: "Your role isn't set up to approve this." };
   return can(u.role, need) ? { ok: true } : { ok: false, why: "Your role doesn't include approving this kind of record." };
 }
+
+/** How a private conversation is named in lists: its own name, or the other people in it. */
+export function directLabel(d: Direct, viewer = VIEWER) {
+  if (d.name) return d.name;
+  const others = d.members.filter((m) => m !== viewer);
+  return others.length ? others.map((m) => personName(m).split(" ")[0]).join(", ") : personName(viewer);
+}
+
+/** Channel names: lower case, words joined by hyphens, as typed into a # reference. */
+export const channelSlug = (name: string) =>
+  name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);

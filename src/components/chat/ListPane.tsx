@@ -11,6 +11,7 @@ import {
   VIEWER,
   chatPeople,
   clientWaiting,
+  directLabel,
   isExternal,
   matchesFilters,
   personName,
@@ -188,7 +189,10 @@ export function ListPane({ onMenu, setList }: { onMenu: () => void; setList: (id
     s.matters.find((m) => m.id === id)?.ref ??
     (s.channels.find((c) => c.id === id)
       ? "#" + s.channels.find((c) => c.id === id)!.name
-      : personName(s.directs.find((d) => d.id === id)?.members.find((x) => x !== VIEWER) ?? ""));
+      : (() => {
+          const d = s.directs.find((x) => x.id === id);
+          return d ? directLabel(d) : "";
+        })());
 
   return (
     <section aria-label={title} className="chat-list flex h-full flex-col bg-d-bg">

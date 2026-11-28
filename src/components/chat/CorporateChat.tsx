@@ -24,6 +24,7 @@ import {
   parseMentions,
   parseRefs,
   personName,
+  channelSlug,
   isExternal as isExternalId,
   type ChatAttachment,
   type ChatMessage,
@@ -38,7 +39,7 @@ import { Sidebar } from "./Sidebar";
 import { ListPane } from "./ListPane";
 import { Detail } from "./Detail";
 import { CommandMenu } from "./CommandMenu";
-import { NewMatterDialog, ShortcutSheet } from "./Dialogs";
+import { ManageChannelDialog, NewConversationDialog, NewMatterDialog, ShortcutSheet } from "./Dialogs";
 
 const uid = () => `m${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 const iso = () => new Date().toISOString();
@@ -94,6 +95,8 @@ export function CorporateChat() {
   const [cmd, setCmd] = useState(false);
   const [help, setHelp] = useState(false);
   const [newM, setNewM] = useState<null | { title?: string; from?: string }>(null);
+  const [newConv, setNewConv] = useState<null | { kind: "channel" | "group"; home?: string }>(null);
+  const [managing, setManaging] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [mobilePane, setMobilePane] = useState<"list" | "detail">("list");
   const [side, setSide] = useState(false);
@@ -145,7 +148,12 @@ export function CorporateChat() {
       if (saved === "inbox" || saved === "conversation" || saved === "focus") setModeState(saved);
     } catch {}
     const m = target ?? params.get("m");
-    if (m && loaded.matters.some((x) => x.id === m)) {
+    // ?c=<channel or conversation id> opens it directly, e.g. a room's team channel
+    const conv = params.get("c");
+    if (conv && (loaded.channels.some((x) => x.id === conv) || loaded.directs.some((x) => x.id === conv))) {
+      setNavState({ kind: "conv", id: conv });
+      setMobilePane("detail");
+    } else if (m && loaded.matters.some((x) => x.id === m)) {
       setSelected(m);
       setMobilePane("detail");
     } else {
@@ -190,6 +198,95 @@ export function CorporateChat() {
 
   const audit = (action: string, m: Matter | undefined, detail: string) =>
     recordAudit({ user: personName(VIEWER), action, object: `Concourse · ${m?.ref ?? ""} ${m?.title ?? ""} · ${detail}` });
+
+  /* ───────── channels and groups ───────── */
+  const createChannel = ({ name, topic, home, members }: { name: string; topic: string; home?: string; members: string[] }) => {
+    const slug = channelSlug(name);
+    const existing = s?.channels.find((c) => c.name === slug && !c.archived);
+    if (existing) {
+      setNav({ kind: "conv", id: existing.id });
+      flash(`#${slug} already exists — opened it`);
+      return existing.id;
+    }
+    const id = "ch-" + uid();
+    const people = [...new Set([VIEWER, ...members])];
+    commit((x) => ({
+      ...x,
+      channels: [...x.channels, { id, name: slug, topic, home, members: people, external: false, createdBy: VIEWER }],
+      messages: [
+        ...x.messages,
+        event(
+          id,
+          `created #${slug}${
+            people.length > 1
+              ? ` and added ${people
+                  .filter((p) => p !== VIEWER)
+                  .map(personName)
+                  .join(", ")}`
+              : ""
+          }`,
+        ),
+      ],
+      read: { ...x.read, [id]: iso() },
+    }));
+    recordAudit({ user: personName(VIEWER), action: "Created channel", object: `Concourse · #${slug}` });
+    setNav({ kind: "conv", id });
+    setMobilePane("detail");
+    flash(`#${slug} created`);
+    return id;
+  };
+  const startGroup = (members: string[], name?: string) => {
+    const people = [...new Set([VIEWER, ...members])].sort();
+    const same = s?.directs.find((d) => [...d.members].sort().join() === people.join());
+    if (same) {
+      setNav({ kind: "conv", id: same.id });
+      return same.id;
+    }
+    const id = "dm-" + uid();
+    commit((x) => ({
+      ...x,
+      directs: [...x.directs, { id, members: people, name: name?.trim() || undefined, createdBy: VIEWER }],
+      messages:
+        people.length > 2
+          ? [
+              ...x.messages,
+              event(
+                id,
+                `started a group with ${people
+                  .filter((p) => p !== VIEWER)
+                  .map(personName)
+                  .join(", ")}`,
+              ),
+            ]
+          : x.messages,
+      read: { ...x.read, [id]: iso() },
+    }));
+    setNav({ kind: "conv", id });
+    setMobilePane("detail");
+    return id;
+  };
+  const updateChannel = (id: string, patch: { topic?: string; members?: string[]; archived?: boolean }) => {
+    const ch = s?.channels.find((c) => c.id === id);
+    if (!ch) return;
+    const notes: string[] = [];
+    if (patch.topic !== undefined && patch.topic !== ch.topic) notes.push(`changed the topic to "${patch.topic}"`);
+    if (patch.members) {
+      const added = patch.members.filter((p) => !ch.members.includes(p));
+      const removed = ch.members.filter((p) => !patch.members!.includes(p));
+      if (added.length) notes.push(`added ${added.map(personName).join(", ")}`);
+      if (removed.length) notes.push(`removed ${removed.map(personName).join(", ")}`);
+    }
+    if (patch.archived !== undefined && patch.archived !== !!ch.archived) notes.push(patch.archived ? "archived the channel" : "restored the channel");
+    commit((x) => ({
+      ...x,
+      channels: x.channels.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+      messages: [...x.messages, ...notes.map((n) => event(id, n))],
+    }));
+    if (patch.archived) {
+      setNav({ kind: "view", id: "v-open" });
+      flash(`#${ch.name} archived — its history stays searchable`);
+    }
+  };
 
   const setStatus = (id: string, st: MatterStatus) => {
     const m = matterById(id);
@@ -678,6 +775,11 @@ export function CorporateChat() {
             setPropMenu,
             openCmd: () => setCmd(true),
             openNew: (p) => setNewM(p ?? {}),
+            openNewConversation: (kind, home) => setNewConv({ kind, home }),
+            createChannel,
+            startGroup,
+            updateChannel,
+            manageChannel: (id) => setManaging(id),
             focusComposer,
             flash,
             mobilePane,
@@ -748,6 +850,8 @@ export function CorporateChat() {
           </div>
           {cmd && <CommandMenu onClose={() => setCmd(false)} onHelp={() => setHelp(true)} />}
           {help && <ShortcutSheet onClose={() => setHelp(false)} />}
+          {newConv && <NewConversationDialog initial={newConv} onClose={() => setNewConv(null)} />}
+          {managing && <ManageChannelDialog id={managing} onClose={() => setManaging(null)} />}
           {newM && (
             <NewMatterDialog
               prefill={newM}
