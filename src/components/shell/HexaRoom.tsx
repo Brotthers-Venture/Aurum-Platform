@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, X } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronsLeft, ChevronsRight, Hash, X } from "lucide-react";
 import { BankingMark, ChainMark, CorporateMark, FamilyMark, FundMark, OfferingMark } from "./SolutionIcons";
 import { cx } from "@/components/ui";
 import { useBrand } from "@/components/brand/BrandProvider";
@@ -12,6 +12,7 @@ import { useTheme } from "@/components/shell/ThemeProvider";
 import { moduleName } from "@/lib/brand";
 import { FAMILIES } from "@/lib/wealth";
 import { hexaHref, hexaOf, type Hexa, type HexaId, type HexaPage } from "@/lib/hexa";
+import { TEAM_CHANNEL } from "@/lib/chat";
 import { useHexas } from "./useHexas";
 
 const KEY = "aurum-hexa-collapsed";
@@ -124,6 +125,8 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
       return h.pages.filter((p) => !p.group || FAMILIES.some((f) => f.tenantId === member.org && p.href.endsWith(`/${f.id}`)));
     return h.pages;
   };
+  // a room opens to its pages, and for people at the firm also to its team channel
+  const hasTree = (h: Hexa) => pagesOf(h).length > 0 || (!outsider && !!TEAM_CHANNEL[h.id]);
   const badgeOf = (h: Hexa) => (outsider ? 0 : (h.badge ?? 0));
   const name = (h: Hexa) => (h.firm ? moduleName(brand, h.firm) : h.name);
   const hrefOf = (h: Hexa) => (isSolution(h.id) && last[h.id]) || hexaHref(h, member);
@@ -186,6 +189,18 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
             </li>
           );
         })}
+        {!outsider && TEAM_CHANNEL[h.id] && (
+          // the room's own channel in Concourse, for people at the firm
+          <li>
+            <Link
+              href={`/admin/communication?c=${TEAM_CHANNEL[h.id]}`}
+              className="flex h-[27px] items-center gap-1.5 rounded-[5px] pl-2 pr-2 text-[12.5px] text-d-text-2 transition-colors hover:bg-d-raise hover:text-d-text"
+            >
+              <Hash size={12} className="shrink-0 text-d-text-3" />
+              <span className="flex-1 truncate">Team channel</span>
+            </Link>
+          </li>
+        )}
       </ul>
     );
   };
@@ -300,7 +315,7 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
             {solutionsOpen &&
               solutions.map(({ h, Icon }) => {
                 const active = here?.id === h.id;
-                const tree = openPages === h.id && pagesOf(h).length > 0;
+                const tree = openPages === h.id && hasTree(h);
                 return (
                   <div key={h.id}>
                     <Row
@@ -311,7 +326,7 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
                       icon={<Icon size={20} className={active ? "text-d-text" : "text-d-text-2"} />}
                       label={name(h)}
                       badge={badgeOf(h)}
-                      toggle={pagesOf(h).length ? () => setOpenPages((o) => (o === h.id ? null : h.id)) : undefined}
+                      toggle={hasTree(h) ? () => setOpenPages((o) => (o === h.id ? null : h.id)) : undefined}
                       expanded={tree}
                     />
                     {tree && <PageTree h={h} />}
@@ -322,8 +337,7 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
         )}
         {workspaces.map((h) => {
           const active = here?.id === h.id;
-          const pages = pagesOf(h);
-          const tree = openPages === h.id && pages.length > 0;
+          const tree = openPages === h.id && hasTree(h);
           return (
             <div key={h.id} className="mb-0.5">
               <Row
@@ -333,7 +347,7 @@ function Room({ defaultCollapsed }: { defaultCollapsed: boolean }) {
                 icon={<HexGlyph color={h.color} size={17} active={active} />}
                 label={name(h)}
                 badge={badgeOf(h)}
-                toggle={pages.length ? () => setOpenPages((o) => (o === h.id ? null : h.id)) : undefined}
+                toggle={hasTree(h) ? () => setOpenPages((o) => (o === h.id ? null : h.id)) : undefined}
                 expanded={tree}
               />
               {tree && <PageTree h={h} />}

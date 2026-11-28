@@ -361,6 +361,34 @@ const internalChannels: Channel[] = [
   },
   { id: "ch-compliance", name: "compliance", topic: "Screening, policy updates and training", external: false, members: ["carla", "luiza", "rafael"], home: "compliance" },
   { id: "ch-pmo", name: "pmo", topic: "Plans, deadlines and what is blocked", external: false, members: ["luiza", "rafael", "juliana", "carla"], home: "pmo" },
+  {
+    id: "ch-family-office",
+    name: "family-office",
+    topic: "Multi-Family Office — families, reporting and service requests",
+    external: false,
+    members: ["helena", "luiza", "juliana"],
+    home: "multi-family",
+  },
+  {
+    id: "ch-offerings",
+    name: "offerings",
+    topic: "Offerings — placements, subscriptions and investor onboarding",
+    external: false,
+    members: ["olivia", "luiza", "carla"],
+    home: "offering",
+  },
+  {
+    id: "ch-digital-assets",
+    name: "digital-assets",
+    topic: "Digital assets — custody, tokenisation and wallets",
+    external: false,
+    members: ["priya", "luiza", "carla"],
+    home: "blockchain",
+  },
+  { id: "ch-banking", name: "banking", topic: "Banking — accounts, payments and bank relationships", external: false, members: ["noah", "luiza", "rafael"], home: "banking" },
+  { id: "ch-sales", name: "sales", topic: "Pipeline, proposals and follow-ups", external: false, members: ["juliana", "luiza", "olivia"], home: "sales" },
+  { id: "ch-data-rooms", name: "data-rooms", topic: "Rooms, NDAs and visitor questions", external: false, members: ["luiza", "juliana", "carla"], home: "dataroom" },
+  { id: "ch-treasury", name: "treasury", topic: "Invoices, fees and collections", external: false, members: ["luiza", "rafael"], home: "billing" },
 ];
 
 /**
@@ -899,3 +927,18 @@ export const channelSlug = (name: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
+
+/** Each Hexa room's and solution's own team channel; the room links to it for people at the firm. */
+export const TEAM_CHANNEL: Record<string, string> = {
+  fund: "ch-fund-ops",
+  corporate: "ch-corporate",
+  "multi-family": "ch-family-office",
+  offering: "ch-offerings",
+  blockchain: "ch-digital-assets",
+  banking: "ch-banking",
+  sales: "ch-sales",
+  pmo: "ch-pmo",
+  dataroom: "ch-data-rooms",
+  billing: "ch-treasury",
+  compliance: "ch-compliance",
+};
